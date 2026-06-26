@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -195,5 +196,114 @@ func TestDetectarHarnesses_Ordenado(t *testing.T) {
 		if got[i] < got[i-1] {
 			t.Errorf("resultado não está ordenado: %v", got)
 		}
+	}
+}
+
+// --- instalarComDeteccao ---
+
+func TestInstalarComDeteccao_NaoInterativoNaoInstala(t *testing.T) {
+	vaultDir, homeDir := injetarVaultEHome(t)
+	criarSkillFake(t, filepath.Join(vaultDir, "habilidades"), "kn-01-recebe-usuario")
+
+	origPath := lookupPathFunc
+	defer func() { lookupPathFunc = origPath }()
+	lookupPathFunc = func(name string) (string, error) {
+		if name == "claude" {
+			return "/usr/bin/claude", nil
+		}
+		return "", errors.New("not found")
+	}
+
+	if err := instalarComDeteccao("", false); err != nil {
+		t.Fatalf("erro inesperado: %v", err)
+	}
+
+	dst := filepath.Join(homeDir, ".claude", "skills", "kn-01-recebe-usuario")
+	if _, err := os.Lstat(dst); err == nil {
+		t.Error("modo não-interativo sem --para não deveria criar symlinks")
+	}
+}
+
+func TestInstalarComDeteccao_ComParaIgnoraInterativo(t *testing.T) {
+	vaultDir, homeDir := injetarVaultEHome(t)
+	criarSkillFake(t, filepath.Join(vaultDir, "habilidades"), "kn-01-recebe-usuario")
+
+	if err := instalarComDeteccao("claude", false); err != nil {
+		t.Fatalf("erro inesperado: %v", err)
+	}
+
+	dst := filepath.Join(homeDir, ".claude", "skills", "kn-01-recebe-usuario")
+	if _, err := os.Lstat(dst); err != nil {
+		t.Errorf("--para deve criar symlink mesmo em modo não-interativo: %v", err)
+	}
+}
+
+func TestInstalarComDeteccao_NenhumHarnessDetectado(t *testing.T) {
+	injetarVaultEHome(t)
+
+	origPath := lookupPathFunc
+	defer func() { lookupPathFunc = origPath }()
+	lookupPathFunc = func(name string) (string, error) {
+		return "", errors.New("not found")
+	}
+
+	if err := instalarComDeteccao("", true); err != nil {
+		t.Fatalf("zero harnesses não deve retornar erro: %v", err)
+	}
+}
+
+func TestInstalarComDeteccao_InterativoConfirma(t *testing.T) {
+	vaultDir, homeDir := injetarVaultEHome(t)
+	criarSkillFake(t, filepath.Join(vaultDir, "habilidades"), "kn-01-recebe-usuario")
+
+	origPath := lookupPathFunc
+	origStdin := stdinReader
+	defer func() {
+		lookupPathFunc = origPath
+		stdinReader = origStdin
+	}()
+	lookupPathFunc = func(name string) (string, error) {
+		if name == "claude" {
+			return "/usr/bin/claude", nil
+		}
+		return "", errors.New("not found")
+	}
+	stdinReader = strings.NewReader("s\n")
+
+	if err := instalarComDeteccao("", true); err != nil {
+		t.Fatalf("erro inesperado: %v", err)
+	}
+
+	dst := filepath.Join(homeDir, ".claude", "skills", "kn-01-recebe-usuario")
+	if _, err := os.Lstat(dst); err != nil {
+		t.Errorf("confirmação 's' deveria criar symlink: %v", err)
+	}
+}
+
+func TestInstalarComDeteccao_InterativoRecusa(t *testing.T) {
+	vaultDir, homeDir := injetarVaultEHome(t)
+	criarSkillFake(t, filepath.Join(vaultDir, "habilidades"), "kn-01-recebe-usuario")
+
+	origPath := lookupPathFunc
+	origStdin := stdinReader
+	defer func() {
+		lookupPathFunc = origPath
+		stdinReader = origStdin
+	}()
+	lookupPathFunc = func(name string) (string, error) {
+		if name == "claude" {
+			return "/usr/bin/claude", nil
+		}
+		return "", errors.New("not found")
+	}
+	stdinReader = strings.NewReader("n\n")
+
+	if err := instalarComDeteccao("", true); err != nil {
+		t.Fatalf("erro inesperado: %v", err)
+	}
+
+	dst := filepath.Join(homeDir, ".claude", "skills", "kn-01-recebe-usuario")
+	if _, err := os.Lstat(dst); err == nil {
+		t.Error("recusa 'n' não deveria criar symlink")
 	}
 }
