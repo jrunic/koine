@@ -168,6 +168,51 @@ func TestCopilotNomeECaminho(t *testing.T) {
 	}
 }
 
+func TestCopilot_BootstrapExplicito_IncluiContextoNoBundle(t *testing.T) {
+	pastaAbs := t.TempDir()
+	tmpCtx := filepath.Join(pastaAbs, "CONTEXTO.md")
+	conteudoCtx := []byte("---\nbootstrap: true\n---\n# Bootstrap\n")
+	if err := os.WriteFile(tmpCtx, conteudoCtx, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// hermes + usuario fakes
+	vaultDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(vaultDir, "agentes"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	hermesPath := filepath.Join(vaultDir, "agentes", "hermes.md")
+	if err := os.WriteFile(hermesPath, []byte("# Hermes"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	c := &Copilot{Agente: "hermes", PastaAbs: pastaAbs}
+	dados := ContextoMontado{
+		Bootstrap:    true,
+		AgentePath:   hermesPath,
+		ContextoPath: tmpCtx,
+	}
+	lanc, err := c.Renderizar(dados)
+	if err != nil {
+		t.Fatalf("erro inesperado: %v", err)
+	}
+
+	// procurar bootstrap.instructions.md no bundle
+	var found bool
+	for path := range lanc.ArquivosExternos {
+		if strings.HasSuffix(path, "/.github/instructions/bootstrap.instructions.md") {
+			found = true
+			conteudo := lanc.ArquivosExternos[path]
+			if !strings.Contains(string(conteudo), "# Bootstrap") {
+				t.Errorf("bootstrap.instructions.md não contém corpo do CONTEXTO.md: %s", string(conteudo))
+			}
+		}
+	}
+	if !found {
+		t.Errorf("bootstrap.instructions.md não encontrado no bundle. Paths: %v", keysOfExternal(lanc.ArquivosExternos))
+	}
+}
+
 func keysOfExternal(m map[string][]byte) []string {
 	keys := make([]string, 0, len(m))
 	for k := range m {
