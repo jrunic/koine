@@ -69,11 +69,13 @@ jobs:
       - name: Compute version
         id: version
         run: |
-          REF="${{ github.ref_name }}"
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="dev-$(git rev-parse --short HEAD)"
+          EVENT="${{ github.event_name }}"
+          if [ "${EVENT}" = "push" ]; then
+            # push de tag — usa tag sem o prefixo 'v'
+            VERSION="${GITHUB_REF_NAME#v}"
           else
-            VERSION="${REF#v}"
+            # pull_request ou workflow_dispatch — versão dev com SHA curto
+            VERSION="dev-$(git rev-parse --short HEAD)"
           fi
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Building version: ${VERSION}"
