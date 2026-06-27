@@ -1,9 +1,13 @@
 package harness
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"testing/fstest"
+
+	koine "github.com/jrunic/koine"
 )
 
 func TestAntigravityRenderizaNormal(t *testing.T) {
@@ -92,6 +96,28 @@ func TestAntigravityRenderizaBootstrap(t *testing.T) {
 	}
 	if strings.Contains(s, "escopos/") || strings.Contains(s, "kn-indice-") {
 		t.Errorf("bootstrap não deve conter escopo/índices\n--- output ---\n%s", s)
+	}
+}
+
+func TestAntigravity_BootstrapExplicito_IncluiContextoPath(t *testing.T) {
+	a := &Antigravity{VaultFS: koine.VaultFS, Agente: "hermes"}
+	tmpCtx := filepath.Join(t.TempDir(), "CONTEXTO.md")
+	if err := os.WriteFile(tmpCtx, []byte("---\nbootstrap: true\n---\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dados := ContextoMontado{
+		Bootstrap:    true,
+		KoineMDPath:  "/vault/KOINE.md",
+		AgentePath:   "/vault/agentes/hermes.md",
+		ContextoPath: tmpCtx,
+	}
+	lanc, err := a.Renderizar(dados)
+	if err != nil {
+		t.Fatalf("erro inesperado: %v", err)
+	}
+	saida := string(lanc.ArquivosNoWorkingDir["GEMINI.md"])
+	if !strings.Contains(saida, "@"+tmpCtx) {
+		t.Errorf("GEMINI.md não contém @%s; saída:\n%s", tmpCtx, saida)
 	}
 }
 

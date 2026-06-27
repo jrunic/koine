@@ -90,7 +90,15 @@ func resolverContextoParaWrapper(agente, pastaAbs string) (harness.ContextoMonta
 		return cm, "hermes", err
 	}
 	cm, err := contexto.Resolver(agente, pastaAbs)
-	return cm, agente, err
+	if err != nil {
+		return cm, agente, err
+	}
+	// Bootstrap explícito: agente foi forçado para Hermes no Resolver; refletir no agenteEfetivo
+	// para o adapter usar "hermes" como identidade nos arquivos gerados.
+	if cm.Bootstrap {
+		return cm, "hermes", nil
+	}
+	return cm, agente, nil
 }
 
 // materializarArquivosLocais escreve ArquivosNoWorkingDir em pastaAbs.

@@ -53,6 +53,14 @@ func (c *Copilot) Renderizar(dados ContextoMontado) (Lancamento, error) {
 	lancamento.ArquivosExternos[filepath.Join(bundleDir, "AGENTS.md")] = agentsMD
 
 	if dados.Bootstrap {
+		if dados.ContextoPath != "" {
+			conteudo, err := os.ReadFile(dados.ContextoPath)
+			if err != nil {
+				return Lancamento{}, fmt.Errorf("lendo CONTEXTO.md em bootstrap: %w", err)
+			}
+			instrPath := filepath.Join(bundleDir, ".github", "instructions", "bootstrap.instructions.md")
+			lancamento.ArquivosExternos[instrPath] = render.WraparInstructions(conteudo)
+		}
 		return lancamento, nil
 	}
 

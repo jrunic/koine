@@ -1,8 +1,10 @@
 package contexto
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	cfg "github.com/jrunic/koine/internal/config"
@@ -207,6 +209,125 @@ func TestResolverBootstrapComUsuario(t *testing.T) {
 	}
 	if filepath.Base(cm.AgentePath) != "hermes.md" {
 		t.Errorf("AgentePath %q não termina em hermes.md", cm.AgentePath)
+	}
+}
+
+// --- Bootstrap explícito (CONTEXTO.md com bootstrap: true) ---
+
+func TestResolver_BootstrapExplicito_Sucesso(t *testing.T) {
+	pastaTrabalho := t.TempDir()
+	conteudoCtx := `---
+bootstrap: true
+---
+
+# Bootstrap
+
+Hermes: inicie /kn-01.
+`
+	if err := os.WriteFile(filepath.Join(pastaTrabalho, "CONTEXTO.md"), []byte(conteudoCtx), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// configurar vault dir e config dir falsos
+	vaultDir := t.TempDir()
+	configDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(vaultDir, "agentes"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(vaultDir, "agentes", "hermes.md"), []byte("# Hermes"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(vaultDir, "KOINE.md"), []byte("# KOINE"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	origVault := lookupVaultDir
+	origConfig := lookupConfigDir
+	t.Cleanup(func() {
+		lookupVaultDir = origVault
+		lookupConfigDir = origConfig
+	})
+	lookupVaultDir = func() string { return vaultDir }
+	lookupConfigDir = func() string { return configDir }
+
+	cm, err := Resolver("hermes", pastaTrabalho)
+	if err != nil {
+		t.Fatalf("erro inesperado: %v", err)
+	}
+	if !cm.Bootstrap {
+		t.Error("esperado Bootstrap=true")
+	}
+	if cm.ContextoPath != filepath.Join(pastaTrabalho, "CONTEXTO.md") {
+		t.Errorf("ContextoPath = %q, want CONTEXTO.md da pasta", cm.ContextoPath)
+	}
+	if cm.EscopoPath != "" {
+		t.Errorf("EscopoPath = %q, esperado vazio em bootstrap", cm.EscopoPath)
+	}
+	if len(cm.IndicePaths) != 0 {
+		t.Errorf("IndicePaths = %v, esperado vazio em bootstrap", cm.IndicePaths)
+	}
+	if cm.AgentePath != filepath.Join(vaultDir, "agentes", "hermes.md") {
+		t.Errorf("AgentePath = %q, want hermes.md do vault", cm.AgentePath)
+	}
+}
+
+func TestResolver_BootstrapExplicito_AgenteNaoHermes_EmiteWarning(t *testing.T) {
+	pastaTrabalho := t.TempDir()
+	if err := os.WriteFile(filepath.Join(pastaTrabalho, "CONTEXTO.md"), []byte("---\nbootstrap: true\n---\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	vaultDir := t.TempDir()
+	configDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(vaultDir, "agentes"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(vaultDir, "agentes", "hermes.md"), []byte("# Hermes"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(vaultDir, "KOINE.md"), []byte("# KOINE"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	origVault := lookupVaultDir
+	origConfig := lookupConfigDir
+	origWarn := warnWriter
+	t.Cleanup(func() {
+		lookupVaultDir = origVault
+		lookupConfigDir = origConfig
+		warnWriter = origWarn
+	})
+	lookupVaultDir = func() string { return vaultDir }
+	lookupConfigDir = func() string { return configDir }
+
+	var buf bytes.Buffer
+	warnWriter = &buf
+
+	cm, err := Resolver("lucius", pastaTrabalho)
+	if err != nil {
+		t.Fatalf("erro inesperado: %v", err)
+	}
+	if !cm.Bootstrap {
+		t.Error("esperado Bootstrap=true")
+	}
+	if !strings.Contains(buf.String(), "lucius") || !strings.Contains(buf.String(), "Hermes") {
+		t.Errorf("warning ausente ou mal formado: %q", buf.String())
+	}
+}
+
+func TestResolver_BootstrapFalse_FluxoNormal(t *testing.T) {
+	// bootstrap: false explícito deve seguir validação normal (exige escopo)
+	pastaTrabalho := t.TempDir()
+	conteudoCtx := `---
+bootstrap: false
+---
+`
+	if err := os.WriteFile(filepath.Join(pastaTrabalho, "CONTEXTO.md"), []byte(conteudoCtx), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	_, err := Resolver("hermes", pastaTrabalho)
+	if err == nil {
+		t.Error("esperado erro de escopo ausente, got nil")
 	}
 }
 

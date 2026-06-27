@@ -79,6 +79,15 @@ func Resolver(a Aliases, chave string) (string, bool) {
 	}
 }
 
+// SetConfigDirForTesting troca lookupConfigDir e retorna função para restaurar.
+// Helper para isolamento em testes de outros pacotes (cmd/kn-agente) que
+// precisam apontar aliases.json para um diretório temporário sem usar os.Setenv.
+func SetConfigDirForTesting(novo string) func() {
+	antigo := lookupConfigDir
+	lookupConfigDir = func() string { return novo }
+	return func() { lookupConfigDir = antigo }
+}
+
 // Adicionar persiste nova entrada (lê + modifica + salva).
 func Adicionar(chave, path, from string) error {
 	a, err := Carregar()
