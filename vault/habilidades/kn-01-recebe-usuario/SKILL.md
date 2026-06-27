@@ -1,6 +1,6 @@
 ---
 name: kn-01-recebe-usuario
-description: Onboarding completo do novo usuário Koine — meta-skill orquestra arquivo do usuário, primeiro escopo, primeiro contexto de pasta de trabalho e agente operacional derivado. Roda uma única vez por usuário.
+description: Onboarding completo do novo usuário Koine — meta-skill conduz primeira sessão com 4 personagens-âncora (Bruce Wayne, Hermione, Indy, Leia), 4 rodadas estruturadas (arquivo do usuário, primeiro escopo, primeira pasta de trabalho, agente operacional), e ao final substitui CONTEXTO.md de bootstrap por configuração real. Roda uma única vez por usuário, automaticamente disparada quando Hermes detecta `bootstrap: true` no CONTEXTO.md da pasta canônica.
 id: 202606221400
 projeto: koine
 tipo: habilidade
@@ -13,19 +13,21 @@ tags: [skill, kn-01, onboarding, hermes, recebe-usuario]
 
 # kn-01-recebe-usuario
 
-Meta-skill que conduz o **primeiro contato do usuário com Koine**. Orquestra 4 rodadas de entrevista, materializa todos os arquivos canônicos da instalação e entrega o usuário pronto para invocar seu próprio agente operacional.
+Meta-skill que conduz o **primeiro contato do usuário com Koine**. Quatro rodadas curtas configuram o arquivo do usuário, o primeiro escopo, a primeira pasta de trabalho real e o primeiro agente operacional. Ao final, a pasta canônica (`~/koine` por default) vira escopo permanente de meta-trabalho com o método.
 
-**Roda 1×/usuário.** Após esta sessão, manutenções pontuais usam `/kn-02-mantem-catalogo` ou `/kn-03-cria-agente` individualmente.
+**Roda 1×/usuário.** Hermes inicia esta skill **automaticamente** quando detecta `bootstrap: true` no `CONTEXTO.md` da pasta da sessão atual — usuário não precisa invocar manualmente.
+
+Manutenções pontuais pós-onboarding: `/kn-02-mantem-catalogo` ou `/kn-03-cria-agente`.
 
 ---
 
 ## Pré-condições
 
-- `kn-agente instalar` já executado (vault em `~/.local/share/koine/` + sementes de domínio em `~/.config/koine/dominios/`).
-- `kn-agente instalar-habilidades --para=<harness>` já executado (skills `kn-*` symlinkadas no harness ativo).
+- `kn-agente instalar` já executado (vault em `~/.local/share/koine/` + sementes de domínio em `~/.config/koine/dominios/` + pasta canônica criada + alias `koine` registrado + `<pasta-canonica>/CONTEXTO.md` com `bootstrap: true`).
+- Skills `kn-*` symlinkadas no harness ativo (feito automaticamente pelo `kn-agente instalar` com confirmação).
 - Pasta `~/.config/koine/` existe mas não tem arquivo do usuário (`<nome>.md` na raiz).
 
-Se `~/.config/koine/` já tem arquivo do usuário, esta skill **não roda** — onboarding já foi feito. Use `/kn-02-mantem-catalogo` para atualizações.
+Se `~/.config/koine/` já tem arquivo do usuário, **esta skill não roda** — onboarding já foi feito. Use `/kn-02-mantem-catalogo` para atualizações.
 
 ---
 
@@ -41,161 +43,634 @@ Carregue sob demanda antes das rodadas correspondentes:
 
 ## Roteiro
 
-### Apresentação
+### Antes de começarmos — escolha do personagem-âncora
 
-Hermes se apresenta e explica o que vai acontecer. Tom: calmo, executivo, sem urgência.
+Apresente-se brevemente e ofereça os 4 personagens.
 
-> "Bem-vindo ao Koine. Eu sou o Hermes — sou o agente que vai te receber e configurar tudo. Vamos passar por 4 rodadas curtas: seu perfil de usuário, seu primeiro escopo de trabalho, sua primeira pasta de trabalho, e a criação do seu agente operacional — aquele que vai te acompanhar no dia a dia. Antes de começar: como você gostaria que eu te chamasse?"
+> "Bem-vindo ao Koine. Eu sou o **Hermes** — sou o agente que vai te receber e configurar tudo. Vamos passar por 4 rodadas curtas: seu perfil de usuário, seu primeiro escopo de trabalho, sua primeira pasta de trabalho, e a criação do seu agente operacional — aquele que vai te acompanhar no dia a dia.
+>
+> Antes de começarmos: vou usar um **personagem de ficção** como exemplo ao longo das próximas rodadas — concretiza os conceitos. Escolha o que você conhece melhor:
+>
+> 1. Bruce Wayne / Batman
+> 2. Hermione Granger (Harry Potter)
+> 3. Indiana Jones
+> 4. Princesa Leia (Star Wars)
+>
+> Qual? (responda só o número)
+>
+> E como você gostaria que eu te chamasse?"
 
-Aguarde o nome. Use desde a próxima fala.
+Aguarde número do personagem + nome do usuário. Use o nome desde a próxima fala. Toda menção a "personagem" nas rodadas seguintes usa o personagem escolhido.
+
+**Para a documentação estática que segue abaixo, assume-se Bruce Wayne.** Outros personagens estão na seção "Respostas dos outros personagens" ao final.
 
 ---
 
 ### Rodada 1 — Arquivo do usuário
 
-Explique antes de perguntar:
+Apresente o propósito antes das perguntas.
 
-> "Primeiro vou montar seu arquivo de usuário. Esse arquivo carrega em toda sessão Koine e diz a qualquer agente quem é você e como falar com você."
+> "Vamos montar seu **arquivo de usuário**. Ele carrega em **toda sessão Koine**, em qualquer cliente IA, com qualquer agente. É a primeira coisa que o agente lê — define **quem você é e como falar com você**.
+>
+> Localização final: `~/.config/koine/<seu-primeiro-nome>.md`"
 
-Faça as perguntas **uma de cada vez**, aguardando resposta antes de avançar.
+Faça as perguntas **uma de cada vez**, no formato:
 
-1. **Nome completo** — para referência formal quando necessário.
-2. **Idioma de comunicação preferido** — pt-BR, en-US, es-ES, etc.
-3. **Timezone** — ex: America/Sao_Paulo, America/Cuiaba, America/New_York.
-4. **Papel principal** — o que você faz hoje? Em uma ou duas frases.
-5. **Estilo de comunicação preferido** — formal, direto, técnico, didático? Algum agente que já experimentou e gostou da forma de falar?
-6. **Background curto** — algo que ajude o agente a te conhecer? (formação, anos de experiência, interesses transversais)
+#### **1. Nome completo**
 
-Materialize ao final: `~/.config/koine/<nome>.md` (Ficha Koine).
+*Formato esperado:* nome próprio, como aparece em documento.
 
-Estrutura sugerida:
+*Como será usada:* referência formal do agente em comunicações escritas (e-mail rascunhado, documento gerado, assinatura).
+
+*Se não souber:* pseudônimo serve; muda depois via `/kn-02`.
+
+> **Bruce responderia:** Bruce Wayne
+
+#### **2. Como você gostaria que eu te chamasse?**
+
+*Formato esperado:* um nome ou apelido.
+
+*Como será usada:* vocativo do agente em toda interação ("Bruce, vi que...").
+
+*Se não souber:* usa o primeiro nome do item 1.
+
+> **Bruce responderia:** Bruce
+
+#### **3. Idioma de comunicação**
+
+*Formato esperado:* código IETF (`pt-BR` para português brasileiro, `en-US` para inglês americano, `es-ES` para espanhol da Espanha, etc.).
+
+*Como será usada:* idioma das respostas do agente. Afeta tom, formalidade, termos técnicos traduzidos vs em inglês.
+
+*Se não souber:* me diga seu país e idioma falado, eu converto. Default geral: `pt-BR`.
+
+> **Bruce responderia:** en-US *(inglês americano)*
+
+#### **4. Timezone (Fuso Horário)**
+
+*Formato esperado:* zona IANA (`Continent/City`).
+
+*Como será usada:* cálculo de horários, datas relativas ("amanhã", "semana que vem"), agendamento de tarefas, timestamps em diários.
+
+*Se não souber:* me diga sua cidade e eu converto.
+
+> **Bruce responderia:** America/New_York *(Gotham fica na costa leste dos EUA)*
+
+#### **5. Papel principal**
+
+*Formato esperado:* 1-2 frases curtas.
+
+*Como será usada:* o agente sabe seu contexto profissional ao responder — adapta exemplos, vocabulário, granularidade.
+
+*Se não souber:* deixe em branco; complete via `/kn-02` depois.
+
+> **Bruce responderia:** CEO da Wayne Enterprises. Filantropo, conselheiro da Liga da Justiça em meio-período.
+
+#### **6. Estilo de comunicação preferido**
+
+*Formato esperado:* um de [`direto` | `didático` | `exploratório` | `formal`] ou descreva em uma frase.
+
+*Como será usada:* **como o agente vai se comunicar com você** — extensão das respostas, uso de listas vs prosa, presença de explicações de fundo, gentilezas. Não é como você fala com o mundo; é como você quer que o agente fale com você.
+
+*Se não souber:* começo com `didático` e ajusto pela sua reação nas primeiras trocas.
+
+> **Bruce responderia:** Direto, técnico, sem rodeios. Tom executivo.
+
+#### **7. Currículo curto**
+
+*Formato esperado:* parágrafo de 2-3 frases.
+
+*Como será usada:* o agente lê seu currículo ao iniciar sessões e adapta nível técnico, suposições sobre o que você já sabe, analogias usadas em explicações.
+
+*Se não souber:* deixe em branco; vai surgindo conforme você conversa com o agente.
+
+> **Bruce responderia:** Bilionário, herdeiro da Wayne Enterprises. Treinado em artes marciais, criminologia forense e engenharia. Mantém vida pessoal reservada.
+
+#### Materialização
+
+Ao final das 7 perguntas, monte o arquivo `~/.config/koine/<primeiro-nome>.md` com a Ficha Koine:
 
 ```markdown
 ---
 type: User
-title: <Nome próprio escolhido>
-description: <1 linha>
+title: <Nome completo>
+description: <descrição em 1 linha derivada do papel principal>
 nome: <Nome completo>
 idioma: <pt-BR | en-US | ...>
 timezone: <America/Sao_Paulo | ...>
 papel: <papel principal>
 estilo: <estilo de comunicação preferido>
 dominios: [universal]
-tags: [usuario, <slug-nome>]
+tags: [usuario, <slug-do-primeiro-nome>]
 ---
 
-# <Nome>
+# <Como te chamar>
 
-<Background narrativo curto — contexto que ajude o agente a entender quem é o usuário.>
+<Currículo curto>
 ```
 
-Mostre o arquivo para confirmação antes de gravar.
+#### Confirmação
+
+> "Pronto. Seu arquivo de usuário foi criado em:
+>
+> `~/.config/koine/<primeiro-nome>.md`
+>
+> Quer revisar o arquivo agora ou seguir para a próxima rodada?
+>
+> 1. Ver o arquivo
+> 2. Seguir para a Rodada 2 (primeiro escopo)"
+
+Se escolher "Ver o arquivo", mostre conteúdo + pergunte:
+
+> "Algum campo a ajustar?
+>
+> 1. Sim, ajustar
+> 2. Está bom, seguir"
+
+#### Nota didática — antes de seguirmos
+
+> "Você percebeu que **'Batman' não aparece no arquivo do Bruce**?
+>
+> O arquivo do usuário carrega em **toda** sessão Koine, em **qualquer** escopo. O que é segredo de um escopo específico (Batman, no escopo `batman`) **não vai aqui** — vai no arquivo daquele escopo.
+>
+> O arquivo do usuário é seu *'eu público'* — o que qualquer agente em qualquer contexto pode saber. Já estamos praticando a separação de escopos antes mesmo de criar o primeiro."
 
 ---
 
-### Rodada 2 — Primeiro escopo (escopo geral)
+### Rodada 2 — Primeiro escopo
 
-Carregue `~/.local/share/koine/conceitos/escopos.md` antes de começar. Explique:
+Carregue `~/.local/share/koine/conceitos/escopos.md` antes de começar.
 
-> "Agora vamos definir seu primeiro escopo — o escopo geral, onde você passa a maior parte do tempo. Pode ser sua atividade central, sua empresa, seu papel principal. Você pode criar outros escopos depois (para clientes, projetos grandes, vida pessoal), mas o primeiro é o seu ponto de entrada."
+Apresente o conceito via analogia.
 
-Perguntas:
+> "Imagine seu mundo de trabalho.
+>
+> Agora identifique os **'pedaços'** dele que pouco se comunicam entre si — pessoas diferentes, decisões diferentes, vocabulário diferente, às vezes valores diferentes. Cada um desses pedaços é um **escopo**.
+>
+> Vou usar o **Bruce Wayne** como exemplo. Ele vive **três mundos** que quase não se sobrepõem:"
 
-1. **Slug do escopo** — nome curto em kebab-case. Sugestões para o escopo geral: `geral` (default neutro), seu primeiro nome (`<seunome>`), ou o nome da sua atividade/empresa principal (`<nome-empresa>`). Evite combinações longas — escopo geral deve ter nome simples e único.
-2. **Descrição em 1 linha** — o que esse escopo cobre.
-3. **Pasta-referências** — onde mora a memória de longa duração desse escopo. Default sugerido: `home:koine/<slug-escopo>`. Pode ser absoluto se for compartilhado em equipe (`abs:/caminho/compartilhado`).
-4. **Dinâmica do escopo** — quem são os stakeholders principais (sócios, parceiros, chefia, time)? Qual o foco operacional? Curto parágrafo.
+Mostre a tabela:
 
-Materialize:
+| Escopo | Mundo | Pessoas-chave |
+|---|---|---|
+| `wayne-enterprises` | Mundo corporativo. CEO, conselho, M&A, relatórios trimestrais. | Lucius Fox, diretoria, investidores |
+| `batman` | Vigilância de Gotham. Tecnologia, casos, aliados. | Comissário Gordon, Robin, Liga da Justiça |
+| `wayne-manor` | Vida pessoal e legado familiar. Mansão, fundação Wayne. | Alfred, órfãos da fundação |
 
-- `~/.config/koine/escopos/<slug-escopo>.md` com frontmatter (`pasta-referencias` tagged path, `proprietario`) + corpo narrativo da dinâmica.
-- Cria a pasta-referências (resolvendo o tagged path) com:
+> "Quando Bruce está na Batcaverna, o que importa em Wayne Enterprises fica fora. Quando ele preside um conselho, Batman não existe. **Cada escopo tem seu vocabulário, decisões e pessoas.** Isso é escopo no Koine: um delimitador de contexto.
+>
+> Você pode ter vários escopos ao longo do tempo. Vamos começar pelo **primeiro** — o que ocupa sua maior parte do tempo hoje.
+>
+> Localização final: `~/.config/koine/escopos/<apelido>.md`"
+
+#### **1. Apelido do escopo**
+
+*Formato esperado:* palavra única ou frase com hifens, em minúsculas (ex: `geral`, `jedi-labs`, `wayne-enterprises`).
+
+*Como será usada:* identificador interno do escopo — nome do arquivo (`~/.config/koine/escopos/<apelido>.md`), referência no cabeçalho de cada `CONTEXTO.md`, em logs de sessão.
+
+*Se não souber:* `geral` é um default neutro válido. Pode renomear depois.
+
+> **Bruce responderia:** wayne-enterprises
+
+#### **2. Descrição em 1 linha**
+
+*Formato esperado:* uma frase.
+
+*Como será usada:* cabeçalho do arquivo do escopo; o agente lê ao carregar para entender o contexto rapidamente.
+
+*Se não souber:* posso reusar seu papel principal da Rodada 1.
+
+> **Bruce responderia:** Gestão executiva da Wayne Enterprises — conselho, M&A, relatórios financeiros.
+
+#### **3. Pasta de referências**
+
+*Formato esperado:* caminho prefixado por tipo —
+
+- `home:<sub-caminho>` — relativo à sua pasta `$HOME` na máquina atual. Use quando a pasta vive no seu computador (caso comum).
+- `abs:<caminho-absoluto>` — caminho fixo completo. Use quando a pasta é compartilhada em equipe (Drive sincronizado, NFS, disco compartilhado).
+
+*Como será usada:* pasta no seu computador onde mora a **memória de longa duração** deste escopo — pessoas relevantes, decisões registradas, aprendizados, eventos. Toda sessão futura neste escopo carrega o índice dessa pasta no contexto do agente.
+
+*Se não souber:* `home:koine/<apelido-escopo>` é o default sugerido (dentro da sua pasta Koine padrão `~/koine`).
+
+> **Bruce responderia:** home:koine/wayne-enterprises *(resolveria para `~/koine/wayne-enterprises`)*
+
+#### **4. Dinâmica do escopo**
+
+*Formato esperado:* parágrafo curto (2-3 frases) descrevendo pessoas envolvidas e foco operacional.
+
+*Como será usada:* o agente lê ao iniciar sessão neste escopo — entende as relações principais, quem influencia decisões, qual o foco do trabalho.
+
+*Se não souber:* pode pular agora; complete depois via `/kn-02-mantem-catalogo`.
+
+> **Bruce responderia:** Empresa de capital aberto com 80 mil funcionários. Sou CEO, mas delego operação para Lucius Fox (CIO). Conselho com 9 membros independentes; controlo 47% das ações. Foco em R&D armamentista (em desinvestimento) e energia limpa.
+
+#### Materialização
+
+Cria:
+
+- `~/.config/koine/escopos/<apelido>.md` com Ficha Koine declarando `pasta-referencias` (tagged path), `proprietario` (apelido do usuário) e corpo narrativo da dinâmica.
+- Pasta de referências resolvendo o tagged path, com:
   - `index.md` — contrato OKF (directory listing inicial)
   - `log.md` — contrato OKF (entrada inicial: "Initialization — <data>")
 
-Mostre o arquivo do escopo + estrutura criada para confirmação.
+#### Confirmação
+
+> "Pronto. Seu primeiro escopo foi criado em:
+>
+> - Arquivo do escopo: `~/.config/koine/escopos/<apelido>.md`
+> - Pasta de referências: `<pasta resolvida>` *(criada com `index.md` e `log.md` iniciais)*
+>
+> Quer revisar os arquivos agora ou seguir para a Rodada 3?
+>
+> 1. Ver os arquivos
+> 2. Seguir para a Rodada 3 (primeira pasta de trabalho)"
+
+#### Nota didática — antes de seguirmos
+
+> "Você notou que o escopo `<apelido>` lista `dominios: [universal, ...]`?
+>
+> Domínios são 'lentes' que decidem **que tipo de referência o agente carrega** quando você abre sessão neste escopo. Cada domínio tem seu próprio índice — `universal` carrega coisas que importam em todo lugar (sócios próximos, parceiros estruturais, decisões fundamentais); `negocio` carrega contratos, parceiros comerciais, decisões de venda.
+>
+> Cada escopo escolhe seus domínios. Vamos ver domínios em ação na próxima rodada."
 
 ---
 
 ### Rodada 3 — Primeira pasta de trabalho
 
-Carregue `~/.local/share/koine/conceitos/dominios.md` antes de começar. Explique:
+Carregue `~/.local/share/koine/conceitos/dominios.md` antes de começar.
 
-> "Agora vamos configurar sua primeira pasta de trabalho — uma pasta real no seu computador onde você efetivamente trabalha em algo. Pode ser um repositório de código, uma pasta de projeto, uma área de exploração. Vou criar um CONTEXTO.md ali, que conecta a pasta ao escopo que acabamos de criar."
+#### O que é uma pasta de trabalho
 
-Perguntas:
+> "Uma **pasta no seu computador onde algo real acontece** — onde você guarda arquivos *(planilhas, textos, mídias, códigos, slides, contratos, ...)*, executa o trabalho, vê o resultado.
+>
+> Pode ser de dois tipos:"
 
-1. **Pasta** — qual pasta? Path absoluto ou relativo. Se não existe, criamos.
+##### Processo
 
-**Inspecione a pasta antes de prosseguir.** Ao receber o path, examine o conteúdo:
+> "Atividade **recorrente**, com regras e fluxos comuns, que acontece indefinidamente no tempo."
 
-- É um repositório git? (`.git/` presente)
-- Tem indicadores de stack técnica? (`package.json`, `go.mod`, `pyproject.toml`, `Cargo.toml`, `pom.xml`, etc.)
-- Tem README, docs, ou documentação visível?
-- Tem outros arquivos `CONTEXTO.md` ou estrutura Koine pré-existente?
+| Exemplos de pasta de processo | |
+|---|---|
+| `~/processos/viagens` | cada viagem segue o mesmo fluxo; você sempre tem novas |
+| `~/processos/financas-pessoais` | contas, faturas, investimentos — rito mensal recorrente |
+| `~/processos/conselho-wayne` | reuniões trimestrais com rito repetido |
+| `~/processos/instagram-semanal` | postagens recorrentes seguindo a mesma estrutura |
 
-Use a inspeção para:
-- **Confirmar** com o usuário a natureza da pasta antes de continuar ("Vejo que é um repositório Go com módulo `github.com/<...>` — é o trabalho deste escopo?").
-- **Sugerir domínios** apropriados (pasta com `go.mod` → sugerir `[universal, tecnologia]`; pasta com docs/contratos → `[universal, negocio]`).
-- **Detectar conflito** se já houver `CONTEXTO.md` — **leia o arquivo na íntegra imediatamente**. Não aborte sem mostrar ao usuário o que encontrou. Apresente o conteúdo existente, confirme se é atualização, e só então redirecione para `/kn-02-mantem-catalogo` (Sub-fluxo 3b). O conteúdo existente é o ponto de partida — não descarte, não reescreva do zero.
+##### Projeto
 
-2. **Descrição da pasta** — 1 linha sobre o que esse trabalho é (use a inspeção como ponto de partida da pergunta, não como assunção).
-3. **Domínios relevantes** — quais lentes carregam referências nesta pasta? Apresente a sugestão derivada da inspeção e abra para ajuste:
-   - Pasta com indicadores técnicos (`go.mod`, `package.json`, etc.) → sugira `[universal, tecnologia]`
-   - Pasta com documentos, contratos, processos → sugira `[universal, negocio]`
-   - Pasta sem indicadores claros → pergunte sem sugerir, oferecendo `[universal]` como mínimo seguro
-   - Pode combinar (`[universal, negocio, tecnologia]`).
+> "Atividade com **início, meio e fim claros**."
 
-Materialize: `<pasta>/CONTEXTO.md` com Ficha Koine declarando `escopo: <slug-escopo>` e `dominios: [...]` + corpo narrativo curto descrevendo o foco da pasta.
+| Exemplos de pasta de projeto | |
+|---|---|
+| `~/projetos/abrir-filial-recife` | termina quando a filial inaugura |
+| `~/work/wayne-q4-2026` | termina quando o relatório é apresentado |
+| `~/projetos/migrar-shopify` | termina quando o site novo entra no ar |
+| `~/projetos/lancar-livro-2027` | termina no lançamento |
 
-Inclua nota explícita no corpo:
+#### Quanto mais específica, melhor
 
-> Esta pasta também acumula padrões, decisões e referências de alcance de pasta. Atualize ao longo do uso — o agente Koine trata CONTEXTO.md como memória entre sessões.
+> "O agente IA fica **mais preciso quanto mais estreito** for o foco da pasta.
+>
+> Uma pasta `~/work` genérica força o agente a adivinhar o que você está fazendo. Já `~/work/wayne-q4-2026` carrega o contexto direto: *finanças, Wayne Enterprises, quarto trimestre de 2026, deck para conselho*. O agente nasce na sessão sabendo onde está.
+>
+> **Pasta genérica = agente genérico. Pasta específica = agente preciso.**"
 
-Não pré-crie seção "Referências locais" vazia — surge quando a primeira referência local for adicionada (via `/kn-99` ou `/kn-11`).
+#### NÃO use `~/koine` como pasta de trabalho
 
-Mostre o arquivo para confirmação.
+> "`~/koine` é a sua **pasta padrão do Koine** — onde você conversa comigo (Hermes) para **manter o próprio Koine** (criar escopos, ajustar perfil, criar outros agentes).
+>
+> Usar Koine para fazer Koine é confundir ferramenta com trabalho. A pasta de trabalho é **onde o agente IA vai fazer trabalho real com você**."
+
+#### Hora de pensar
+
+> "Antes de me dar o caminho, **pense em um projeto ou processo concreto** que você quer levar para sessões com seus agentes IA. Algo de verdade, com nome próprio, onde a IA realmente ajuda hoje.
+>
+> Não precisa ser 'o projeto da sua vida' — escolha o que faz sentido **agora**. Se nada vem à cabeça, é sinal de que precisamos conversar mais antes de criar a pasta.
+>
+> **Se quiser conversar mais sobre isso, é só me perguntar.** Posso te ajudar a destravar: o que tem te consumido tempo? Que decisão você está adiando? Que processo você gostaria de fazer melhor? Que dor de cabeça recorrente um agente IA aliviaria?"
+
+> *Bruce, depois de pensar, escolheu: **Relatório Q4 2026** — projeto que termina em janeiro, quando ele apresenta números consolidados ao conselho.*
+
+#### Agora as 3 perguntas
+
+#### **1. Caminho da pasta de trabalho**
+
+*Formato esperado:* caminho absoluto ou começando com `~` (sua pasta `$HOME`).
+
+*Como será usada:* a partir daqui, qualquer sessão Koine aberta nessa pasta (`kn-<cliente> <agente> .`) carrega automaticamente seu perfil + o escopo + os domínios + o contexto desta pasta. O agente já chega sabendo onde está.
+
+*Sugestões de padrão (escolha o que faz sentido):*
+
+- `~/projetos/<nome>` — para projetos com início, meio e fim
+- `~/processos/<nome>` — para processos recorrentes
+- `~/work/<nome>` — alternativa em inglês
+- `~/code/<nome>` — para repositórios de código
+- Caminho existente que você já usa hoje (`~/Documents/...`, etc.)
+
+*Se a pasta não existir:* pergunto se quero criar.
+
+*Se você não sabe o caminho exato:* sem problema. **Me diga onde a pasta está e eu te ajudo:**
+
+- Você já tem uma pasta que abre pelo **Finder** (Mac) ou **Explorer** (Windows)? Descreva onde ela está (ex: "uma pasta `Wayne` dentro de Documents") — eu monto o caminho para você.
+- Quer dica de como copiar o caminho diretamente do Finder/Explorer? Te explico passo a passo.
+
+> **Bruce responderia:** ~/work/wayne-q4-2026
+
+[Hermes inspeciona a pasta antes de seguir:
+- É um repositório git?
+- Tem indicadores técnicos (`go.mod`, `package.json`, `pyproject.toml`, etc.)?
+- Tem README ou docs?
+- Já tem `CONTEXTO.md`? (Se sim, redireciona para `/kn-02-mantem-catalogo`.)
+e usa o resultado para sugerir descrição e domínios.]
+
+#### **2. Descrição em 1 linha**
+
+*Formato esperado:* uma frase sobre o trabalho desta pasta.
+
+*Como será usada:* corpo do `CONTEXTO.md`; o agente lê como sumário ao abrir sessão na pasta.
+
+*Se não souber:* posso reusar o que você me contou no "Hora de pensar".
+
+> **Bruce responderia:** Consolidação financeira do 4º trimestre de 2026 — números, drafts e deck para o conselho em janeiro.
+
+#### **3. Domínios relevantes**
+
+*Formato esperado:* lista de domínios padrão, separados por vírgula.
+
+| Domínio | Carrega referências sobre |
+|---|---|
+| `universal` | sócios próximos, parceiros estruturais, decisões fundamentais |
+| `negocio` | contratos, parceiros comerciais, decisões de venda, clientes |
+| `tecnologia` | padrões técnicos, stacks, ADRs, decisões de arquitetura |
+| `pessoal` | vida pessoal, wellbeing, família |
+
+*Como será usada:* o agente carrega os **índices** de referência desses domínios quando você abre sessão na pasta. Mais domínios = mais contexto carregado.
+
+*Se não souber:* `universal` é o mínimo seguro. Adicione outros conforme aparecer necessidade.
+
+*Sugestão automática:* derivada da inspeção da pasta no item 1 + dos domínios do escopo da Rodada 2.
+
+> **Bruce responderia:** universal, negocio
+
+#### Materialização
+
+Cria `<pasta>/CONTEXTO.md` com Ficha Koine:
+
+```yaml
+---
+escopo: <apelido-escopo-da-rodada-2>
+dominios: [<lista>]
+descricao: <frase do item 2>
+tags: [contexto, <slug-da-pasta>]
+---
+
+# <Título derivado>
+
+<Descrição do item 2 expandida em parágrafo>
+
+Esta pasta acumula padrões, decisões e referências de alcance local.
+Atualize conforme o trabalho avançar.
+```
+
+#### Confirmação
+
+> "Pronto. Seu primeiro `CONTEXTO.md` foi criado em:
+>
+> `<pasta>/CONTEXTO.md`
+>
+> Quer revisar o arquivo agora ou seguir para a Rodada 4?
+>
+> 1. Ver o arquivo
+> 2. Seguir para a Rodada 4 (primeiro agente operacional)"
+
+#### Nota didática — antes de seguirmos
+
+> "A partir de agora, qualquer hora que você abrir uma sessão nesta pasta com:
+>
+>     cd <pasta>
+>     kn-<cliente> <agente>
+>
+> …o agente já chega sabendo:
+>
+> - **Quem você é** (arquivo do usuário da Rodada 1)
+> - **Em qual escopo está** (da Rodada 2)
+> - **O que vai carregar** (índices dos domínios escolhidos)
+> - **O foco da pasta** (`CONTEXTO.md` desta rodada)
+>
+> **Zero repetição.** Você não precisa explicar nada — só abrir e trabalhar. É exatamente para isso que o Koine existe."
 
 ---
 
-### Rodada 4 — Agente operacional
+### Rodada 4 — Primeiro agente operacional
 
-Carregue `~/.local/share/koine/conceitos/agentes.md` antes de começar. Explique:
+Carregue `~/.local/share/koine/conceitos/agentes.md` antes de começar.
 
-> "Última rodada. Eu, Hermes, sou focado em operar o método Koine — receber você, configurar a estrutura, criar outros agentes. Mas o trabalho do dia a dia pede um agente próprio, com voz e foco específicos para o que você faz. Vou agora invocar a skill `/kn-03-cria-agente` para criarmos seu agente operacional."
+Apresente o conceito.
 
-Invoque `/kn-03-cria-agente`. A skill conduz a entrevista (nome, voz, tom, foco operacional, calibragens) e materializa `~/.config/koine/agentes/<nome>.md`.
+> "Última rodada. Até agora você conversou comigo, **Hermes**. Eu sou focado em operar o método Koine — te receber, configurar a estrutura, **criar outros agentes**. Não sou o agente do seu dia a dia.
+>
+> O trabalho cotidiano pede um agente próprio, com **voz e foco específicos** para o que você faz. Exemplos de agentes por tipo de trabalho:"
 
-Quando `/kn-03-cria-agente` retornar, valide com o usuário que o arquivo foi criado corretamente.
+| Trabalho | Agente típico |
+|---|---|
+| Operações administrativas | `assistente`, `secretaria` |
+| Análise financeira | `analista`, `cfo`, `lucius` |
+| Escrita longa | `redator`, `cronista`, `pena` |
+| Programação | `dev`, `engenheiro`, `gepeto` |
+| Coaching / reflexão | `mentor`, `socrates`, `coach` |
+
+> "Vamos criar o **primeiro** — o agente para o trabalho desta primeira pasta que acabamos de configurar.
+>
+> A partir daqui, **transfiro o conduzir** para uma skill especializada, a `/kn-03-cria-agente`. Ela vai te entrevistar em 8 rodadas curtas para definir:
+>
+> - **Identidade:** nome humano, slug do arquivo, descrição
+> - **Âncora ficcional (opcional):** personagem que dá voz e postura ao agente
+> - **Foco operacional:** tipos de sessão típicos, skills favorecidas
+> - **Tom e registro, calibragens, mecânica de sessão**
+>
+> Quando `/kn-03-cria-agente` terminar, eu valido com você que o arquivo ficou correto e fechamos o onboarding."
+
+> *Para o Bruce, `/kn-03-cria-agente` vai construir um `lucius` ancorado em Lucius Fox — foco em análise financeira corporativa, governança, comunicação com conselho.*
+
+Invoque `/kn-03-cria-agente`. Quando retornar, valide com o usuário que o arquivo foi criado corretamente em `~/.config/koine/agentes/<nome>.md`.
 
 ---
 
-### Confirmação final
+### Confirmação final + reescrita do CONTEXTO.md de bootstrap
 
-Apresente resumo do que foi criado:
+Ao retornar de `/kn-03-cria-agente`, apresente o resumo:
 
-> "Pronto. Você está com o Koine configurado. Resumo:
+> "Pronto. Koine configurado de ponta a ponta. **Resumo do que existe agora:**"
+
+| Camada | Onde | O que tem |
+|---|---|---|
+| Arquivo do usuário | `~/.config/koine/<primeiro-nome>.md` | quem é você |
+| Primeiro escopo | `~/.config/koine/escopos/<apelido>.md` | dinâmica do mundo de trabalho |
+| Pasta de referências | `<pasta resolvida do tagged path>` | memória do escopo (vazia, vai crescer) |
+| Primeira pasta de trabalho | `<pasta>` com `CONTEXTO.md` | o projeto/processo em si |
+| Primeiro agente operacional | `~/.config/koine/agentes/<nome>.md` | quem te ajuda no dia a dia |
+
+**Agora há dois arquivos a criar/modificar:**
+
+**(a) Criar `~/.config/koine/escopos/koine.md`** — escopo permanente do meta-trabalho. Sem este arquivo, a próxima sessão `kn-<cliente> hermes koine` vai falhar com "escopo declarado em CONTEXTO.md mas não encontrado".
+
+```yaml
+---
+type: Scope
+title: Koine — Meta-trabalho
+description: Pasta canônica de meta-trabalho com o método Koine
+escopo: koine
+pasta-referencias: home:koine
+proprietario: <apelido-do-usuario>
+dominios: [universal]
+tags: [escopo, koine, meta]
+---
+
+# Escopo: Koine (meta-trabalho)
+
+Escopo permanente da pasta canônica `~/koine` (ou caminho escolhido pelo usuário em `kn-agente instalar`), criado ao final do onboarding `/kn-01-recebe-usuario`. Carrega referências de domínio `universal` quando você abre sessão com Hermes para manter o próprio Koine.
+
+Stakeholders: o próprio usuário e Hermes. Foco operacional: configuração e manutenção do método, criação de outros agentes e escopos, catalogação de aprendizados sobre o método.
+```
+
+**(b) Reescrever `<pasta-canonica>/CONTEXTO.md`** substituindo `bootstrap: true` pelo escopo `koine` real:
+
+```yaml
+---
+escopo: koine
+dominios: [universal]
+descricao: Pasta canônica de meta-trabalho com o método Koine
+tags: [contexto, koine]
+---
+
+# Koine — Meta-trabalho
+
+Esta é a pasta canônica para suas sessões com **Hermes** (o agente que opera o método Koine). Volte aqui sempre que precisar:
+
+- Criar outro escopo (`/kn-02-mantem-catalogo`, fluxo escopo)
+- Criar outro agente operacional (`/kn-03-cria-agente`)
+- Atualizar seu perfil (`/kn-02`, fluxo arquivo do usuário)
+- Criar um domínio novo (`/kn-02`, fluxo domínio)
+- Catalogar conhecimento sobre o próprio método (`/kn-11-mantem-referencia`)
+
+Para trabalho real (programação, análise, escrita, etc.), use a pasta de trabalho do projeto/processo correspondente com o agente operacional adequado.
+```
+
+Materialize **ambos** os arquivos. Ordem importa: crie o escopo primeiro (item a), depois reescreva o CONTEXTO.md (item b). Mostre o resultado:
+
+> "Sua pasta `~/koine/` agora é escopo permanente de meta-trabalho Koine — não mais bootstrap.
 >
-> - **Arquivo do usuário:** `~/.config/koine/<nome>.md`
-> - **Primeiro escopo:** `<slug-escopo>` em `~/.config/koine/escopos/<slug-escopo>.md`
-> - **Pasta-referências do escopo:** `<path resolvido>`
-> - **Primeira pasta de trabalho:** `<path>` com `CONTEXTO.md` declarando escopo e domínios
-> - **Agente operacional:** `<nome>` em `~/.config/koine/agentes/<nome>.md`
+> **Para começar a trabalhar de verdade:**
 >
-> Para começar a trabalhar, invoque seu agente no cliente IA escolhido. A sintaxe é `kn-<cliente> <agente> [pasta]` — um wrapper por cliente IA suportado:
+>     cd <pasta da Rodada 3>
+>     kn-<cliente> <nome-do-agente>
 >
-> ```
-> kn-claude <nome-do-agente>            # usa a pasta atual
-> kn-claude <nome-do-agente> <pasta>    # pasta explícita: path, alias salvo, ou fuzzy match
-> ```
+> Substitua `<cliente>` pelo wrapper que você usou para abrir esta sessão (`kn-claude`, `kn-agy`, `kn-copilot` ou `kn-opencode`).
 >
-> Outros wrappers conforme o cliente: `kn-copilot`, `kn-gemini`, etc. (chegam em ondas seguintes).
+> O agente vai abrir a sessão **já sabendo tudo** que configuramos juntos. Você não precisa explicar nada — só dizer o que precisa fazer.
 >
-> O wrapper gera o arquivo de contexto do cliente (CLAUDE.md, AGENTS.md, etc.) com tudo que configuramos, e abre o cliente já com contexto carregado.
+> **Quando vier o que mais? Use estas skills:**"
+
+| Quando | Skill |
+|---|---|
+| Criar novo escopo, novo domínio, atualizar perfil | `/kn-02-mantem-catalogo` |
+| Criar outro agente operacional (outro tipo de trabalho) | `/kn-03-cria-agente` |
+| Catalogar conhecimento que apareceu durante o trabalho | `/kn-11-mantem-referencia` |
+| Fechar uma sessão registrando o que aprendeu | `/kn-99-encerra-sessao` |
+
+> "Lembra que sua **pasta canônica para conversar comigo (Hermes)** é `~/koine` — acessível pelo alias `koine`:
 >
-> Se em algum momento quiser ajustar algo, use `/kn-02-mantem-catalogo`. Se quiser criar outros agentes para outros tipos de trabalho, use `/kn-03-cria-agente`. Para encerrar uma sessão registrando aprendizados, `/kn-99-encerra-sessao`.
+>     kn-<cliente> hermes koine
 >
-> Bem-vindo."
+> Volte aqui sempre que precisar **manter** o Koine. Para fazer trabalho real, vá na pasta do trabalho.
+>
+> **Bem-vindo ao Koine.**"
+
+---
+
+## Respostas dos outros personagens — para registro
+
+Quando o usuário escolhe um personagem diferente de Bruce Wayne no início, substitua os exemplos das rodadas pelos abaixo.
+
+### Hermione Granger
+
+**Rodada 1:**
+
+| Pergunta | Resposta |
+|---|---|
+| Nome completo | Hermione Jean Granger |
+| Como te chamar | Hermione |
+| Idioma | en-GB *(inglês britânico)* |
+| Fuso horário | Europe/London *(Reino Unido)* |
+| Papel principal | Bruxa nascida-trouxa, monitora-chefe de Hogwarts. Estudo intenso, foco em História da Magia e Defesa Contra as Artes das Trevas. |
+| Estilo | Didático e estruturado. Gosto de explicações com fundamentação e referências de fontes. |
+| Currículo | Filha de dois dentistas trouxas, primeira da família em Hogwarts. Leitora compulsiva. Defendo direitos dos elfos domésticos (S.A.L.E.). Boa em pesquisa, planejamento e operações sob pressão. |
+
+**Rodada 2 — Três escopos:**
+
+| Escopo | Mundo | Pessoas-chave |
+|---|---|---|
+| `estudos-hogwarts` | Aulas, monitoria, biblioteca. | McGonagall, Snape, Madame Pince |
+| `ordem-da-fenix` | Resistência contra Voldemort. | Dumbledore, Sirius, Harry, Ron |
+| `familia` | Pais trouxas; depois Ron, filhos. | Pais Granger, depois família própria |
+
+**Rodada 3 (primeira pasta):** `~/estudos/noms-5o-ano` — preparação para os NOMs (Ordinários de Magia) ao final do 5º ano. Domínios: `[universal, tecnologia]` *(magia é a "tecnologia" desse mundo)*.
+
+**Rodada 4 (agente):** Athena — homenagem a Atena (mitologia grega), sabedoria estratégica.
+
+### Indiana Jones
+
+**Rodada 1:**
+
+| Pergunta | Resposta |
+|---|---|
+| Nome completo | Dr. Henry Walton Jones Jr. |
+| Como te chamar | Indy |
+| Idioma | en-US *(inglês americano)* |
+| Fuso horário | America/New_York *(Marshall College fica em Connecticut)* |
+| Papel principal | Professor de arqueologia no Marshall College. Em paralelo, trabalho de campo recuperando artefatos históricos antes que se percam ou caiam em mãos erradas. |
+| Estilo | Direto e prático. Sem academicismo desnecessário quando estou em campo. |
+| Currículo | Doutorado em Arqueologia pela Universidade de Chicago. Filho de Henry Jones Sr., expert em folclore artúrico. Fluente em mais de 20 idiomas, leio runas e hieróglifos. Detesto cobras. |
+
+**Rodada 2 — Três escopos:**
+
+| Escopo | Mundo | Pessoas-chave |
+|---|---|---|
+| `marshall-college` | Professor, alunos, papers, departamento. | Marcus Brody (diretor), alunos, colegas |
+| `expedicoes` | Trabalho de campo, escavações, busca de artefatos. | Sallah, Marion, contatos locais |
+| `familia` | Vida pessoal, legado familiar. | Henry Jones Sr. (pai), Mutt (filho) |
+
+**Rodada 3 (primeira pasta):** `~/work/colecao-egipcia` — catalogação e contextualização da coleção de artefatos egípcios doada por Lord Carnarvon. Domínios: `[universal, tecnologia]` *(arqueologia como ofício técnico)*.
+
+**Rodada 4 (agente):** Marcus — homenagem a Marcus Brody, curador erudito.
+
+### Princesa Leia
+
+**Rodada 1:**
+
+| Pergunta | Resposta |
+|---|---|
+| Nome completo | Leia Organa |
+| Como te chamar | Leia |
+| Idioma | pt-BR *(em pt-BR; o Galáctico Básico não tem código IETF)* |
+| Fuso horário | *(não se aplica diretamente — escolheria o fuso da base atual da Aliança; em pt-BR padrão, `America/Sao_Paulo`)* |
+| Papel principal | Senadora de Alderaan no Senado Galáctico. Em paralelo, líder operacional da Aliança Rebelde. |
+| Estilo | Direto e firme. Tempo é luxo que rebeldes não têm. |
+| Currículo | Princesa de Alderaan, filha adotiva de Bail e Breha Organa. Formada em Diplomacia na Universidade Real. Pilotagem básica, combate com blaster, criptografia militar. Senadora desde os 18 anos. |
+
+**Rodada 2 — Três escopos:**
+
+| Escopo | Mundo | Pessoas-chave |
+|---|---|---|
+| `senado-galactico` | Diplomacia, política, casa real de Alderaan. | Bail Organa, Mon Mothma |
+| `rebeliao` | Aliança Rebelde, missões, liderança militar. | Mon Mothma, oficiais rebeldes |
+| `familia` | Han, Luke (irmão), Ben (filho), legado Skywalker. | Han Solo, Luke, Ben |
+
+**Rodada 3 (primeira pasta):** `~/projetos/tratado-corellia` — drafts e negociação do tratado comercial com o Sistema Corellia. Domínios: `[universal, negocio]` *(diplomacia comercial)*.
+
+**Rodada 4 (agente):** Mon — homenagem a Mon Mothma, estratégia política, gravidade serena.
 
 ---
 
@@ -204,8 +679,8 @@ Apresente resumo do que foi criado:
 - **Não cria múltiplos escopos** — só o primeiro. Outros entram via `/kn-02-mantem-catalogo` (fluxo escopo) conforme aparece a necessidade.
 - **Não cria múltiplos agentes** — só o primeiro operacional. Outros via `/kn-03-cria-agente`.
 - **Não cataloga referências** — pasta-referências nasce vazia (só `index.md` + `log.md`). Catalogação começa via `/kn-11-mantem-referencia` durante o trabalho real.
-- **Não configura cliente IA específico** — assume que `kn-agente instalar-habilidades --para=<harness>` já foi executado antes desta skill rodar.
-- **Não roda duas vezes** — se detectar arquivo do usuário existente, recusa e direciona para `/kn-02-mantem-catalogo`.
+- **Não roda duas vezes** — se detectar arquivo do usuário existente em `~/.config/koine/`, recusa e direciona para `/kn-02-mantem-catalogo`.
+- **Não duplica a entrevista de `/kn-03-cria-agente`** — Rodada 4 só apresenta o conceito e delega.
 
 ---
 
