@@ -204,3 +204,61 @@ func TestOpenCodeNomeECaminho(t *testing.T) {
 		t.Errorf("CaminhoArquivoContexto = %q, want %q", got, want)
 	}
 }
+
+func TestOpenCode_BootstrapExplicito_IncluiContextoEmInstructions(t *testing.T) {
+	pastaAbs := t.TempDir()
+	tmpCtx := filepath.Join(pastaAbs, "CONTEXTO.md")
+	if err := os.WriteFile(tmpCtx, []byte("---\nbootstrap: true\n---\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	vaultDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(vaultDir, "agentes"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	hermesPath := filepath.Join(vaultDir, "agentes", "hermes.md")
+	if err := os.WriteFile(hermesPath, []byte("# Hermes"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// mock stat global → não existe (sem aviso)
+	origStat := ExportLookupStatOpenCodeGlobal()
+	SetLookupStatOpenCodeGlobal(func(string) (os.FileInfo, error) { return nil, os.ErrNotExist })
+	defer SetLookupStatOpenCodeGlobal(origStat)
+
+	o := &OpenCode{Agente: "hermes", PastaAbs: pastaAbs}
+	dados := ContextoMontado{
+		Bootstrap:    true,
+		AgentePath:   hermesPath,
+		ContextoPath: tmpCtx,
+	}
+	lanc, err := o.Renderizar(dados)
+	if err != nil {
+		t.Fatalf("erro inesperado: %v", err)
+	}
+
+	// achar o config json e parsear
+	var configBytes []byte
+	for _, b := range lanc.ArquivosExternos {
+		configBytes = b
+		break
+	}
+	if configBytes == nil {
+		t.Fatal("nenhum config gerado")
+	}
+	var cfg openCodeConfig
+	if err := json.Unmarshal(configBytes, &cfg); err != nil {
+		t.Fatalf("config inválido: %v", err)
+	}
+
+	// ContextoPath deve estar em instructions
+	found := false
+	for _, inst := range cfg.Instructions {
+		if inst == tmpCtx {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("ContextoPath %q ausente em instructions: %v", tmpCtx, cfg.Instructions)
+	}
+}

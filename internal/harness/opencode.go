@@ -67,7 +67,13 @@ func (o *OpenCode) Renderizar(dados ContextoMontado) (Lancamento, error) {
 		instructions = append(instructions, dados.UsuarioPath)
 	}
 	instructions = append(instructions, dados.AgentePath)
-	if !dados.Bootstrap {
+	if dados.Bootstrap {
+		// Bootstrap explícito: CONTEXTO.md vai direto em instructions
+		// (não há symlink AGENTS.md → CONTEXTO.md em bootstrap, ver bloco final).
+		if dados.ContextoPath != "" {
+			instructions = append(instructions, dados.ContextoPath)
+		}
+	} else {
 		if dados.EscopoPath != "" {
 			instructions = append(instructions, dados.EscopoPath)
 		}
