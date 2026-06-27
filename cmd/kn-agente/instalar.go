@@ -69,6 +69,18 @@ Use --para=<harness> para instalar skills sem prompt.`,
 			fmt.Fprintf(os.Stderr, "aviso: skills: %v\n", err)
 		}
 
+		fmt.Println()
+		fmt.Println("Para começar sua primeira sessão com Hermes:")
+		fmt.Println()
+		fmt.Println("  kn-claude hermes koine")
+		fmt.Println()
+		fmt.Println("Dentro da sessão, rode: /kn-01-recebe-usuario")
+		fmt.Println()
+		fmt.Println("Se você usa outro cliente, troque o prefixo:")
+		fmt.Println("  Antigravity:  kn-agy hermes koine")
+		fmt.Println("  Copilot CLI:  kn-copilot hermes koine")
+		fmt.Println("  OpenCode:     kn-opencode hermes koine")
+
 		return nil
 	},
 }
