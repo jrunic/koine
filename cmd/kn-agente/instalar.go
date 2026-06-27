@@ -96,8 +96,7 @@ func instalarComDeteccao(para string, interativo bool) error {
 
 	detectados := detectarHarnesses()
 	if len(detectados) == 0 {
-		fmt.Println("  (nenhum harness detectado no PATH)")
-		fmt.Println("  → Instale um cliente IA e rode: kn-agente instalar-habilidades --para=<harness>")
+		fmt.Print(mensagemOrientativaSemHarness())
 		return nil
 	}
 
