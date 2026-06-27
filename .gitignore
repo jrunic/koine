@@ -6,6 +6,10 @@
 *.dylib
 /kn-agente
 /kn-agente-*
+/kn-claude
+/kn-agy
+/kn-copilot
+/kn-opencode
 
 # Diretório de build/release
 dist/
