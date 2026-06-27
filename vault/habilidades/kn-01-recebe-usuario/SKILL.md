@@ -364,11 +364,11 @@ Apresente o conceito via analogia.
 
 > **Bruce responderia:** Empresa de capital aberto com 80 mil funcionários. Sou CEO, mas delego operação para Lucius Fox (CIO). Conselho com 9 membros independentes; controlo 47% das ações. Foco em R&D armamentista (em desinvestimento) e energia limpa.
 >
-> **Hermione responderia:** Escola de magia em regime de internato. Sou aluna do 5º ano e monitora-chefe da Grifinória. McGonagall é minha chefe de casa e mentora principal; Madame Pince me conhece da biblioteca. Foco no ano são os NOMs ao final do ano letivo.
+> **Hermione responderia:** Escola de magia em regime de internato. Sou aluna do 5º ano e monitora (prefect) da Grifinória. McGonagall é minha chefe de casa e mentora principal; Madame Pince me conhece da biblioteca. Foco do ano são os NOMs ao final do ano letivo.
 >
-> **Indy responderia:** Universidade de pequeno porte na Nova Inglaterra. Sou professor titular do departamento de arqueologia; Marcus Brody é o diretor do museu e meu mentor. Carga semestral de 2 disciplinas, orientação de teses, comitês ocasionais. Foco em culturas pré-cristãs do Mediterrâneo.
+> **Indy responderia:** Universidade de pequeno porte na Nova Inglaterra. Sou professor de arqueologia no Marshall College; Marcus Brody é decano e meu mentor de longa data. Carga semestral de 2 disciplinas, orientação de teses, comitês ocasionais. Foco em artefatos do Mediterrâneo antigo e Oriente Próximo.
 >
-> **Leia responderia:** Câmara legislativa da República — milhares de senadores, blocos políticos, comitês. Sou senadora júnior de Alderaan, alinhada com Mon Mothma e Bail Organa. Foco em comitês de comércio interestelar e direitos civis, num momento de tensão crescente com o Imperador.
+> **Leia responderia:** Senado Imperial — milhares de senadores, blocos políticos, comitês. Sou a senadora de Alderaan (aos 19 anos), alinhada com Mon Mothma e meu pai Bail Organa. Foco em comitês de comércio interestelar e direitos civis, num momento de tensão crescente com o Imperador.
 
 #### Materialização
 
