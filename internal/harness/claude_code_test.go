@@ -1,9 +1,13 @@
 package harness
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"testing/fstest"
+
+	koine "github.com/jrunic/koine"
 )
 
 func TestClaudeCodeRenderiza(t *testing.T) {
@@ -128,6 +132,28 @@ func TestRenderizarBootstrapSemUsuario(t *testing.T) {
 	}
 	if !strings.Contains(s, "@/vault/KOINE.md") {
 		t.Errorf("output deve conter @KoineMDPath\n--- output ---\n%s", s)
+	}
+}
+
+func TestClaudeCode_BootstrapExplicito_IncluiContextoPath(t *testing.T) {
+	cc := &ClaudeCode{VaultFS: koine.VaultFS, Agente: "hermes"}
+	tmpCtx := filepath.Join(t.TempDir(), "CONTEXTO.md")
+	if err := os.WriteFile(tmpCtx, []byte("---\nbootstrap: true\n---\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dados := ContextoMontado{
+		Bootstrap:    true,
+		KoineMDPath:  "/vault/KOINE.md",
+		AgentePath:   "/vault/agentes/hermes.md",
+		ContextoPath: tmpCtx,
+	}
+	lanc, err := cc.Renderizar(dados)
+	if err != nil {
+		t.Fatalf("erro inesperado: %v", err)
+	}
+	saida := string(lanc.ArquivosNoWorkingDir["CLAUDE.md"])
+	if !strings.Contains(saida, "@"+tmpCtx) {
+		t.Errorf("CLAUDE.md não contém @%s; saída:\n%s", tmpCtx, saida)
 	}
 }
 
