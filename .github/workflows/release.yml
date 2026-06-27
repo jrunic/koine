@@ -98,3 +98,100 @@ jobs:
           path: dist/${{ matrix.asset }}
           retention-days: 7
           if-no-files-found: error
+
+  release:
+    name: Publish Release
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify install scripts exist
+        run: |
+          missing=0
+          for script in install.sh install.ps1 install.bat; do
+            if [ ! -f "scripts/release/${script}" ]; then
+              echo "::error::scripts/release/${script} not found — spec B2 not merged yet?"
+              missing=1
+            fi
+          done
+          if [ "${missing}" = "1" ]; then
+            exit 1
+          fi
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Copy install scripts to dist
+        run: |
+          cp scripts/release/install.sh dist/
+          cp scripts/release/install.ps1 dist/
+          cp scripts/release/install.bat dist/
+          ls -lh dist/
+
+      - name: Generate SHA256SUMS
+        run: |
+          cd dist
+          sha256sum -- * > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Detect pre-release
+        id: prerelease
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [[ "${TAG}" == *-* ]]; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract release notes from CHANGELOG
+        id: notes
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          NOTES_FILE=$(mktemp)
+
+          if [ "${{ steps.prerelease.outputs.is_prerelease }}" = "true" ]; then
+            echo "Pre-release ${TAG} — automated build for validation. See main release notes for details." > "${NOTES_FILE}"
+            echo "notes_path=${NOTES_FILE}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Release oficial: exige seção no CHANGELOG
+          awk "/^## \\[${VERSION}\\]/{flag=1; next} /^## \\[/{flag=0} flag" CHANGELOG.md > "${NOTES_FILE}"
+
+          if [ ! -s "${NOTES_FILE}" ]; then
+            echo "::error::CHANGELOG.md has no entry for ## [${VERSION}] — update CHANGELOG before re-publishing the tag."
+            exit 1
+          fi
+
+          echo "notes_path=${NOTES_FILE}" >> "$GITHUB_OUTPUT"
+          echo "---- Release notes ----"
+          cat "${NOTES_FILE}"
+          echo "---- End ----"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: ${{ steps.notes.outputs.notes_path }}
+          prerelease: ${{ steps.prerelease.outputs.is_prerelease == 'true' }}
+          files: |
+            dist/kn-agente-darwin-arm64
+            dist/kn-agente-darwin-amd64
+            dist/kn-agente-linux-amd64
+            dist/kn-agente-windows-amd64.exe
+            dist/install.sh
+            dist/install.ps1
+            dist/install.bat
+            dist/SHA256SUMS
+          fail_on_unmatched_files: true
