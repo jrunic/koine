@@ -2,6 +2,7 @@ package contexto
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -16,11 +17,15 @@ import (
 var lookupConfigDir = paths.ConfigDir
 var lookupVaultDir = paths.VaultDir
 
+// warnWriter é injetável para testes — destino de warnings (default os.Stderr).
+var warnWriter io.Writer = os.Stderr
+
 // CtxLocal representa o frontmatter de <pasta>/CONTEXTO.md.
 // Campos mínimos para resolução; outros campos do frontmatter são ignorados.
 type CtxLocal struct {
-	Escopo   string   `yaml:"escopo"`
-	Dominios []string `yaml:"dominios"`
+	Escopo    string   `yaml:"escopo"`
+	Dominios  []string `yaml:"dominios"`
+	Bootstrap bool     `yaml:"bootstrap"`
 }
 
 // Resolver carrega CONTEXTO.md em <pasta>, resolve escopo e domínios,
@@ -45,6 +50,25 @@ func Resolver(agente, pasta string) (harness.ContextoMontado, error) {
 	if err != nil {
 		return harness.ContextoMontado{}, err
 	}
+
+	// Bootstrap explícito: bypassa validação de escopo/dominios; agente forçado para Hermes.
+	if ctx.Bootstrap {
+		if agente != "hermes" {
+			fmt.Fprintf(warnWriter,
+				"kn-agente: CONTEXTO.md em modo bootstrap em %s — carregando Hermes (em vez de %q) para guiar a configuração inicial\n",
+				pasta, agente,
+			)
+		}
+		usuarioPath, _ := config.AcharCaminhoUsuario()
+		return harness.ContextoMontado{
+			Bootstrap:    true,
+			UsuarioPath:  usuarioPath,
+			KoineMDPath:  filepath.Join(lookupVaultDir(), "KOINE.md"),
+			AgentePath:   filepath.Join(lookupVaultDir(), "agentes", "hermes.md"),
+			ContextoPath: contextoPath,
+		}, nil
+	}
+
 	if ctx.Escopo == "" {
 		return harness.ContextoMontado{}, fmt.Errorf("%s: campo `escopo:` ausente ou vazio", contextoPath)
 	}
