@@ -10,12 +10,24 @@ tags: [referencia, cli, kn-agente]
 
 ## `kn-agente` — motor administrativo
 
-### `kn-agente instalar [--force]`
+### `kn-agente instalar [--force] [--para=<harness>]`
 
-Extrai o vault embutido para `~/.local/share/koine/`, planta domínios canônicos em `~/.config/koine/dominios/`, cria symlinks de cliente (`kn-claude`, `kn-agy`, `kn-copilot`, `kn-opencode`) no mesmo diretório do binário.
+Comando único de configuração inicial. Executa as fases:
 
-- Idempotente. Sem `--force`, detecta divergências e lista; não sobrescreve.
-- Com `--force`: sobrescreve mesmo divergências.
+1. **Extração do vault** — embed `vault/` → `~/.local/share/koine/`
+2. **Plantio de domínios canônicos** — `~/.config/koine/dominios/` (universal, negocio, tecnologia, pessoal)
+3. **Symlinks de cliente** — `kn-claude`, `kn-agy`, `kn-copilot`, `kn-opencode` no mesmo diretório do binário
+4. **Pasta canônica + alias** — prompt-com-default (default `~/koine`); cria pasta; registra alias `koine` em `~/.config/koine/aliases.json`; gera `<pasta>/CONTEXTO.md` com `bootstrap: true` a partir do embed `vault/bootstrap/CONTEXTO.md`
+5. **Skills de harness** — detecta clientes IA no PATH; para cada detectado, prompt `Y/n` para instalar skills `kn-*`. Se zero detectados, exibe orientação completa (Node.js, Homebrew em macOS, lista dos 4 clientes IA com comandos por OS)
+
+Flags:
+
+- `--force` — sobrescreve arquivos divergentes do embed sem prompt.
+- `--para=<harness>` — instala skills do harness especificado sem prompt (suportados: `claude`, `agy`, `copilot`, `opencode`).
+
+Idempotente em todas as fases. Em modo não-interativo (stdin sem TTY), aceita defaults sem prompts.
+
+Modo não-interativo é detectado via `golang.org/x/term`.
 
 ### `kn-agente gerar <agente> [pasta]`
 
@@ -58,14 +70,40 @@ Sintaxe canônica para abrir sessão de cliente IA com contexto Koine.
 
 ### Modo bootstrap
 
-Quando a pasta não tem `CONTEXTO.md`, o wrapper entra em **modo bootstrap**:
+Dois caminhos disparam carregamento reduzido (sem escopo nem domínios):
 
-1. Detecta ausência de `CONTEXTO.md`.
+**1. Bootstrap implícito** — pasta sem `CONTEXTO.md`:
+
+1. Wrapper detecta ausência do arquivo.
 2. Sempre usa `hermes` (independente do `<agente>` passado).
-3. Gera contexto reduzido: usuário + KOINE.md + Hermes (sem escopo, sem índices).
+3. Gera contexto reduzido: usuário + KOINE.md + Hermes.
 4. Lança o cliente.
 
 Hermes guia o usuário a criar o contexto via `/kn-02-mantem-catalogo` (fluxo contexto).
+
+**2. Bootstrap explícito** — `CONTEXTO.md` com `bootstrap: true` no cabeçalho:
+
+1. `Resolver` lê o arquivo e detecta o flag.
+2. Bypassa validação de escopo/dominios obrigatórios.
+3. Carrega contexto reduzido + **inclui o corpo do CONTEXTO.md** (com instruções para Hermes).
+4. Força agente Hermes (emite warning se `<agente>` solicitado era outro).
+5. Lança o cliente.
+
+Este caminho é usado pelo `kn-agente instalar` para a pasta canônica `~/koine` — o `CONTEXTO.md` gerado instrui Hermes a iniciar `/kn-01-recebe-usuario` automaticamente. Ao final do onboarding, `/kn-01` reescreve o `CONTEXTO.md` substituindo `bootstrap: true` pelo escopo `koine` real, e o caminho de bootstrap explícito deixa de disparar.
+
+Ver ADR `20260627-bootstrap-flag-em-contexto-md.md`.
+
+### `kn-agente instalar-habilidades --para=<harness>`
+
+Caminho administrativo separado para instalar (symlinkar) skills `kn-*` no harness alvo. Útil quando você instalou um cliente IA **depois** do `kn-agente instalar` inicial e quer adicionar as skills sem re-rodar a instalação inteira.
+
+Harnesses suportados:
+- `claude` → `~/.claude/skills/`
+- `agy` → `~/.gemini/antigravity-cli/skills/`
+- `copilot` → `~/.copilot/skills/`
+- `opencode` → `~/.config/opencode/skills/`
+
+`kn-agente instalar` chama esta lógica internamente; uso direto é só para casos pontuais.
 
 ## Estrutura de configuração em runtime
 
