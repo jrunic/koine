@@ -6,6 +6,43 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-06-28
+
+Segunda release pública. Onboarding um-comando, install scripts cross-platform,
+schema CONTEXTO.md com flag `bootstrap`, skill `/kn-01-recebe-usuario` reescrita
+com 4 personagens-âncora, pipeline de release automatizado. Cobertura: PRs #1
+a #6 (mergeadas entre 2026-06-26 e 2026-06-28).
+
+### Added
+
+- **Install scripts** publicados como assets do GitHub Release: `install.sh` (Unix), `install.ps1` (Windows PowerShell), `install.bat` (Windows cmd com `-ExecutionPolicy Bypass` inline para contornar restrições corporativas). PR #4.
+- **Pasta canônica em `kn-agente instalar`**: cria pasta com prompt-com-default (default `~/koine`), registra alias `koine` em `~/.config/koine/aliases.json`, gera `CONTEXTO.md` de bootstrap a partir de embed `vault/bootstrap/CONTEXTO.md`. PR #3.
+- **Schema `CONTEXTO.md` com flag `bootstrap: true`** — campo opcional retrocompatível; `Resolver()` bypassa validação de escopo/dominios quando setado; emite warning se agente solicitado != Hermes. ADR `docs/decisoes/20260627-bootstrap-flag-em-contexto-md.md`. PR #3.
+- **Bootstrap explícito nos 4 adapters de harness** (Claude, Antigravity, Copilot, OpenCode): carregam corpo do `CONTEXTO.md` no contexto do cliente IA quando `bootstrap: true` está presente. PR #3.
+- **Pipeline de release automatizado** em `.github/workflows/release.yml`: cross-compile para `darwin-arm64`/`darwin-amd64`/`linux-amd64`/`windows-amd64`, gera `SHA256SUMS`, publica binários + scripts + checksums em GitHub Release ao push de tag `v*`. PR #2.
+- **Mensagem orientativa quando zero clientes IA detectados** em `kn-agente instalar`: bloco Node.js (se ausente, com comandos por OS), bloco Homebrew (se ausente em macOS), lista dos 4 clientes IA suportados com comando de instalação por OS. PR #4.
+- **Tutorial passo a passo** `docs/tutoriais/onboarding-completo.md` cobrindo do install até o primeiro agente operacional configurado, com resolução de problemas. PR #6.
+- **Referência das 5 skills** em `docs/referencias/habilidades.md` com tabela compacta + sub-seções detalhadas (trigger, inputs, outputs, skills relacionadas). PR #6.
+- **Dependência `golang.org/x/term`** para detecção de terminal cross-platform (PATH não atualizado, modo interativo vs CI). ADR `docs/decisoes/20260626-golang-x-term-deteccao-terminal.md`. PR #1.
+
+### Changed
+
+- **`/kn-01-recebe-usuario` SKILL.md reescrito** com 4 personagens-âncora (Bruce Wayne, Hermione Granger, Indiana Jones, Princesa Leia) em respostas inline lado-a-lado por pergunta — zero adaptação mental do agente. Formato padronizado: `Formato esperado`, `Como será usada`, `Se não souber`. Vocabulário pt-BR (apelido, cabeçalho, caminho, pasta padrão). Rodada 4 delega para `/kn-03-cria-agente` sem duplicar entrevista. Mensagem final usa `kn-<cliente>` dinâmico. Ao final do onboarding, reescreve `CONTEXTO.md` de bootstrap substituindo `bootstrap: true` por escopo `koine` permanente + cria `~/.config/koine/escopos/koine.md`. PR #5.
+- **`kn-agente instalar` detecta harnesses no PATH** e oferece instalação de skills `kn-*` com prompt `Y/n`; aceita flag `--para=<harness>` para bypass. PR #1.
+- **`harnessSuportados` expandido** para os 4 clientes IA: `claude` → `.claude/skills`, `agy` → `.gemini/antigravity-cli/skills`, `copilot` → `.copilot/skills`, `opencode` → `.config/opencode/skills`. PR #1.
+- **`docs/referencias/cli.md` atualizado** com as 5 fases de `kn-agente instalar` e a distinção entre bootstrap implícito (sem CONTEXTO.md) e bootstrap explícito (com `bootstrap: true`). PR #6.
+
+### Removed
+
+- **`docs/tutoriais/instalacao-primeira-sessao.md`** — substituído por `onboarding-completo.md` (fluxo manual obsoleto). PR #6.
+
+### Notes
+
+- Binários macOS ainda não são notarizados; usuário pode ver alerta "Apple não pôde verificar" na primeira execução. Mitigação: `xattr -d com.apple.quarantine ~/.local/bin/kn-agente`.
+- Binários Windows ainda não são assinados; pode disparar SmartScreen. Mitigação: comparar SHA-256 com `SHA256SUMS` publicado no release.
+- Schema do `CONTEXTO.md` permanece retrocompatível: arquivos sem `bootstrap:` continuam funcionando como antes.
+- Pre-release `v0.2.0-rc1` foi pulada — `v0.2.0` é o primeiro release público com binários e scripts.
+
 ## [0.1.0] — 2026-06-26
 
 Initial public release.
@@ -31,5 +68,6 @@ Initial public release.
 First public release. API, on-disk layout, vault contents and adapter
 behavior may evolve until 1.0.
 
-[Unreleased]: https://github.com/jrunic/koine/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/jrunic/koine/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/jrunic/koine/releases/tag/v0.2.0
 [0.1.0]: https://github.com/jrunic/koine/releases/tag/v0.1.0

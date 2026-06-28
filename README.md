@@ -18,55 +18,85 @@ Koine resolve isso separando o que normalmente vem embaralhado em "memória de a
 
 Cada camada evolui em ritmo próprio. O agente IA passa a "já saber" quem você é, no que está trabalhando e onde está, sem precisar contar de novo a cada turno.
 
+## Pré-requisitos
+
+Para Koine fazer sentido, você precisa de:
+
+- **Um cliente IA terminal** suportado — Claude Code, Antigravity, GitHub Copilot CLI ou OpenCode. Tabela abaixo na seção [Clientes IA suportados](#clientes-ia-suportados).
+- **Node.js 18+** (recomendado 22+) — necessário para instalar Claude Code e Copilot CLI via `npm`. Download: <https://nodejs.org/>.
+- **Homebrew** (opcional em macOS) — gerenciador recomendado para instalar Node e clientes IA. Instalar: <https://brew.sh/>.
+
+Se você rodar `kn-agente instalar` sem cliente IA detectado, o próprio binário orienta o que falta com comandos por OS — não precisa decorar nada agora.
+
 ## Instalação
 
-Baixe o binário do release mais recente para sua plataforma:
+### macOS / Linux
 
 ```bash
-# macOS / Linux — exemplo (substitua o sufixo pela sua plataforma)
-curl -L https://github.com/jrunic/koine/releases/latest/download/kn-agente-darwin-arm64 -o /usr/local/bin/kn-agente
-chmod +x /usr/local/bin/kn-agente
+curl -fsSL https://github.com/jrunic/koine/releases/latest/download/install.sh | sh
 ```
 
-Plataformas suportadas: `darwin-arm64`, `darwin-amd64`, `linux-amd64`, `windows-amd64`.
+### Windows (Command Prompt — recomendado em estações corporativas)
 
-Alternativamente, com Go 1.22+:
+```cmd
+curl -L -o install.bat https://github.com/jrunic/koine/releases/latest/download/install.bat
+install.bat
+```
+
+`install.bat` invoca `install.ps1` com `-ExecutionPolicy Bypass` inline — contorna restrições de PowerShell em estações com política restritiva, sem precisar de admin.
+
+### Windows (PowerShell — alternativa)
+
+```powershell
+iwr -useb https://github.com/jrunic/koine/releases/latest/download/install.ps1 | iex
+```
+
+### Alternativa com Go 1.22+
 
 ```bash
 go install github.com/jrunic/koine/cmd/kn-agente@latest
 ```
 
-Em seguida, extraia o vault e instale os symlinks de cliente IA:
+Útil para desenvolvedores Go que já têm o toolchain. Após instalar, rode `kn-agente instalar` para extrair o vault.
+
+**Plataformas suportadas:** `darwin-arm64`, `darwin-amd64`, `linux-amd64`, `windows-amd64`.
+
+## Primeira sessão em 3 comandos
 
 ```bash
+# 1. Finalizar configuração (cria pasta canônica, alias 'koine', instala skills)
 kn-agente instalar
+
+# 2. Abrir primeira sessão com Hermes
+kn-claude hermes koine
+# (substitua kn-claude pelo wrapper do seu cliente: kn-agy, kn-copilot, kn-opencode)
+
+# 3. Dentro da sessão, Hermes inicia automaticamente:
+#    /kn-01-recebe-usuario
 ```
 
-Isso cria `~/.local/share/koine/` (vault readonly) e symlinks `kn-claude`, `kn-agy`, `kn-copilot`, `kn-opencode` apontando para `kn-agente`.
+`/kn-01-recebe-usuario` é a skill de onboarding. Hermes te entrevista em 4 rodadas e configura:
 
-## Sessão em 60 segundos
+- Seu **arquivo de usuário** (idioma, fuso horário, estilo)
+- Seu **primeiro escopo** de trabalho
+- Sua **primeira pasta de trabalho** real (com `CONTEXTO.md`)
+- Seu **primeiro agente operacional** (criado via `/kn-03-cria-agente`)
 
-```bash
-# 1. Configure seu arquivo de usuário (uma vez por máquina)
-$EDITOR ~/.config/koine/<seu-primeiro-nome>.md
+**Para o passo a passo completo (incluindo pré-requisitos detalhados, estimativas de tempo, e resolução de problemas):** ver [`docs/tutoriais/onboarding-completo.md`](docs/tutoriais/onboarding-completo.md).
 
-# 2. Crie a primeira pasta de trabalho
-mkdir -p ~/projeto-x && cd ~/projeto-x
-$EDITOR CONTEXTO.md                 # frontmatter mínimo: escopo + dominios
+## Skills `kn-*`
 
-# 3. Abra o cliente IA com contexto Koine
-kn-claude hermes .
-```
+Distribuídas no vault e disponíveis após `kn-agente instalar`:
 
-Sessão Claude Code abre na pasta com `CLAUDE.md` gerado contendo:
+| Skill | Quando invocar |
+|---|---|
+| `/kn-01-recebe-usuario` | Onboarding inicial (1× por usuário; Hermes dispara automaticamente em pasta de bootstrap) |
+| `/kn-02-mantem-catalogo` | Criar/ajustar arquivo do usuário, escopo, contexto de pasta, ou domínio |
+| `/kn-03-cria-agente` | Criar novo agente operacional especializado em um tipo de trabalho |
+| `/kn-11-mantem-referencia` | Catalogar conhecimento (pessoa, decisão, aprendizado) durante o trabalho |
+| `/kn-99-encerra-sessao` | Fechar sessão escrevendo diário e distribuindo aprendizados |
 
-- perfil do usuário
-- persona do agente Hermes
-- escopo da pasta
-- índice de referências por domínio
-- `CONTEXTO.md` da pasta
-
-Mesma sintaxe vale para `kn-agy`, `kn-copilot`, `kn-opencode`.
+Detalhes em [`docs/referencias/habilidades.md`](docs/referencias/habilidades.md).
 
 ## Clientes IA suportados
 
@@ -79,9 +109,11 @@ Mesma sintaxe vale para `kn-agy`, `kn-copilot`, `kn-opencode`.
 
 ## Documentação
 
+**Começando do zero?** [Tutorial — Onboarding completo](docs/tutoriais/onboarding-completo.md)
+
 - [Tutoriais](docs/tutoriais/) — passo a passo para começar
 - [Guias](docs/guias/) — como resolver problemas específicos
-- [Referências](docs/referencias/) — comandos CLI, schema do `CONTEXTO.md`, formato OKF
+- [Referências](docs/referencias/) — CLI, schema do `CONTEXTO.md`, habilidades, formato OKF
 - [Explicações](docs/explicacoes/) — por que cada decisão de design
 - [Decisões](docs/decisoes/) — ADRs
 
