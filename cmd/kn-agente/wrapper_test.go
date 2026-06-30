@@ -207,6 +207,74 @@ func TestRodarWrapperOpenCodeBootstrap(t *testing.T) {
 	}
 }
 
+func TestRodarWrapperCodexBootstrap(t *testing.T) {
+	dir := t.TempDir()
+
+	// isola config dir (sem usuário → UsuarioPath vazio em bootstrap)
+	tmpCfg := t.TempDir()
+	origCfg := cfg.ExportLookupConfigDir()
+	cfg.SetLookupConfigDir(func() string { return filepath.Join(tmpCfg, "koine") })
+	defer cfg.SetLookupConfigDir(origCfg)
+
+	// vault fake: KOINE.md + hermes.md (Codex inlina ambos no AGENTS.md)
+	tmpVault := t.TempDir()
+	os.MkdirAll(filepath.Join(tmpVault, "agentes"), 0o755)
+	os.WriteFile(
+		filepath.Join(tmpVault, "KOINE.md"),
+		[]byte("---\nid: koine\n---\n# Koine\nSobre o Koine."),
+		0o644,
+	)
+	os.WriteFile(
+		filepath.Join(tmpVault, "agentes", "hermes.md"),
+		[]byte("---\nid: hermes-test\n---\n# Hermes\nAgente Koine de teste."),
+		0o644,
+	)
+	origVault := contexto.ExportLookupVaultDir()
+	contexto.SetLookupVaultDir(func() string { return tmpVault })
+	defer contexto.SetLookupVaultDir(origVault)
+
+	var calledCliente string
+	var calledArgs []string
+	origLancar := lancarCliente
+	lancarCliente = func(c, p string, env map[string]string, args []string) error {
+		calledCliente = c
+		calledArgs = args
+		return nil
+	}
+	defer func() { lancarCliente = origLancar }()
+
+	// dir sem CONTEXTO.md → bootstrap
+	if err := rodarWrapper("codex", []string{"hermes", dir}); err != nil {
+		t.Fatalf("rodarWrapper codex bootstrap: %v", err)
+	}
+
+	if calledCliente != "codex" {
+		t.Errorf("cliente = %q, want codex", calledCliente)
+	}
+
+	// AGENTS.md materializado NO working dir (inline, não bundle de cache), com marker
+	agentsPath := filepath.Join(dir, "AGENTS.md")
+	data, err := os.ReadFile(agentsPath)
+	if err != nil {
+		t.Fatalf("AGENTS.md não materializado em %s: %v", agentsPath, err)
+	}
+	s := string(data)
+	if !strings.HasPrefix(s, harness.MarkerKoine) {
+		t.Errorf("AGENTS.md não começa com MarkerKoine:\n%.80s", s)
+	}
+	if !strings.Contains(s, "Agente Koine de teste.") {
+		t.Errorf("AGENTS.md bootstrap deve inlinar o conteúdo do agente:\n%s", s)
+	}
+	if !strings.Contains(s, "/kn-02-mantem-catalogo") {
+		t.Errorf("AGENTS.md bootstrap deve orientar criar o CONTEXTO.md:\n%s", s)
+	}
+
+	// ExtraArgs com o lift de project_doc_max_bytes
+	if got := strings.Join(calledArgs, " "); got != "-c project_doc_max_bytes=1048576" {
+		t.Errorf("ExtraArgs = %v, want [-c project_doc_max_bytes=1048576]", calledArgs)
+	}
+}
+
 func TestRodarWrapperSubstituirPulaConflito(t *testing.T) {
 	dir := t.TempDir()
 
