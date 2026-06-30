@@ -6,6 +6,24 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-06-30
+
+Terceira release pública. Codex CLI suportado como quinto harness e melhoria de
+UX no tratamento de conflito de arquivos. Cobertura: PR #8.
+
+### Added
+
+- **Adapter Codex CLI (`kn-codex`)** — quinto harness suportado. Gera `AGENTS.md` com conteúdo **inline** (usuário, KOINE, agente, escopo, índices) porque o Codex injeta o texto literal do `AGENTS.md` em vez de resolver `@path` nativamente como Claude/Antigravity; o inline garante a injeção do contexto. Passa `-c project_doc_max_bytes=1048576` para não truncar bundles acima de 32 KiB. `CONTEXTO.md` permanece arquivo separado (snapshot inline + prosa apontando o arquivo mutável). Symlink `kn-codex` criado em `kn-agente instalar`; cliente listado no onboarding. PR #8.
+- **Skills `kn-*` instaladas para o Codex** em `~/.agents/skills` (path USER de skills do Codex); `codex` adicionado à detecção automática de harness e a `instalar-habilidades --para=codex`. PR #8.
+
+### Changed
+
+- **Tratamento de conflito faz backup em vez de erro** — arquivo pré-existente não gerado pelo Koine no destino do working dir (`AGENTS.md`/`CLAUDE.md`/`GEMINI.md`) é movido para backup (`.bak`, depois `.bak.1`, `.bak.2`, … — nunca sobrescreve backup existente) e a sessão prossegue, com aviso de uma linha — em vez do erro duro que exigia `--substituir`. Vale para todos os wrappers via o resolvedor de conflito compartilhado. `--substituir` passa a significar "sobrescrever sem backup". Estados ambíguos (diretório, symlink com alvo divergente) continuam retornando erro. PR #8.
+
+### Notes
+
+- Caveats de assinatura permanecem da 0.2.0: binários macOS não notarizados e Windows não assinados (ver release 0.2.0 para mitigações).
+
 ## [0.2.0] — 2026-06-28
 
 Segunda release pública. Onboarding um-comando, install scripts cross-platform,
@@ -68,6 +86,7 @@ Initial public release.
 First public release. API, on-disk layout, vault contents and adapter
 behavior may evolve until 1.0.
 
-[Unreleased]: https://github.com/jrunic/koine/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/jrunic/koine/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/jrunic/koine/releases/tag/v0.3.0
 [0.2.0]: https://github.com/jrunic/koine/releases/tag/v0.2.0
 [0.1.0]: https://github.com/jrunic/koine/releases/tag/v0.1.0
