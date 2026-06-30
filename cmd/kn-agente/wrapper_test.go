@@ -23,7 +23,7 @@ func TestClienteDoBinario(t *testing.T) {
 		{"kn-copilot", "copilot", true},
 		{"kn-agente", "", false},
 		{"kn-opencode", "opencode", true}, // Plano 3 — ativo
-		{"kn-codex", "", false},
+		{"kn-codex", "codex", true},
 		{"claude", "", false},
 		{"kn-desconhecido", "", false},
 	}
