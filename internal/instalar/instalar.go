@@ -131,7 +131,7 @@ func CriarSymlinks(opts Opcoes) error {
 	}
 
 	dir := filepath.Dir(exePath)
-	links := []string{"kn-claude", "kn-agy", "kn-copilot", "kn-opencode"} // Onda 1 + Antigravity + Copilot + OpenCode
+	links := []string{"kn-claude", "kn-agy", "kn-copilot", "kn-opencode", "kn-codex"} // Onda 1 + Antigravity + Copilot + OpenCode + Codex
 
 	for _, name := range links {
 		dest := filepath.Join(dir, name)
