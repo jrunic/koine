@@ -129,6 +129,7 @@ func TestInstalarHabilidadesParaHarness_TodosOsHarnesses(t *testing.T) {
 		"agy":      ".gemini/antigravity-cli/skills",
 		"copilot":  ".copilot/skills",
 		"opencode": ".config/opencode/skills",
+		"codex":    ".agents/skills",
 	}
 	for harness, rel := range destinos {
 		t.Run(harness, func(t *testing.T) {
@@ -189,8 +190,8 @@ func TestDetectarHarnesses_Ordenado(t *testing.T) {
 	}
 
 	got := detectarHarnesses()
-	if len(got) != 4 {
-		t.Fatalf("esperado 4 harnesses, got %v", got)
+	if len(got) != 5 {
+		t.Fatalf("esperado 5 harnesses, got %v", got)
 	}
 	for i := 1; i < len(got); i++ {
 		if got[i] < got[i-1] {

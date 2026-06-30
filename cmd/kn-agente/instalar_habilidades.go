@@ -19,6 +19,7 @@ var harnessSuportados = map[string]string{
 	"agy":      ".gemini/antigravity-cli/skills",
 	"copilot":  ".copilot/skills",
 	"opencode": ".config/opencode/skills",
+	"codex":    ".agents/skills", // path USER de skills do Codex (doc oficial)
 }
 
 // binarioHarness mapeia nome do harness → binário de detecção no PATH.
@@ -27,6 +28,7 @@ var binarioHarness = map[string]string{
 	"agy":      "agy",
 	"copilot":  "copilot",
 	"opencode": "opencode",
+	"codex":    "codex",
 }
 
 // lookupVaultDirHab e lookupUserHomeDirHab são injetáveis para testes.
