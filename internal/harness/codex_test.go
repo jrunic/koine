@@ -93,3 +93,48 @@ func TestCodexRenderizaNormal(t *testing.T) {
 		t.Error("Symlinks deve estar vazio para Codex")
 	}
 }
+
+func TestCodexRenderizaBootstrap(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	usuarioPath := filepath.Join(tmpDir, "walter.md")
+	os.WriteFile(usuarioPath, []byte("---\nid: 1\n---\n# Walter\nPerfil do Walter."), 0o644)
+	koinePath := filepath.Join(tmpDir, "KOINE.md")
+	os.WriteFile(koinePath, []byte("---\nid: 9\n---\n# Koine\nSobre o Koine."), 0o644)
+	agentePath := filepath.Join(tmpDir, "hermes.md")
+	os.WriteFile(agentePath, []byte("---\nid: 2\n---\n# Hermes\nAgente Hermes."), 0o644)
+
+	cx := &Codex{Agente: "hermes"}
+	dados := ContextoMontado{
+		Bootstrap:   true,
+		UsuarioPath: usuarioPath,
+		KoineMDPath: koinePath,
+		AgentePath:  agentePath,
+	}
+
+	lancamento, err := cx.Renderizar(dados)
+	if err != nil {
+		t.Fatalf("Renderizar (bootstrap): %v", err)
+	}
+	s := string(lancamento.ArquivosNoWorkingDir["AGENTS.md"])
+
+	if !strings.Contains(s, "Perfil do Walter.") || !strings.Contains(s, "Agente Hermes.") {
+		t.Errorf("bootstrap deve conter usuário e agente\n%s", s)
+	}
+	if strings.Contains(s, "## Escopo") || strings.Contains(s, "Referências — ") {
+		t.Errorf("bootstrap não deve conter escopo/índices\n%s", s)
+	}
+	if !strings.Contains(s, "/kn-02-mantem-catalogo") {
+		t.Errorf("bootstrap deve orientar criação do CONTEXTO.md\n%s", s)
+	}
+}
+
+func TestCodexNomeECaminho(t *testing.T) {
+	cx := &Codex{}
+	if cx.Nome() != "codex" {
+		t.Errorf("Nome = %q, want codex", cx.Nome())
+	}
+	if got := cx.CaminhoArquivoContexto("/foo"); got != "/foo/AGENTS.md" {
+		t.Errorf("CaminhoArquivoContexto = %q, want /foo/AGENTS.md", got)
+	}
+}
