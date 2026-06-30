@@ -108,9 +108,10 @@ Criando symlinks de cliente IA:
   ✓ kn-agy → /usr/local/bin/kn-agente
   ✓ kn-copilot → /usr/local/bin/kn-agente
   ✓ kn-opencode → /usr/local/bin/kn-agente
+  ✓ kn-codex → /usr/local/bin/kn-agente
 ```
 
-Os 4 wrappers ficam no mesmo diretório do binário. Você usa o que corresponde ao seu cliente IA.
+Os 5 wrappers ficam no mesmo diretório do binário. Você usa o que corresponde ao seu cliente IA.
 
 ### 2.3 Pasta canônica + alias
 
@@ -142,7 +143,7 @@ Se você tem um cliente IA instalado, `kn-agente instalar` detecta e pergunta. E
 **Se nenhum cliente IA estiver instalado**, esta fase mostra mensagem orientativa com:
 - Bloco "Node.js não encontrado" (se faltar Node)
 - Bloco "Homebrew não encontrado" (se faltar Brew em macOS)
-- Lista dos 4 clientes IA com comando de instalação por OS
+- Lista dos 5 clientes IA com comando de instalação por OS
 - Instrução para rodar `kn-agente instalar` novamente após instalar um cliente
 
 ### 2.5 Mensagem final
@@ -158,6 +159,7 @@ Se você usa outro cliente, troque o prefixo:
   Antigravity:  kn-agy hermes koine
   Copilot CLI:  kn-copilot hermes koine
   OpenCode:     kn-opencode hermes koine
+  Codex CLI:    kn-codex hermes koine
 ```
 
 ---
@@ -168,7 +170,7 @@ Se você usa outro cliente, troque o prefixo:
 kn-claude hermes koine
 ```
 
-Substitua `kn-claude` pelo wrapper do seu cliente: `kn-agy`, `kn-copilot` ou `kn-opencode`.
+Substitua `kn-claude` pelo wrapper do seu cliente: `kn-agy`, `kn-copilot`, `kn-opencode` ou `kn-codex`.
 
 O wrapper:
 

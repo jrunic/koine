@@ -10,7 +10,7 @@ tags: [contexto, koine, produto]
 
 ## O que é
 
-Koine é uma CLI que injeta contexto multi-camada (usuário, agente, referências, contexto da pasta de trabalho) em harnesses de IA terminal — Claude Code, Antigravity (`agy`), GitHub Copilot CLI, OpenCode.
+Koine é uma CLI que injeta contexto multi-camada (usuário, agente, referências, contexto da pasta de trabalho) em harnesses de IA terminal — Claude Code, Antigravity (`agy`), GitHub Copilot CLI, OpenCode, Codex CLI.
 
 O nome vem do grego κοινή (koiné) — a "língua comum" do mundo helenístico, inteligível por todos. O objetivo é que qualquer usuário, independente de stack ou empresa, possa operar com agentes de IA que "já sabem" o contexto relevante.
 

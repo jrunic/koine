@@ -1,6 +1,6 @@
 # Koine
 
-> CLI que injeta contexto multi-camada (usuário, agente, referências, contexto da pasta) em harnesses de IA terminal — Claude Code, Antigravity (`agy`), GitHub Copilot CLI, OpenCode.
+> CLI que injeta contexto multi-camada (usuário, agente, referências, contexto da pasta) em harnesses de IA terminal — Claude Code, Antigravity (`agy`), GitHub Copilot CLI, OpenCode, Codex CLI.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Go](https://img.shields.io/badge/go-1.22+-00ADD8.svg)](go.mod)
@@ -22,7 +22,7 @@ Cada camada evolui em ritmo próprio. O agente IA passa a "já saber" quem você
 
 Para Koine fazer sentido, você precisa de:
 
-- **Um cliente IA terminal** suportado — Claude Code, Antigravity, GitHub Copilot CLI ou OpenCode. Tabela abaixo na seção [Clientes IA suportados](#clientes-ia-suportados).
+- **Um cliente IA terminal** suportado — Claude Code, Antigravity, GitHub Copilot CLI, OpenCode ou Codex CLI. Tabela abaixo na seção [Clientes IA suportados](#clientes-ia-suportados).
 - **Node.js 18+** (recomendado 22+) — necessário para instalar Claude Code e Copilot CLI via `npm`. Download: <https://nodejs.org/>.
 - **Homebrew** (opcional em macOS) — gerenciador recomendado para instalar Node e clientes IA. Instalar: <https://brew.sh/>.
 
@@ -69,7 +69,7 @@ kn-agente instalar
 
 # 2. Abrir primeira sessão com Hermes
 kn-claude hermes koine
-# (substitua kn-claude pelo wrapper do seu cliente: kn-agy, kn-copilot, kn-opencode)
+# (substitua kn-claude pelo wrapper do seu cliente: kn-agy, kn-copilot, kn-opencode, kn-codex)
 
 # 3. Dentro da sessão, Hermes inicia automaticamente:
 #    /kn-01-recebe-usuario
@@ -106,6 +106,7 @@ Detalhes em [`docs/referencias/habilidades.md`](docs/referencias/habilidades.md)
 | Antigravity (`agy`) | `kn-agy` | `GEMINI.md` com `@path` includes |
 | GitHub Copilot CLI | `kn-copilot` | `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` + bundle em cache |
 | OpenCode | `kn-opencode` | `OPENCODE_CONFIG` + JSON em cache |
+| Codex CLI | `kn-codex` | `AGENTS.md` inline + `-c project_doc_max_bytes` |
 
 ## Documentação
 

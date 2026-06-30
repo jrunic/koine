@@ -16,14 +16,14 @@ Comando único de configuração inicial. Executa as fases:
 
 1. **Extração do vault** — embed `vault/` → `~/.local/share/koine/`
 2. **Plantio de domínios canônicos** — `~/.config/koine/dominios/` (universal, negocio, tecnologia, pessoal)
-3. **Symlinks de cliente** — `kn-claude`, `kn-agy`, `kn-copilot`, `kn-opencode` no mesmo diretório do binário
+3. **Symlinks de cliente** — `kn-claude`, `kn-agy`, `kn-copilot`, `kn-opencode`, `kn-codex` no mesmo diretório do binário
 4. **Pasta canônica + alias** — prompt-com-default (default `~/koine`); cria pasta; registra alias `koine` em `~/.config/koine/aliases.json`; gera `<pasta>/CONTEXTO.md` com `bootstrap: true` a partir do embed `vault/bootstrap/CONTEXTO.md`
-5. **Skills de harness** — detecta clientes IA no PATH; para cada detectado, prompt `Y/n` para instalar skills `kn-*`. Se zero detectados, exibe orientação completa (Node.js, Homebrew em macOS, lista dos 4 clientes IA com comandos por OS)
+5. **Skills de harness** — detecta clientes IA no PATH; para cada detectado, prompt `Y/n` para instalar skills `kn-*`. Se zero detectados, exibe orientação completa (Node.js, Homebrew em macOS, lista dos 5 clientes IA com comandos por OS)
 
 Flags:
 
 - `--force` — sobrescreve arquivos divergentes do embed sem prompt.
-- `--para=<harness>` — instala skills do harness especificado sem prompt (suportados: `claude`, `agy`, `copilot`, `opencode`).
+- `--para=<harness>` — instala skills do harness especificado sem prompt (suportados: `claude`, `agy`, `copilot`, `opencode`, `codex`).
 
 Idempotente em todas as fases. Em modo não-interativo (stdin sem TTY), aceita defaults sem prompts.
 
