@@ -83,7 +83,7 @@ func rodarWrapper(cliente string, args []string) error {
 	}
 
 	if !substituir {
-		if err := verificarConflitos(lancamento, pastaAbs); err != nil {
+		if err := resolverConflitos(lancamento, pastaAbs); err != nil {
 			return err
 		}
 	}

@@ -238,16 +238,21 @@ func TestRodarWrapperSubstituirPulaConflito(t *testing.T) {
 	lancarCliente = func(c, p string, env map[string]string, args []string) error { return nil }
 	defer func() { lancarCliente = origLancar }()
 
-	// sem --substituir → erro de conflito
-	err := rodarWrapper("claude", []string{"hermes", dir})
-	if err == nil {
-		t.Fatal("esperado erro de conflito sem --substituir")
+	// sem --substituir → backup silencioso do arquivo do usuário + sucesso
+	if err := rodarWrapper("claude", []string{"hermes", dir}); err != nil {
+		t.Fatalf("sem --substituir esperado backup + sucesso, got erro: %v", err)
 	}
-	if !strings.Contains(err.Error(), "--substituir") {
-		t.Errorf("mensagem deve mencionar --substituir: %v", err)
+	bak, err := os.ReadFile(filepath.Join(dir, "CLAUDE.md.bak"))
+	if err != nil || !strings.Contains(string(bak), "Arquivo existente sem marker") {
+		t.Errorf("esperado CLAUDE.md.bak preservando o arquivo original, got %q (err %v)", bak, err)
+	}
+	// o novo CLAUDE.md gerado deve ter o marker Koine
+	novo, err := os.ReadFile(filepath.Join(dir, "CLAUDE.md"))
+	if err != nil || !strings.HasPrefix(string(novo), harness.MarkerKoine) {
+		t.Errorf("CLAUDE.md regenerado deve começar com MarkerKoine, got %q (err %v)", novo, err)
 	}
 
-	// com --substituir → sucesso (pula verificação, sobrescreve)
+	// com --substituir → sucesso (pula resolução, sobrescreve sem backup)
 	if err := rodarWrapper("claude", []string{"hermes", dir, "--substituir"}); err != nil {
 		t.Fatalf("com --substituir esperado sucesso: %v", err)
 	}
