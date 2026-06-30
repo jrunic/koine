@@ -79,7 +79,13 @@ func (h *<Novo>) Renderizar(dados ContextoMontado) (Lancamento, error) { ... }
 var _ Harness = (*<Novo>)(nil)
 ```
 
-Para adapters simples (estilo Claude/Antigravity), use o template em `vault/templates/` como base. Para adapters complexos (estilo Copilot/OpenCode), use `internal/cache/` para slots determinísticos e `internal/render/merge.go` para concatenar USUARIO + Hermes em `AGENTS.md` único.
+Há três estilos de adapter, conforme o cliente entrega o contexto ao modelo:
+
+- **Ponteiro (`@path`)** — estilo Claude/Antigravity. O cliente resolve `@path` includes nativamente (injeta o conteúdo do arquivo antes do agente rodar). O adapter gera um arquivo de ponteiros a partir do template em `vault/templates/`; cabe em `Renderizar` retornando só `ArquivosNoWorkingDir`. Zero duplicação.
+- **Bundle em cache** — estilo Copilot/OpenCode. O cliente carrega instruções via env var apontando para um diretório/arquivo descartável. Use `internal/cache/` para slots determinísticos e `internal/render/merge.go` para concatenar as seções; o adapter retorna `ArquivosExternos` (em `~/.cache/koine/`) + `EnvVars` + (opcional) `Symlinks` para o `CONTEXTO.md` no working dir.
+- **Inline no working dir** — estilo Codex. Use quando o cliente **não** resolve `@path` como include nativo — o Codex injeta o texto literal do arquivo de instruções, e o agente só leria os paths via tool call (best-effort, não garantido). O adapter então **embute o conteúdo** das seções (via `internal/render/merge.go`) direto no arquivo do working dir e retorna `ArquivosNoWorkingDir` + `ExtraArgs` (ex.: `-c project_doc_max_bytes=...` para não truncar bundles grandes). Sem cache, sem env var. `CONTEXTO.md` permanece separado, apontado por prosa. Referência: `internal/harness/codex.go`.
+
+> Antes de assumir que um cliente resolve `@path` nativamente (estilo ponteiro), **valide empiricamente**: inspecione o transcript de uma sessão real e cheque se o agente leu os arquivos via tool call (Mecanismo B, inline) ou se o conteúdo chegou injetado sem leitura (Mecanismo A, ponteiro). A narração do agente ("li os arquivos") não distingue os dois.
 
 ### 4. Adicionar symlink em `kn-agente instalar`
 
