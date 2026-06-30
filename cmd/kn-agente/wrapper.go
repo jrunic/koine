@@ -13,10 +13,10 @@ import (
 // clientesSuportados mapeia sufixo do binário → ativo na onda atual.
 var clientesSuportados = map[string]bool{
 	"claude":   true,
-	"agy":      true,  // Antigravity CLI
-	"copilot":  true,  // Onda 2 — Plano 2
-	"opencode": true,  // Onda 2 — Plano 3
-	"codex":    false, // Onda 3+
+	"agy":      true, // Antigravity CLI
+	"copilot":  true, // Onda 2 — Plano 2
+	"opencode": true, // Onda 2 — Plano 3
+	"codex":    true, // inline AGENTS.md + -c project_doc_max_bytes
 }
 
 // clienteDoBinario extrai o cliente do nome do binário (ex: kn-claude → "claude").
@@ -83,7 +83,7 @@ func rodarWrapper(cliente string, args []string) error {
 	}
 
 	if !substituir {
-		if err := verificarConflitos(lancamento, pastaAbs); err != nil {
+		if err := resolverConflitos(lancamento, pastaAbs); err != nil {
 			return err
 		}
 	}
@@ -110,6 +110,8 @@ func adapterParaCliente(cliente, agente, pastaAbs string) harness.Harness {
 		return &harness.Copilot{Agente: agente, PastaAbs: pastaAbs}
 	case "opencode":
 		return &harness.OpenCode{Agente: agente, PastaAbs: pastaAbs}
+	case "codex":
+		return &harness.Codex{Agente: agente}
 	default: // "claude"
 		return &harness.ClaudeCode{VaultFS: vaultFS, Agente: agente}
 	}

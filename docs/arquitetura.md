@@ -56,7 +56,7 @@ embed.FS (vault/*) embarcado no binário
 
 ## Interface `Harness`
 
-Abstrai o cliente IA alvo. Adapters atuais: Claude Code, Antigravity (`agy`), GitHub Copilot CLI, OpenCode.
+Abstrai o cliente IA alvo. Adapters atuais: Claude Code, Antigravity (`agy`), GitHub Copilot CLI, OpenCode, Codex CLI.
 
 ```go
 type Harness interface {

@@ -80,6 +80,7 @@ Use --para=<harness> para instalar skills sem prompt.`,
 		fmt.Println("  Antigravity:  kn-agy hermes koine")
 		fmt.Println("  Copilot CLI:  kn-copilot hermes koine")
 		fmt.Println("  OpenCode:     kn-opencode hermes koine")
+		fmt.Println("  Codex CLI:    kn-codex hermes koine")
 
 		return nil
 	},
