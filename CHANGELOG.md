@@ -6,6 +6,14 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-07-02
+
+Patch de compatibilidade. Binários recompilados com Go 1.26 para suporte a macOS 26 (Tahoe / Darwin 25).
+
+### Fixed
+
+- **Go 1.22 trava em macOS 26 (Darwin 25)** — o runtime Go 1.22 entra em deadlock durante inicialização em Darwin 25 antes de qualquer código de usuário rodar: sem output, sem goroutine dump no SIGQUIT. Causa raiz: mudança no scheduler de threads do macOS 26. Atualização para Go 1.26 resolve. Usuários em macOS 26 que instalaram versões anteriores devem reinstalar com `install.sh`.
+
 ## [0.3.0] — 2026-06-30
 
 Terceira release pública. Codex CLI suportado como quinto harness e melhoria de
