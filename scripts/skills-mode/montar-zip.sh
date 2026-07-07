@@ -3,6 +3,10 @@
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 OUT="${1:-$REPO/dist/koine-skills.zip}"
+# Resolve OUT para absoluto: o zip roda após um `cd` para o staging,
+# então um OUT relativo apontaria para um dir inexistente lá (zip exit 15).
+mkdir -p "$(dirname "$OUT")"
+OUT="$(cd "$(dirname "$OUT")" && pwd)/$(basename "$OUT")"
 STAGE="$(mktemp -d)/koine"
 mkdir -p "$STAGE/.koine-bootstrap"
 
