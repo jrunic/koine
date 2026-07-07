@@ -1,0 +1,8 @@
+[project]
+name = "koine"
+version = "0.4.0-dev"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
