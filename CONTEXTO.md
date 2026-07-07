@@ -16,7 +16,7 @@ Este documento orienta quem desenvolve o repositório. Para a visão de produto 
 
 ## Stack
 
-- **Linguagem:** Go 1.22+
+- **Linguagem:** Go 1.26+
 - **CLI framework:** Cobra (`github.com/spf13/cobra`)
 - **YAML:** `gopkg.in/yaml.v3`
 - **Templates:** `text/template` (stdlib)

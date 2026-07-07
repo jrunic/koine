@@ -138,6 +138,11 @@ jobs:
           cp scripts/release/install.bat dist/
           ls -lh dist/
 
+      - name: Build skills-mode zip
+        run: |
+          bash scripts/skills-mode/montar-zip.sh dist/koine-skills.zip
+          ls -lh dist/koine-skills.zip
+
       - name: Generate SHA256SUMS
         run: |
           cd dist
@@ -195,5 +200,6 @@ jobs:
             dist/install.sh
             dist/install.ps1
             dist/install.bat
+            dist/koine-skills.zip
             dist/SHA256SUMS
           fail_on_unmatched_files: true

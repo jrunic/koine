@@ -6,6 +6,21 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.2] — 2026-07-07
+
+Modo skills dual-mode: o Koine passa a operar também **sem o binário**, para ambientes que bloqueiam executáveis. Além dos binários, a release agora distribui `koine-skills.zip`.
+
+### Added
+
+- **Modo skills (dual-mode)** — distribuição alternativa sem binário: o Claude Code carrega o contexto Koine via skills e `@path` relativo, sem `kn-agente`. Para ambientes corporativos que bloqueiam `.exe`.
+- **Skill `kn-12-prepara-contexto`** — gera o `CLAUDE.md` da pasta de trabalho e os índices de domínio sem o binário, replicando a resolução e a geração do `kn-agente`.
+- **Instaladores do modo skills** — `instalar-koine.bat` (Windows: cria os diretórios XDG e copia vault + skills) e `instalar-koine.md` (guia executável por agente, com auto-teste de filesystem).
+- **`koine-skills.zip` como asset de release** — montado no CI e anexado à release, ao lado dos binários.
+
+### Changed
+
+- **Skills `kn-01`, `kn-02`, `kn-03`, `kn-11`** — passam a contemplar o modo skills além do modo binário, qualificando a invocação por modo.
+
 ## [0.3.1] — 2026-07-02
 
 Patch de compatibilidade. Binários recompilados com Go 1.26 para suporte a macOS 26 (Tahoe / Darwin 25).
