@@ -39,7 +39,7 @@ Corpo denso do domínio (não vai pro índice).
 REF_A = """---
 type: referencia
 title: "Ref A"
-description: Nota com dois-pontos: exemplo e travessão — real
+description: "Nota com dois-pontos: exemplo e travessão — real"
 dominios: [tecnologia]
 plataforma: "*"
 ---
