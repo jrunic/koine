@@ -6,11 +6,15 @@ import subprocess
 # Congeladas fora da comparação. Ampliar SÓ com evidência empírica.
 _TIMESTAMP = re.compile(r"em \d{4}-\d{2}-\d{2}[ T][\d:]+")
 _REGEN = re.compile(r"regerar com [^\n]*")
+# Header do kn-indice-<dom>.md: `gerado: <ISO8601>Z` (RFC3339 UTC).
+# Formato distinto do `em <ts>` do CLAUDE.md — normalizar separadamente.
+_INDICE_GERADO = re.compile(r"gerado: [^\n]*")
 
 
 def normalize(text: str) -> str:
     text = _TIMESTAMP.sub("em <TS>", text)
     text = _REGEN.sub("regerar com <CMD>", text)
+    text = _INDICE_GERADO.sub("gerado: <TS>", text)
     return text
 
 
