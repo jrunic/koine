@@ -182,10 +182,10 @@ Liste os domínios atuais (`~/.config/koine/dominios/*.md`). Pergunte qual ajust
 
 **Distinção crítica — canônico vs usuário.** Inspecione `origem:` no frontmatter:
 
-- `origem: koine-canonico` — **não editar diretamente**. Domínios canônicos evoluem com `kn-agente atualizar` (Onda 2+). Ofereça: criar variante do usuário (`origem: usuario`) com slug próximo, ou abrir tarefa para ajustar o canônico no método.
+- `origem: koine-canonico` — **não editar diretamente**. Domínios canônicos evoluem com a atualização do vault (modo binário: `kn-agente atualizar`, Onda 2+; modo skills: reinstalação do pacote). Ofereça: criar variante do usuário (`origem: usuario`) com slug próximo, ou abrir tarefa para ajustar o canônico no método.
 - `origem: usuario` — editar livremente.
 
-Para domínio do usuário, pergunte o delta. **Mudar sinopse afeta runtime** (é embutida no header de todo `kn-indice` daquele domínio na próxima invocação do `kn-agente`). Confirmação extra.
+Para domínio do usuário, pergunte o delta. **Mudar sinopse afeta runtime** (é embutida no header de todo `kn-indice` daquele domínio na próxima regeneração — `kn-agente` no modo binário, `/kn-12-prepara-contexto` no modo skills). Confirmação extra.
 
 Materialize com diff. Renomear slug é caro — quebra referências cruzadas; só renomear quando o slug original ficou enganoso.
 

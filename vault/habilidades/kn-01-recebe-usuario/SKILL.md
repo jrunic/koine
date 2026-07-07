@@ -23,8 +23,8 @@ Manutenções pontuais pós-onboarding: `/kn-02-mantem-catalogo` ou `/kn-03-cria
 
 ## Pré-condições
 
-- `kn-agente instalar` já executado (vault em `~/.local/share/koine/` + sementes de domínio em `~/.config/koine/dominios/` + pasta canônica criada + alias `koine` registrado + `<pasta-canonica>/CONTEXTO.md` com `bootstrap: true`).
-- Skills `kn-*` symlinkadas no harness ativo (feito automaticamente pelo `kn-agente instalar` com confirmação).
+- Setup do Koine concluído — **modo binário** (`kn-agente instalar`) **ou modo skills** (`instalar-koine.bat` / guia `instalar-koine.md`): vault em `~/.local/share/koine/`, sementes de domínio em `~/.config/koine/dominios/`, pasta canônica `~/koine` com `CONTEXTO.md` `bootstrap: true`.
+- Skills `kn-*` disponíveis no harness ativo — symlinkadas pelo `kn-agente instalar` (modo binário) ou copiadas para `~/.claude/skills/` (modo skills).
 - Pasta `~/.config/koine/` existe mas não tem arquivo do usuário (`<nome>.md` na raiz).
 
 Se `~/.config/koine/` já tem arquivo do usuário, **esta skill não roda** — onboarding já foi feito. Use `/kn-02-mantem-catalogo` para atualizações.
@@ -701,7 +701,7 @@ Materialize **ambos** os arquivos. Ordem importa: crie o escopo primeiro (item a
 >     cd <pasta da Rodada 3>
 >     kn-<cliente> <nome-do-agente>
 >
-> Substitua `<cliente>` pelo wrapper que você usou para abrir esta sessão (`kn-claude`, `kn-agy`, `kn-copilot` ou `kn-opencode`).
+> No **modo binário**, substitua `<cliente>` pelo wrapper que você usou (`kn-claude`, `kn-agy`, `kn-copilot` ou `kn-opencode`). No **modo skills** (sem binário), abra o `claude` direto na pasta de trabalho — o `CLAUDE.md` já carrega o agente.
 >
 > O agente vai abrir a sessão **já sabendo tudo** que configuramos juntos. Você não precisa explicar nada — só dizer o que precisa fazer.
 >

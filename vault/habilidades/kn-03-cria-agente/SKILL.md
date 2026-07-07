@@ -25,7 +25,7 @@ Invocada em dois contextos:
 ## Pré-condições
 
 - Arquivo do usuário existe (`~/.config/koine/<nome>.md`). Se não existir, redirecione para `/kn-01-recebe-usuario`.
-- `kn-agente instalar` já rodado — Hermes existe em `~/.local/share/koine/agentes/hermes.md` para servir de base do fork.
+- Setup concluído (modo binário ou skills) — Hermes existe em `~/.local/share/koine/agentes/hermes.md` para servir de base do fork.
 
 ---
 
@@ -216,7 +216,7 @@ Após gravar, retorne:
 > kn-<cliente> <nome> [pasta]
 > ```
 >
-> O wrapper resolve a pasta (alias, path direto ou fuzzy match), gera o arquivo de contexto do cliente IA (CLAUDE.md, AGENTS.md, etc.) e abre o cliente com `<nome>` carregado."
+> No **modo binário**, o wrapper resolve a pasta, gera o arquivo de contexto do cliente IA (CLAUDE.md, AGENTS.md, etc.) e abre o cliente com `<nome>` carregado. No **modo skills**, rode `/kn-12-prepara-contexto` na pasta de trabalho para gerar o `CLAUDE.md` e então abra o `claude` ali."
 
 Se invocada pela `/kn-01`, devolva controle para que ela continue na confirmação final do onboarding.
 

@@ -145,7 +145,7 @@ Após gravar `<localizacao>/<slug>.md`:
 1. **Atualizar `index.md`** da pasta-referências — adicionar linha agrupando por `type` ou seção pré-existente. Se o `index.md` tiver seções por `type`, manter o padrão; senão, inserir em ordem alfabética simples.
 2. **Atualizar `log.md`** — append `AAAAMMDD — cria — <slug> — <motivo curto>`.
 
-Mencione ao usuário que o `kn-indice-<dom>.md` correspondente será regenerado na próxima invocação do `kn-agente` (não precisa fazer manualmente).
+Mencione ao usuário que o `kn-indice-<dom>.md` correspondente será regenerado na próxima invocação do `kn-agente` (modo binário) ou ao rodar `/kn-12-prepara-contexto` (modo skills) — não precisa editar o índice à mão.
 
 ---
 
@@ -173,7 +173,7 @@ Após gravar:
 1. **`index.md`** — atualizar só se o `title` ou agrupamento mudou.
 2. **`log.md`** — append `AAAAMMDD — atualiza — <slug> — <campos|motivo curto>`.
 
-Se a atualização mexeu em `description` ou `dominios` (campos lidos pelo gerador), mencione ao usuário que o `kn-indice-<dom>.md` correspondente será regenerado na próxima invocação do `kn-agente` — automático.
+Se a atualização mexeu em `description` ou `dominios` (campos lidos pelo gerador), o `kn-indice-<dom>.md` será regenerado na próxima invocação do `kn-agente` (modo binário) ou ao rodar `/kn-12-prepara-contexto` (modo skills).
 
 ---
 
@@ -193,7 +193,7 @@ Alerta: se a referência é citada em outros `.md` da pasta-referências (`grep`
 
 - **Não cria escopo, pasta de trabalho, domínio, agente nem arquivo do usuário** — isso é `/kn-02-mantem-catalogo` e `/kn-03-cria-agente`.
 - **Não substitui o diário da sessão.** Diário é o registro do que aconteceu na sessão (escrito por `/kn-99-encerra-sessao` na pasta `diario/` da pasta de trabalho). Referência generaliza além do episódio. Se o usuário tenta catalogar coisa muito episódica, sugira o diário.
-- **Não regenera `kn-indice-<dom>.md`** — isso é trabalho do `kn-agente` na próxima invocação, automático.
+- **Não regenera `kn-indice-<dom>.md`** — isso é trabalho do `kn-agente` (modo binário) ou da `/kn-12-prepara-contexto` (modo skills).
 - **Não opera fora do escopo da sessão atual.** Para catalogar em outro escopo, abrir sessão na pasta de trabalho daquele escopo (ou criar uma pasta com `CONTEXTO.md` apontando para ele). Cross-escopo é fricção deliberada.
 - **Não cataloga em massa.** Uma invocação, uma referência. Catalogação em lote é antipadrão — dilui sinal e quebra a entrevista que dá densidade à `description`.
 - **Não cria arquivo separado para o que cabe em uma frase.** Se a referência cabe em 1-2 linhas, prefira **uma linha em CONTEXTO.md** (alcance de pasta) ou **uma description densa** (alcance de escopo, que entra no `kn-indice`). Arquivo separado é para material denso (checklist, várias seções, lista longa) que se beneficia de estrutura própria.
