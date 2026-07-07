@@ -226,7 +226,7 @@ Se invocada pela `/kn-01`, devolva controle para que ela continue na confirmaç�
 
 - **Não edita agentes existentes** — Onda 1 não tem skill de edição. Usuário edita o `.md` direto, guiado por `conceitos/agentes.md` §"Como manter agente existente". Onda 2+ pode trazer fluxo de edição em `/kn-02-mantem-catalogo`.
 - **Não cria fork explícito de Hermes** — qualquer arquivo em `~/.config/koine/agentes/hermes.md` já sobrescreve por precedência (`conceitos/agentes.md` §"Resolução em runtime"). Se o usuário pediu "fork de Hermes", crie agente novo com nome diferente — sugira `hermes-<adjetivo>` ou nome próprio (`leia`, `helena`).
-- **Não invoca o agente recém-criado** — só cria o arquivo. Invocação é responsabilidade do usuário via wrapper `kn-<cliente>`.
+- **Não invoca o agente recém-criado** — só cria o arquivo. Invocação é responsabilidade do usuário: via wrapper `kn-<cliente>` (modo binário) ou abrindo o `claude` na pasta de trabalho após `/kn-12-prepara-contexto` (modo skills).
 - **Não cataloga referência sobre a criação do agente** — se valer a pena registrar a decisão, sugira `/kn-11-mantem-referencia` separado.
 
 ---
