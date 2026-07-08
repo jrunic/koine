@@ -32,6 +32,19 @@ def gerar_go(pasta: str, agente: str, home: str) -> str:
         return f.read()
 
 
+def gerar_go_arg(arg: str, agente: str, home: str, destino: str) -> str:
+    """Roda `gerar <agente> <arg>` (arg cru, p/ o Go resolver alias) e lê
+    <destino>/CLAUDE.md — o destino resolvido, não o arg."""
+    go_bin = os.environ.get("KOINE_GO_BIN", "kn-agente")
+    subprocess.run(
+        [go_bin, "gerar", agente, arg],
+        env={**os.environ, "HOME": home}, check=True,
+        capture_output=True, text=True,
+    )
+    with open(os.path.join(destino, "CLAUDE.md"), encoding="utf-8") as f:
+        return f.read()
+
+
 def mostrar_go(pasta: str, agente: str, home: str) -> str:
     """stdout de `kn-agente mostrar <agente> <pasta>` num HOME isolado."""
     go_bin = os.environ.get("KOINE_GO_BIN", "kn-agente")

@@ -37,3 +37,20 @@ def test_mostrar_nao_resolve_alias(koine_home, monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)                 # cwd vazio, sem ./koine
     with pytest.raises(FileNotFoundError):      # CONTEXTO.md de ./koine não existe
         cli.main(["mostrar", "hermes", "koine"])
+
+
+def test_alias_resolve_no_gerar(koine_home, monkeypatch):
+    from koine import aliases
+    home = koine_home["home"]; monkeypatch.setenv("HOME", home)
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    canon = os.path.join(home, "koine"); os.makedirs(canon, exist_ok=True)
+    with open(os.path.join(canon, "CONTEXTO.md"), "w") as f:
+        f.write("---\nbootstrap: true\n---\n\n# Bootstrap\n")
+    aliases.adicionar("koine", "koine", "home")                 # alias koine → ~/koine
+    go = _parity.gerar_go_arg("koine", "hermes", home, canon)   # Go resolve o alias → ~/koine
+    if os.path.exists(os.path.join(canon, "CLAUDE.md")):
+        os.remove(os.path.join(canon, "CLAUDE.md"))
+    rc = cli.main(["gerar", "hermes", "koine"])                 # Python resolve o alias
+    assert rc == 0
+    py = open(os.path.join(canon, "CLAUDE.md"), encoding="utf-8").read()
+    assert _parity.normalize(py) == _parity.normalize(go)       # mesmo destino, mesmo conteúdo

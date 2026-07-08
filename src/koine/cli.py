@@ -147,7 +147,8 @@ def _cmd_mostrar(args: list[str]) -> int:
 
 
 def _rodar_cliente(cliente: str, args: list[str]) -> int:
-    agente, pasta = args[0], args[1]  # P1: pasta é direct-path
+    agente = args[0]
+    pasta = pasta_mod.resolver(args[1] if len(args) >= 2 else "")
     conteudo = _gerar_conteudo(agente, pasta)
     with open(os.path.join(pasta, "CLAUDE.md"), "w", encoding="utf-8") as f:
         f.write(conteudo)
