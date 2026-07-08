@@ -47,6 +47,23 @@ def test_pyz_claude_paridade(tmp_path, monkeypatch):
     assert _parity.normalize(py) == _parity.normalize(go)
 
 
+def test_zip_de_distribuicao_pyz_e_vault_lado_a_lado(tmp_path):
+    # o installer extrai este zip e o `instalar` localiza o vault AO LADO do pyz
+    import zipfile
+    from koine._version import __version__
+    out = str(tmp_path / "dist")
+    subprocess.run([sys.executable, os.path.join(REPO, "scripts", "build-pyz.py"),
+                    "--out", out, "--zip"], check=True, capture_output=True, text=True)
+    zpath = os.path.join(out, f"koine-{__version__}.zip")
+    assert os.path.exists(zpath)
+    with zipfile.ZipFile(zpath) as z:
+        nomes = set(z.namelist())
+    assert "koine.pyz" in nomes
+    assert "vault/KOINE.md" in nomes
+    assert "vault/agentes/hermes.md" in nomes
+    assert not any(n.endswith((".pyd", ".so", ".dll")) for n in nomes)
+
+
 def test_greenfield_instalar_do_pyz_e_rodar_wrapper(tmp_path):
     pyz = _build(tmp_path)                        # pacote de distribuição
     home = str(tmp_path / "home"); os.makedirs(home)

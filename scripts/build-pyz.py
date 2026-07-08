@@ -6,9 +6,17 @@ import zipapp
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+def _versao() -> str:
+    import re
+    with open(os.path.join(REPO, "src", "koine", "_version.py"), encoding="utf-8") as f:
+        return re.search(r'__version__ = "([^"]+)"', f.read()).group(1)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=os.path.join(REPO, "dist"))
+    ap.add_argument("--zip", action="store_true",
+                    help="também monta dist/koine-<versao>.zip (pyz + vault/ na raiz)")
     ns = ap.parse_args()
     os.makedirs(ns.out, exist_ok=True)
 
@@ -32,6 +40,18 @@ def main() -> int:
     shutil.copytree(os.path.join(REPO, "vault"), payload,
                     ignore=shutil.ignore_patterns(".gitkeep"))
     shutil.rmtree(stage)
+    if ns.zip:
+        import zipfile
+        zpath = os.path.join(ns.out, f"koine-{_versao()}.zip")
+        if os.path.exists(zpath):
+            os.remove(zpath)
+        with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as z:
+            z.write(pyz, "koine.pyz")
+            for raiz, _, arqs in os.walk(payload):
+                for a in arqs:
+                    p = os.path.join(raiz, a)
+                    z.write(p, "vault/" + os.path.relpath(p, payload).replace(os.sep, "/"))
+        print(f"zip: {zpath}")
     print(f"pyz: {pyz}")
     print(f"payload: {payload}")
     return 0
