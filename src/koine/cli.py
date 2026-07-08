@@ -135,6 +135,7 @@ def _materializar(lanc, pasta: str) -> None:
     for rel, conteudo in lanc.arquivos_working_dir.items():
         p = os.path.join(pasta, rel)
         os.makedirs(os.path.dirname(p) or ".", exist_ok=True)
+        conflito.resolver_arquivo_conflito(p)  # symlink/diretório → ConflitoErro
         with open(p, "w", encoding="utf-8") as f:
             f.write(conteudo)
     for absp, conteudo in lanc.arquivos_externos.items():

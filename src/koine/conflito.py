@@ -25,6 +25,21 @@ def resolver_symlink_conflito(link: str, alvo_esperado: str) -> None:
     _backup_com_aviso(link)
 
 
+def resolver_arquivo_conflito(p: str) -> None:
+    """Porta PARCIAL do ramo arquivo de cmd/kn-agente/conflito.go
+    (resolverArquivoConflito) — só symlink/diretório. Path que será escrito
+    como arquivo regular. Symlink/diretório → erro (escrever "atravessaria"
+    o symlink — perda de dado). Regular/ausente → OK; marker-check/.bak de
+    arquivo regular é deferido (gap declarado do port)."""
+    if not os.path.lexists(p):
+        return
+    if os.path.islink(p):
+        raise ConflitoErro(
+            f"conflito em {p}: é um symlink — esperava arquivo regular; resolva manualmente")
+    if os.path.isdir(p):
+        raise ConflitoErro(f"conflito em {p}: é um diretório — resolva manualmente")
+
+
 def _backup_com_aviso(p: str) -> None:
     bak = _backup_livre(p)
     os.rename(p, bak)
