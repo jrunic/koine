@@ -55,6 +55,23 @@ def instalar_go(home: str) -> None:
     )
 
 
+def instalar_habilidades_go(home: str, harness: str) -> None:
+    """Roda o `instalar-habilidades --para=<harness>` do Go num HOME isolado.
+    Requer que `instalar_go(home)` tenha rodado antes (popula o vault)."""
+    go_bin = os.environ.get("KOINE_GO_BIN", "kn-agente")
+    bindir = os.path.join(home, "_gobin")
+    os.makedirs(bindir, exist_ok=True)
+    dst = os.path.join(bindir, "kn-agente")
+    if not os.path.exists(dst):
+        shutil.copy(go_bin, dst)
+        os.chmod(dst, 0o755)
+    subprocess.run(
+        [dst, "instalar-habilidades", "--para", harness],
+        env={"HOME": home, "PATH": "/usr/bin:/bin"},
+        stdin=subprocess.DEVNULL, capture_output=True, text=True, check=True,
+    )
+
+
 def arvore(base: str) -> dict:
     """{caminho-relativo: sha256} de todos os arquivos sob base. {} se ausente."""
     out = {}
