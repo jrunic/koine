@@ -10,7 +10,7 @@ tags: [referencia, habilidades, skills, kn]
 
 ## Visão geral
 
-Koine distribui **5 skills** no vault (`vault/habilidades/kn-NN-*/SKILL.md`), instaladas em `~/.local/share/koine/habilidades/` pelo `kn-agente instalar` e symlinkadas no harness ativo (ex: `~/.claude/skills/`).
+Koine distribui **5 skills** no vault (`vault/habilidades/kn-NN-*/SKILL.md`), instaladas em `~/.local/share/koine/habilidades/` pelo `koine instalar` e symlinkadas no harness ativo (ex: `~/.claude/skills/`).
 
 Skills `kn-*` são **invocadas em sessões com Hermes** — o agente que opera o método Koine, presente na pasta canônica `~/koine` (alias `koine`). Agentes operacionais derivados (criados via `/kn-03-cria-agente`) normalmente **não** invocam skills `kn-*` — eles focam em trabalho real, não em manutenção do método.
 
@@ -47,7 +47,7 @@ Espaço entre blocos permite adicionar skills futuras sem renumeração cascata.
 Meta-skill que conduz o primeiro contato do usuário com Koine. Orquestra 4 rodadas de entrevista, materializa todos os arquivos canônicos da instalação inicial e entrega o usuário pronto para invocar seu próprio agente operacional.
 
 **Inputs:**
-- Pasta canônica criada pelo `kn-agente instalar` com `CONTEXTO.md` contendo `bootstrap: true`
+- Pasta canônica criada pelo `koine instalar` com `CONTEXTO.md` contendo `bootstrap: true`
 - Sessão aberta com Hermes nessa pasta
 
 **Outputs:**
@@ -191,7 +191,7 @@ Encerra uma sessão Koine — sintetiza o que aconteceu, escreve diário na past
 
 ## Onde os SKILL.md vivem
 
-Após `kn-agente instalar`:
+Após `koine instalar`:
 
 ```
 ~/.local/share/koine/habilidades/
@@ -216,5 +216,5 @@ Cliente IA descobre skills automaticamente.
 ## Referências
 
 - [Tutorial — Onboarding completo](../tutoriais/onboarding-completo.md)
-- [CLI](./cli.md) — comandos `kn-agente` e wrappers
+- [CLI](./cli.md) — comandos `koine` e wrappers
 - ADR `20260621-estrutura-config-koine.md` (decisão 13) — família `kn-NN` com bloco numérico semântico

@@ -3,7 +3,7 @@
 > CLI que injeta contexto multi-camada (usuário, agente, referências, contexto da pasta) em harnesses de IA terminal — Claude Code, Antigravity (`agy`), GitHub Copilot CLI, OpenCode, Codex CLI.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Go](https://img.shields.io/badge/go-1.22+-00ADD8.svg)](go.mod)
+[![Python](https://img.shields.io/badge/python-3.12+-3776AB.svg)](pyproject.toml)
 
 ## Por que existe
 
@@ -11,7 +11,7 @@ Agentes de IA terminal abrem cada sessão zeradas. O usuário precisa repetir, a
 
 Koine resolve isso separando o que normalmente vem embaralhado em "memória de agente":
 
-1. **Harness** — `kn-agente` carrega contexto e escreve o arquivo que o cliente IA lê na inicialização (`CLAUDE.md`, `GEMINI.md`, etc.)
+1. **Harness** — `koine` carrega contexto e escreve o arquivo que o cliente IA lê na inicialização (`CLAUDE.md`, `GEMINI.md`, etc.)
 2. **Habilidades** — skills `kn-*` que o agente invoca durante a sessão
 3. **Base de conhecimento** — bundle [OKF](https://github.com/GoogleCloudPlatform/knowledge-catalog/) com perfis, escopos, domínios e referências; propriedade do usuário
 4. **Sistema de arquivos** — recomendado, não obrigatório
@@ -22,11 +22,12 @@ Cada camada evolui em ritmo próprio. O agente IA passa a "já saber" quem você
 
 Para Koine fazer sentido, você precisa de:
 
+- **Python 3.12+** — o Koine é distribuído como aplicação Python (`koine.pyz`). macOS: `brew install python`; Windows: instalador oficial em <https://www.python.org/downloads/> (ou o Python da sua TI); Linux: gerenciador do sistema (`apt install python3` etc.).
 - **Um cliente IA terminal** suportado — Claude Code, Antigravity, GitHub Copilot CLI, OpenCode ou Codex CLI. Tabela abaixo na seção [Clientes IA suportados](#clientes-ia-suportados).
 - **Node.js 18+** (recomendado 22+) — necessário para instalar Claude Code e Copilot CLI via `npm`. Download: <https://nodejs.org/>.
 - **Homebrew** (opcional em macOS) — gerenciador recomendado para instalar Node e clientes IA. Instalar: <https://brew.sh/>.
 
-Se você rodar `kn-agente instalar` sem cliente IA detectado, o próprio binário orienta o que falta com comandos por OS — não precisa decorar nada agora.
+Se você rodar `koine instalar` sem cliente IA detectado, o próprio instalador orienta o que falta com comandos por OS — não precisa decorar nada agora.
 
 ## Instalação
 
@@ -51,21 +52,19 @@ install.bat
 iwr -useb https://github.com/jrunic/koine/releases/latest/download/install.ps1 | iex
 ```
 
-### Alternativa com Go 1.22+
+### Upgrade da v0.3.x (Go)
 
-```bash
-go install github.com/jrunic/koine/cmd/kn-agente@latest
-```
+Rode o mesmo one-liner do seu sistema. O installer substitui os atalhos `kn-*` da instalação Go pelos wrappers Python e preserva `~/.config/koine/` e `~/.local/share/koine/` intocados — escopos, aliases e agentes continuam onde estavam. Nada a migrar.
 
-Útil para desenvolvedores Go que já têm o toolchain. Após instalar, rode `kn-agente instalar` para extrair o vault.
+**Plataformas suportadas:** qualquer sistema com Python ≥ 3.12 (macOS, Linux, Windows).
 
-**Plataformas suportadas:** `darwin-arm64`, `darwin-amd64`, `linux-amd64`, `windows-amd64`.
+**Ambiente que bloqueia até o Python?** Use o modo skills: baixe `koine-skills.zip` da release e siga o `instalar-koine.md` dentro do zip.
 
 ## Primeira sessão em 3 comandos
 
 ```bash
-# 1. Finalizar configuração (cria pasta canônica, alias 'koine', instala skills)
-kn-agente instalar
+# 1. Finalizar configuração (o installer já roda isto; repita só para reconfigurar)
+koine instalar
 
 # 2. Abrir primeira sessão com Hermes
 kn-claude hermes koine
@@ -86,7 +85,7 @@ kn-claude hermes koine
 
 ## Skills `kn-*`
 
-Distribuídas no vault e disponíveis após `kn-agente instalar`:
+Distribuídas no vault e disponíveis após `koine instalar`:
 
 | Skill | Quando invocar |
 |---|---|
@@ -123,8 +122,8 @@ Detalhes em [`docs/referencias/habilidades.md`](docs/referencias/habilidades.md)
 Ver [`CONTEXTO.md`](CONTEXTO.md) para stack, padrões e como contribuir.
 
 ```bash
-go build ./cmd/kn-agente
-go test ./...
+python3 -m venv .venv && .venv/bin/pip install pytest
+.venv/bin/pytest -q
 ```
 
 ## Licença
