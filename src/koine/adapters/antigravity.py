@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from koine.contexto import ContextoMontado
 
 MARCADOR = "<!-- gerado por kn-agente -->"
-ARQUIVO = "CLAUDE.md"
+ARQUIVO = "GEMINI.md"
 
 
 def renderizar(cm: ContextoMontado) -> str:
@@ -13,8 +13,8 @@ def renderizar(cm: ContextoMontado) -> str:
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     linhas = [
         MARCADOR,
-        "# CLAUDE.md",
-        f"*Gerado por kn-agente em {ts}. Não editar — regerar com `kn-claude .`.*",
+        "# GEMINI.md",
+        f"*Gerado por kn-agente em {ts}. Não editar — regerar com `kn-agy .`.*",
         "",
         f"@{cm.usuario_path}",
         f"@{cm.koine_path}",
@@ -32,7 +32,7 @@ def _render_bootstrap(cm: ContextoMontado) -> str:
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     linhas = [
         MARCADOR,
-        "# CLAUDE.md",
+        "# GEMINI.md",
         f"*Gerado por kn-agente em {ts} — modo bootstrap. Não editar.*",
         "",
     ]

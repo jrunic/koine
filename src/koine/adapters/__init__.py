@@ -1,9 +1,10 @@
-from koine.adapters import claude
+from koine.adapters import antigravity, claude
 
-# registry cliente → (módulo do adapter). instalar (P2) itera isto para
-# emitir um wrapper kn-<cliente> por adapter REGISTRADO. P1 registra só claude.
+# registry cliente → (módulo do adapter). instalar itera isto para
+# emitir um wrapper kn-<cliente> por adapter REGISTRADO.
 REGISTRY = {
     "claude": claude,
+    "agy": antigravity,
 }
 
 
