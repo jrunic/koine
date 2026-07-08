@@ -29,6 +29,15 @@ def demover_h1(content: str) -> str:
     return "\n".join(linhas)
 
 
+def wrapar_instructions(conteudo: str) -> str:
+    """Produz conteúdo para um `.instructions.md` do Copilot CLI.
+
+    Adiciona frontmatter `applyTo: "**"`, remove frontmatter original e demove H1→H2.
+    """
+    body = demover_h1(strip_frontmatter(conteudo)).lstrip("\n")
+    return '---\napplyTo: "**"\n---\n\n' + body
+
+
 def mescar_documentos(titulo: str, partes: list) -> str:
     buf = f"# {titulo}\n\n"
     for p in partes:

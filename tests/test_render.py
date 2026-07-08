@@ -21,6 +21,11 @@ def test_dominio_de():
     assert render.dominio_de("/foo/kn-indice-universal.md") == "universal"
 
 
+def test_wrapar_instructions():
+    out = render.wrapar_instructions("---\nid: 1\n---\n# Título\nCorpo.")
+    assert out == '---\napplyTo: "**"\n---\n\n## Título\nCorpo.'
+
+
 def test_mescar_documentos():
     partes = [render.Parte("Usuário", "---\nid: 1\n---\n# Walter\nBio."),
               render.Parte("Koine", "# Koine\nManual.\n")]
