@@ -11,6 +11,7 @@ from koine import (
     indice,
     instalar as _instalar,
     launch,
+    pasta as pasta_mod,
     paths,
     schema,
     skills,
@@ -18,7 +19,7 @@ from koine import (
 )
 from koine._version import __version__
 
-SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades"}  # gerar/mostrar chegam em P3
+SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades", "gerar", "mostrar"}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -36,6 +37,10 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_instalar(argv[1:])
         if primeiro == "instalar-habilidades":
             return _cmd_instalar_habilidades(argv[1:])
+        if primeiro == "gerar":
+            return _cmd_gerar(argv[1:])
+        if primeiro == "mostrar":
+            return _cmd_mostrar(argv[1:])
     if primeiro in adapters.REGISTRY:
         return _rodar_cliente(primeiro, argv[1:])
 
@@ -107,8 +112,7 @@ def _pyz_padrao() -> str:
     return os.path.abspath(sys.argv[0])
 
 
-def _rodar_cliente(cliente: str, args: list[str]) -> int:
-    agente, pasta = args[0], args[1]  # P1: pasta é direct-path
+def _gerar_conteudo(agente: str, pasta: str) -> str:
     ctx_path = os.path.join(pasta, "CONTEXTO.md")
     fm, _ = frontmatter.ler(open(ctx_path, encoding="utf-8").read())
     # bootstrap não tem escopo nem índices; contexto.resolver trata o ramo.
@@ -119,9 +123,32 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
                  encoding="utf-8").read())
         refs = paths.resolver_tagged(schema.Escopo.from_fm(escopo_fm).pasta_referencias)
         indice.gerar(refs, fm.get("dominios", []))
-
     cm = contexto.resolver(agente, pasta)
-    conteudo = adapters.get(cliente).renderizar(cm)
+    # gerar/mostrar/cliente sempre renderizam com o adapter Claude (igual ao Go executar)
+    return adapters.get("claude").renderizar(cm)
+
+
+def _cmd_gerar(args: list[str]) -> int:
+    agente = args[0]
+    pasta = pasta_mod.resolver(args[1] if len(args) >= 2 else "")
+    conteudo = _gerar_conteudo(agente, pasta)
+    destino = os.path.join(pasta, "CLAUDE.md")
+    with open(destino, "w", encoding="utf-8") as f:
+        f.write(conteudo)
+    print(f"Escrito {destino} ({len(conteudo.encode('utf-8'))} bytes)")
+    return 0
+
+
+def _cmd_mostrar(args: list[str]) -> int:
+    agente, alvo = args[0], args[1]
+    conteudo = _gerar_conteudo(agente, alvo)   # NÃO resolve — casa o oráculo (Go passa arg cru)
+    print(conteudo, end="")
+    return 0
+
+
+def _rodar_cliente(cliente: str, args: list[str]) -> int:
+    agente, pasta = args[0], args[1]  # P1: pasta é direct-path
+    conteudo = _gerar_conteudo(agente, pasta)
     with open(os.path.join(pasta, "CLAUDE.md"), "w", encoding="utf-8") as f:
         f.write(conteudo)
     try:

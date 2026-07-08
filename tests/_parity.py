@@ -32,6 +32,17 @@ def gerar_go(pasta: str, agente: str, home: str) -> str:
         return f.read()
 
 
+def mostrar_go(pasta: str, agente: str, home: str) -> str:
+    """stdout de `kn-agente mostrar <agente> <pasta>` num HOME isolado."""
+    go_bin = os.environ.get("KOINE_GO_BIN", "kn-agente")
+    r = subprocess.run(
+        [go_bin, "mostrar", agente, pasta],
+        env={"HOME": home, "PATH": "/usr/bin:/bin"},
+        stdin=subprocess.DEVNULL, capture_output=True, text=True, check=True,
+    )
+    return r.stdout
+
+
 def parity(go_text: str, py_text: str) -> bool:
     return normalize(go_text) == normalize(py_text)
 
