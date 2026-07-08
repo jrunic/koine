@@ -154,7 +154,7 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
     with open(destino, "w", encoding="utf-8") as f:
         f.write(conteudo)
     try:
-        launch.lancar(cliente, pasta)
+        launch.lancar(cliente, pasta, args=getattr(adapters.get(cliente), "EXTRA_ARGS", None))
     except launch.ClienteNaoEncontrado as e:
         print(str(e), file=sys.stderr)
         return 1

@@ -66,6 +66,28 @@ def gerar_agy_go(pasta: str, agente: str, home: str, shim_path_dir: str) -> str:
         return f.read()
 
 
+def gerar_via_wrapper_go(cliente: str, arquivo: str, pasta: str, agente: str,
+                         home: str, shim_path_dir: str) -> str:
+    """Renderiza <arquivo> pelo Go via o wrapper kn-<cliente>: copia o oráculo
+    para `kn-<cliente>` (o Go decide o cliente pelo basename) e roda com um shim
+    <cliente> PREPENDADO no PATH. Lê <pasta>/<arquivo>."""
+    go_bin = os.environ.get("KOINE_GO_BIN", "kn-agente")
+    bindir = os.path.join(home, f"_gobin_{cliente}")
+    os.makedirs(bindir, exist_ok=True)
+    kn = os.path.join(bindir, f"kn-{cliente}")
+    if not os.path.exists(kn):
+        shutil.copy(go_bin, kn)
+        os.chmod(kn, 0o755)
+    path = shim_path_dir + os.pathsep + "/usr/bin:/bin"
+    subprocess.run(
+        [kn, agente, pasta], env={"HOME": home, "PATH": path},
+        stdin=subprocess.DEVNULL, capture_output=True, text=True,
+        check=True, timeout=30,
+    )
+    with open(os.path.join(pasta, arquivo), encoding="utf-8") as f:
+        return f.read()
+
+
 def mostrar_go(pasta: str, agente: str, home: str) -> str:
     """stdout de `kn-agente mostrar <agente> <pasta>` num HOME isolado."""
     go_bin = os.environ.get("KOINE_GO_BIN", "kn-agente")
