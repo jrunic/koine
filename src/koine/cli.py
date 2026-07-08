@@ -48,6 +48,7 @@ def _cmd_instalar(args: list[str]) -> int:
     p.add_argument("--bin", default=None)
     p.add_argument("--pyz", default=None)
     p.add_argument("--force", action="store_true")
+    p.add_argument("--para", default=None)
     ns = p.parse_args(args)
 
     vault_src = ns.vault or _localizar_vault()
@@ -62,6 +63,9 @@ def _cmd_instalar(args: list[str]) -> int:
     # bakear absoluto no wrapper evita `python3` puro pegar um Python antigo.
     wrappers.gerar(bindir, pyz, sys.executable)
     canonica.configurar(vault_src)
+    if ns.para:
+        # reaproveita o --force já existente do instalar (P2, para o extrair)
+        skills.instalar_habilidades(ns.para, force=ns.force)
     print("Instalação concluída.")
     return 0
 

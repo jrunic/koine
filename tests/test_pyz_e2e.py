@@ -54,9 +54,11 @@ def test_greenfield_instalar_do_pyz_e_rodar_wrapper(tmp_path):
     path = "/usr/bin:/bin"
 
     # 1. instalar a partir do pyz (payload do vault está ao lado do pyz)
-    subprocess.run([sys.executable, pyz, "instalar", "--bin", bindir, "--pyz", pyz],
+    subprocess.run([sys.executable, pyz, "instalar", "--bin", bindir, "--pyz", pyz, "--para", "claude"],
                    env={"HOME": home, "PATH": path}, check=True, capture_output=True, text=True)
     assert os.path.exists(os.path.join(home, ".local/share/koine/KOINE.md"))
+    # skills instaladas no harness (co-requisito do onboarding)
+    assert os.path.isdir(os.path.join(home, ".claude", "skills", "kn-12-prepara-contexto"))
     wrapper = os.path.join(bindir, "kn-claude")
     assert os.path.exists(wrapper) and (os.stat(wrapper).st_mode & stat.S_IXUSR)
 
