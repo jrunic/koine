@@ -1,10 +1,21 @@
+import argparse
 import os
+import pathlib
 import sys
 
-from koine import adapters, contexto, frontmatter, indice, paths, schema
+from koine import (
+    adapters,
+    contexto,
+    frontmatter,
+    indice,
+    instalar as _instalar,
+    paths,
+    schema,
+    wrappers,
+)
 from koine._version import __version__
 
-SUBCOMANDOS = {"versao"}  # instalar/gerar/mostrar chegam em P2/P3
+SUBCOMANDOS = {"versao", "instalar"}  # gerar/mostrar chegam em P3
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -18,11 +29,55 @@ def main(argv: list[str] | None = None) -> int:
         if primeiro == "versao":
             print(f"koine {__version__}")
             return 0
+        if primeiro == "instalar":
+            return _cmd_instalar(argv[1:])
     if primeiro in adapters.REGISTRY:
         return _rodar_cliente(primeiro, argv[1:])
 
     print(f"desconhecido: {primeiro}", file=sys.stderr)
     return 2
+
+
+def _cmd_instalar(args: list[str]) -> int:
+    p = argparse.ArgumentParser(prog="koine instalar")
+    p.add_argument("--vault", default=None)
+    p.add_argument("--bin", default=None)
+    p.add_argument("--pyz", default=None)
+    p.add_argument("--force", action="store_true")
+    ns = p.parse_args(args)
+
+    vault_src = ns.vault or _localizar_vault()
+    div = _instalar.extrair(vault_src, __version__, force=ns.force)
+    if div and not ns.force:
+        print("Arquivos divergentes (use --force):")
+        for d in div:
+            print("  !", d)
+    bindir = ns.bin or _bin_padrao()
+    pyz = ns.pyz or _pyz_padrao()
+    wrappers.gerar(bindir, pyz)
+    print("Instalação concluída.")
+    return 0
+
+
+def _localizar_vault() -> str:
+    # 1. ao lado do argv0/pyz (payload de distribuição)
+    base = os.path.dirname(os.path.abspath(sys.argv[0]))
+    for cand in (os.path.join(base, "vault"), os.path.join(base, ".koine-bootstrap")):
+        if os.path.isdir(cand):
+            return cand
+    # 2. dev: repo vault/ relativo a este arquivo (src/koine/cli.py → ../../vault)
+    repo_vault = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "vault"))
+    if os.path.isdir(repo_vault):
+        return repo_vault
+    raise SystemExit("vault não encontrado; use --vault <path>")
+
+
+def _bin_padrao() -> str:
+    return os.path.join(str(pathlib.Path.home()), ".local", "bin")
+
+
+def _pyz_padrao() -> str:
+    return os.path.abspath(sys.argv[0])
 
 
 def _rodar_cliente(cliente: str, args: list[str]) -> int:
