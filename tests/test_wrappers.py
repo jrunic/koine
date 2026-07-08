@@ -13,10 +13,11 @@ def test_gera_um_wrapper_por_adapter_registrado(tmp_path):
     bindir = str(tmp_path / "bin")
     pyz = "/opt/koine/koine.pyz"
     criados = wrappers.gerar(bindir, pyz)
-    # um wrapper kn-<cliente> por adapter registrado (claude + agy)
+    # um wrapper kn-<cliente> por adapter registrado (claude + agy + codex)
     assert set(criados) == {
         os.path.join(bindir, "kn-claude"),
         os.path.join(bindir, "kn-agy"),
+        os.path.join(bindir, "kn-codex"),
     }
 
 
