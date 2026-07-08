@@ -1,5 +1,7 @@
+import hashlib
 import os
 import re
+import shutil
 import subprocess
 
 # Linhas que variam entre execuções e NÃO são divergência real.
@@ -32,3 +34,35 @@ def gerar_go(pasta: str, agente: str, home: str) -> str:
 
 def parity(go_text: str, py_text: str) -> bool:
     return normalize(go_text) == normalize(py_text)
+
+
+def instalar_go(home: str) -> None:
+    """Roda o `instalar` do Go num HOME isolado, com efeitos colaterais contidos.
+
+    Copia o binário para <home>/_gobin (symlinks caem lá, não no repo) e usa
+    PATH mínimo (nenhum harness detectado) + stdin fechado (não-interativo).
+    """
+    go_bin = os.environ.get("KOINE_GO_BIN", "kn-agente")
+    bindir = os.path.join(home, "_gobin")
+    os.makedirs(bindir, exist_ok=True)
+    dst = os.path.join(bindir, "kn-agente")
+    shutil.copy(go_bin, dst)
+    os.chmod(dst, 0o755)
+    subprocess.run(
+        [dst, "instalar"],
+        env={"HOME": home, "PATH": "/usr/bin:/bin"},
+        stdin=subprocess.DEVNULL, capture_output=True, text=True, check=True,
+    )
+
+
+def arvore(base: str) -> dict:
+    """{caminho-relativo: sha256} de todos os arquivos sob base. {} se ausente."""
+    out = {}
+    if not os.path.isdir(base):
+        return out
+    for raiz, _, arqs in os.walk(base):
+        for a in arqs:
+            p = os.path.join(raiz, a)
+            with open(p, "rb") as f:
+                out[os.path.relpath(p, base)] = hashlib.sha256(f.read()).hexdigest()
+    return out
