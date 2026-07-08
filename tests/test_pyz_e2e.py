@@ -1,4 +1,5 @@
 import os
+import stat
 import subprocess
 import sys
 from tests import _parity
@@ -37,4 +38,32 @@ def test_pyz_claude_paridade(tmp_path, monkeypatch):
     subprocess.run([sys.executable, pyz, "claude", "hermes", fx["trab"]],
                    env={**os.environ, "HOME": fx["home"]}, check=True, capture_output=True, text=True)
     py = open(os.path.join(fx["trab"], "CLAUDE.md"), encoding="utf-8").read()
+    assert _parity.normalize(py) == _parity.normalize(go)
+
+
+def test_greenfield_instalar_do_pyz_e_rodar_wrapper(tmp_path):
+    pyz = _build(tmp_path)                        # pacote de distribuição
+    home = str(tmp_path / "home"); os.makedirs(home)
+    bindir = os.path.join(home, "bin")
+
+    # PATH que resolve python3 para um >=3.12 (o do venv que roda os testes).
+    # /usr/bin/python3 no macOS é 3.9 e NÃO roda koine (sintaxe 3.12+); numa
+    # máquina real do Aldo o python 3.13 instalado está no PATH.
+    py3dir = os.path.dirname(sys.executable)
+    path = f"{py3dir}:/usr/bin:/bin"
+
+    # 1. instalar a partir do pyz (payload do vault está ao lado do pyz)
+    subprocess.run([sys.executable, pyz, "instalar", "--bin", bindir, "--pyz", pyz],
+                   env={"HOME": home, "PATH": path}, check=True, capture_output=True, text=True)
+    assert os.path.exists(os.path.join(home, ".local/share/koine/KOINE.md"))
+    wrapper = os.path.join(bindir, "kn-claude")
+    assert os.path.exists(wrapper) and (os.stat(wrapper).st_mode & stat.S_IXUSR)
+
+    # 2. semear pasta de trabalho no HOME instalado e rodar o wrapper
+    trab = seed.semear_trabalho(home)
+    go = _parity.gerar_go(trab, "hermes", home)
+    os.remove(os.path.join(trab, "CLAUDE.md"))
+    subprocess.run([wrapper, "hermes", trab], env={"HOME": home, "PATH": path},
+                   check=True, capture_output=True, text=True)
+    py = open(os.path.join(trab, "CLAUDE.md"), encoding="utf-8").read()
     assert _parity.normalize(py) == _parity.normalize(go)

@@ -93,6 +93,24 @@ def montar(base: str) -> dict:
     return {"home": home, "cfg": cfg, "data": data, "refs": refs, "trab": trab}
 
 
+def semear_trabalho(home: str) -> str:
+    """Semeia arquivo do usuário + escopo + refs + pasta de trabalho num HOME
+    onde o `koine instalar` JÁ rodou. NÃO planta dominios/KOINE/hermes — usa os
+    REAIS do vault instalado. As refs declaram o domínio 'tecnologia' (existe no
+    vault real). Devolve o path da pasta de trabalho. Evita o montar+cirurgia."""
+    cfg = os.path.join(home, ".config", "koine")
+    refs = os.path.join(home, "refs-fixture")
+    trab = os.path.join(home, "trabalho")
+    for d in (os.path.join(cfg, "escopos"), refs, trab):
+        os.makedirs(d, exist_ok=True)
+    _w(os.path.join(cfg, "teste.md"), USUARIO)
+    _w(os.path.join(cfg, "escopos", "fixture.md"), ESCOPO)
+    _w(os.path.join(refs, "ref-a.md"), REF_A)
+    _w(os.path.join(refs, "ref-b.md"), REF_B)
+    _w(os.path.join(trab, "CONTEXTO.md"), CONTEXTO)
+    return trab
+
+
 def _w(path: str, conteudo: str) -> None:
     with open(path, "w", encoding="utf-8") as f:
         f.write(conteudo)
