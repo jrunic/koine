@@ -1,5 +1,5 @@
 ---
-descricao: Guia de instalação do Koine v0.4.x — macOS, Linux e Windows; upgrade da v0.3.x (Go); versão pinada e espelho; verificação e solução de problemas
+descricao: Guia de instalação do Koine v0.4.x — macOS, Linux e Windows; upgrade da v0.3.x (Go); passo a passo manual com explicação de cada comando (o que os installers automatizam); variantes, verificação e solução de problemas
 id: 202607090130
 tipo: guia
 status: ativo
@@ -63,6 +63,70 @@ Rode o mesmo comando de instalação do seu sistema. O installer:
 - preserva qualquer arquivo seu que colida com um nome de wrapper (aviso em vez de sobrescrita).
 
 A geração de contexto é equivalente à do Go — a sessão seguinte continua de onde parou.
+
+## Passo a passo manual — o que os installers fazem
+
+**Este passo a passo é exatamente o que `install.sh` (macOS/Linux) e `install.ps1` (Windows) automatizam** — o `install.bat` é só um atalho que baixa e executa o `install.ps1` com `-ExecutionPolicy Bypass`, para estações onde scripts PowerShell são bloqueados por política. Use esta seção para instalar à mão (ex.: auditoria em ambiente corporativo, máquina sem acesso direto ao GitHub) ou para entender o que roda na sua máquina. Nenhum passo exige administrador.
+
+### 1. Localizar um Python ≥ 3.12
+
+```bash
+python3.13 -c 'import sys; print(sys.version_info >= (3, 12))'   # macOS/Linux: tente python3.13, python3.12, python3, python
+py -3 -c "import sys; print(sys.version_info >= (3, 12))"        # Windows: py -3, depois python, python3
+```
+
+O comando pergunta ao próprio interpretador se ele é ≥ 3.12 — checar pela versão real, e não pelo nome, evita a pegadinha do macOS, onde `python3` é o 3.9 do sistema. Anote o caminho do interpretador aprovado (`command -v python3.13`); é ele que você usa nos passos seguintes. Se nenhum passar, instale o Python (pré-requisito acima) — nada foi tocado até aqui.
+
+### 2. Resolver a versão a instalar
+
+```bash
+curl -fsSLI -o /dev/null -w '%{url_effective}' https://github.com/jrunic/koine/releases/latest
+```
+
+O GitHub redireciona `releases/latest` para a URL da última release — o final da URL é a tag (ex.: `v0.4.0`). Se você já sabe a versão que quer, pule este passo e use a tag direto (é o que o override `KOINE_VERSAO` faz).
+
+### 3. Baixar o pacote
+
+```bash
+curl -fsSL --retry 3 -o /tmp/koine-0.4.0.zip \
+  https://github.com/jrunic/koine/releases/download/v0.4.0/koine-0.4.0.zip
+```
+
+O asset se chama `koine-<versão sem o v>.zip` e contém duas coisas: `koine.pyz` (a aplicação — um zipapp Python, só código-fonte) e `vault/` (os arquivos de dados). Baixar para um diretório temporário garante que nada é tocado se o download falhar. Num espelho interno, troque a base da URL (é o que `KOINE_BASE_URL` faz). Para conferir integridade, o asset `SHA256SUMS` da release lista o hash de cada arquivo.
+
+### 4. Extrair para o local canônico
+
+```bash
+python3.13 -m zipfile -e /tmp/koine-0.4.0.zip ~/.local/share/koine/dist/
+```
+
+Extrai com o módulo `zipfile` do próprio Python — não depende de `unzip` instalado. O destino canônico é o diretório de dados do Koine (`$XDG_DATA_HOME/koine/dist/`, default `~/.local/share/koine/dist/`; no Windows, `%USERPROFILE%\.local\share\koine\dist\`). Os installers limpam esse diretório antes de extrair — é área do pacote, não de dados seus; seus dados vivem em `~/.config/koine/` e não são tocados.
+
+### 5. Rodar o instalador do produto
+
+```bash
+python3.13 ~/.local/share/koine/dist/koine.pyz instalar
+```
+
+Este é o passo que instala de fato — tudo que vem antes é transporte. O `koine instalar`:
+
+- planta o **vault** em `~/.local/share/koine/` e os domínios em `~/.config/koine/dominios/` (arquivos idênticos são pulados; divergentes são preservados e reportados — nada seu é sobrescrito);
+- gera os **wrappers** `koine` e `kn-claude`/`kn-agy`/`kn-codex`/`kn-copilot`/`kn-opencode` em `~/.local/bin/`, com o caminho absoluto do interpretador aprovado no passo 1 gravado dentro (imune a `python3` errado no PATH de amanhã);
+- configura a **pasta canônica** `~/koine` com um `CONTEXTO.md` inicial e registra o alias `koine` (num terminal interativo, pergunta onde você quer a pasta);
+- detecta **clientes IA** no PATH e oferece instalar as skills `kn-*` de cada um (`[S/n]`; sem terminal interativo, apenas lista e mostra o comando para depois);
+- termina mostrando o comando da sua **primeira sessão**.
+
+### 6. PATH
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"    # adicione ao ~/.zshrc ou ~/.bashrc
+```
+
+```powershell
+[Environment]::SetEnvironmentVariable("PATH", "$env:USERPROFILE\.local\bin;" + [Environment]::GetEnvironmentVariable("PATH", "User"), "User")
+```
+
+Os wrappers só funcionam por nome (`kn-claude ...`) se `~/.local/bin` estiver no PATH. No Unix é uma linha no profile do shell; no Windows o comando acima persiste no ambiente do usuário, sem admin. Reabra o terminal depois.
 
 ## Variantes
 
