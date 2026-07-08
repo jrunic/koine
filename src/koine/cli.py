@@ -5,6 +5,7 @@ import sys
 
 from koine import (
     adapters,
+    canonica,
     contexto,
     frontmatter,
     indice,
@@ -57,6 +58,7 @@ def _cmd_instalar(args: list[str]) -> int:
     # sys.executable = interpretador que rodou `instalar` (>=3.10 garantido);
     # bakear absoluto no wrapper evita `python3` puro pegar um Python antigo.
     wrappers.gerar(bindir, pyz, sys.executable)
+    canonica.configurar(vault_src)
     print("Instalação concluída.")
     return 0
 
