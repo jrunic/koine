@@ -1,12 +1,17 @@
 from datetime import datetime, timezone
 
 from koine.contexto import ContextoMontado
+from koine.lancamento import Lancamento
 
 MARCADOR = "<!-- gerado por kn-agente -->"
 ARQUIVO = "GEMINI.md"
 
 
-def renderizar(cm: ContextoMontado) -> str:
+def renderizar(cm: ContextoMontado) -> Lancamento:
+    return Lancamento(arquivos_working_dir={ARQUIVO: _render(cm)})
+
+
+def _render(cm: ContextoMontado) -> str:
     if cm.bootstrap:
         return _render_bootstrap(cm)
     # RFC3339 UTC, igual a time.Now().UTC().Format(time.RFC3339) do Go.

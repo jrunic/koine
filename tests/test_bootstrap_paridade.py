@@ -18,7 +18,7 @@ def test_bootstrap_claude_bate_com_go(koine_home, monkeypatch):
     pasta = _pasta_bootstrap(koine_home["home"])
     go = _parity.gerar_go(pasta, "hermes", koine_home["home"])
     cm = contexto.resolver("hermes", pasta)
-    py = claude.renderizar(cm)
+    py = claude.renderizar(cm).arquivos_working_dir["CLAUDE.md"]
     assert _parity.normalize(py) == _parity.normalize(go)
     assert py.startswith("<!-- gerado por kn-agente -->")
     assert "modo bootstrap" in py

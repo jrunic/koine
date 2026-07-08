@@ -1,11 +1,13 @@
 import argparse
 import os
 import pathlib
+import shutil
 import sys
 
 from koine import (
     adapters,
     canonica,
+    conflito,
     contexto,
     frontmatter,
     indice,
@@ -112,7 +114,7 @@ def _pyz_padrao() -> str:
     return os.path.abspath(sys.argv[0])
 
 
-def _gerar_conteudo(agente: str, pasta: str, cliente: str = "claude") -> str:
+def _montar_cm(agente: str, pasta: str) -> contexto.ContextoMontado:
     ctx_path = os.path.join(pasta, "CONTEXTO.md")
     fm, _ = frontmatter.ler(open(ctx_path, encoding="utf-8").read())
     # bootstrap não tem escopo nem índices; contexto.resolver trata o ramo.
@@ -123,15 +125,42 @@ def _gerar_conteudo(agente: str, pasta: str, cliente: str = "claude") -> str:
                  encoding="utf-8").read())
         refs = paths.resolver_tagged(schema.Escopo.from_fm(escopo_fm).pasta_referencias)
         indice.gerar(refs, fm.get("dominios", []))
-    cm = contexto.resolver(agente, pasta)
-    # gerar/mostrar usam o default claude; o caminho do wrapper passa o cliente real.
-    return adapters.get(cliente).renderizar(cm)
+    return contexto.resolver(agente, pasta)
+
+
+def _materializar(lanc, pasta: str) -> None:
+    """Materializa um Lancamento: working dir → externos → symlinks."""
+    for rel, conteudo in lanc.arquivos_working_dir.items():
+        p = os.path.join(pasta, rel)
+        os.makedirs(os.path.dirname(p) or ".", exist_ok=True)
+        with open(p, "w", encoding="utf-8") as f:
+            f.write(conteudo)
+    for absp, conteudo in lanc.arquivos_externos.items():
+        os.makedirs(os.path.dirname(absp), exist_ok=True)
+        with open(absp, "w", encoding="utf-8") as f:
+            f.write(conteudo)
+    for link, alvo in lanc.symlinks.items():
+        os.makedirs(os.path.dirname(link), exist_ok=True)
+        conflito.resolver_symlink_conflito(link, alvo)  # no-op/backup/ConflitoErro
+        if os.path.islink(link):
+            os.remove(link)  # só chega aqui se alvo correto (no-op) — recriar é idempotente
+        _criar_symlink(link, alvo)
+
+
+def _criar_symlink(link: str, alvo: str) -> None:
+    try:
+        os.symlink(alvo, link)
+    except OSError:
+        if sys.platform != "win32":
+            raise
+        shutil.copyfile(alvo, link)  # Windows sem Developer Mode: cópia regenerada por sessão
 
 
 def _cmd_gerar(args: list[str]) -> int:
     agente = args[0]
     pasta = pasta_mod.resolver(args[1] if len(args) >= 2 else "")
-    conteudo = _gerar_conteudo(agente, pasta)
+    lanc = adapters.get("claude").renderizar(_montar_cm(agente, pasta))
+    conteudo = lanc.arquivos_working_dir["CLAUDE.md"]
     destino = os.path.join(pasta, "CLAUDE.md")
     with open(destino, "w", encoding="utf-8") as f:
         f.write(conteudo)
@@ -141,20 +170,23 @@ def _cmd_gerar(args: list[str]) -> int:
 
 def _cmd_mostrar(args: list[str]) -> int:
     agente, alvo = args[0], args[1]
-    conteudo = _gerar_conteudo(agente, alvo)   # NÃO resolve — casa o oráculo (Go passa arg cru)
-    print(conteudo, end="")
+    # alvo NÃO resolve — casa o oráculo (Go passa arg cru)
+    lanc = adapters.get("claude").renderizar(_montar_cm(agente, alvo))
+    print(lanc.arquivos_working_dir["CLAUDE.md"], end="")
     return 0
 
 
 def _rodar_cliente(cliente: str, args: list[str]) -> int:
     agente = args[0]
     pasta = pasta_mod.resolver(args[1] if len(args) >= 2 else "")
-    conteudo = _gerar_conteudo(agente, pasta, cliente)
-    destino = os.path.join(pasta, adapters.get(cliente).ARQUIVO)
-    with open(destino, "w", encoding="utf-8") as f:
-        f.write(conteudo)
+    lanc = adapters.get(cliente).renderizar(_montar_cm(agente, pasta))
     try:
-        launch.lancar(cliente, pasta, args=getattr(adapters.get(cliente), "EXTRA_ARGS", None))
+        _materializar(lanc, pasta)
+    except conflito.ConflitoErro as e:
+        print(str(e), file=sys.stderr)
+        return 1
+    try:
+        launch.lancar(cliente, pasta, env=lanc.env_vars or None, args=lanc.extra_args or None)
     except launch.ClienteNaoEncontrado as e:
         print(str(e), file=sys.stderr)
         return 1

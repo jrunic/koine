@@ -2,6 +2,7 @@ import os
 
 from koine import render
 from koine.contexto import ContextoMontado
+from koine.lancamento import Lancamento
 
 MARCADOR = "<!-- gerado por kn-agente -->"
 ARQUIVO = "AGENTS.md"
@@ -12,7 +13,12 @@ def _agente_de(cm) -> str:
     return os.path.splitext(os.path.basename(cm.agente_path))[0] if cm.agente_path else "hermes"
 
 
-def renderizar(cm: ContextoMontado) -> str:
+def renderizar(cm: ContextoMontado) -> Lancamento:
+    return Lancamento(arquivos_working_dir={ARQUIVO: _render(cm)},
+                      extra_args=list(EXTRA_ARGS))
+
+
+def _render(cm: ContextoMontado) -> str:
     partes = []
 
     def add(secao, path):

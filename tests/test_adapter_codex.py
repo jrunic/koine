@@ -21,7 +21,7 @@ def test_codex_arquivo_e_extra_args():
 
 
 def test_codex_render_inline_e_prosa(tmp_path):
-    out = codex.renderizar(_cm(tmp_path))
+    out = codex.renderizar(_cm(tmp_path)).arquivos_working_dir["AGENTS.md"]
     assert out.startswith("<!-- gerado por kn-agente -->\n")
     assert "# Sessão Koine — Codex" in out
     assert "## Usuário" in out and "Bio." in out           # conteúdo INLINE, não @path
@@ -34,6 +34,6 @@ def test_codex_render_inline_e_prosa(tmp_path):
 
 def test_codex_bootstrap_omite_escopo(tmp_path):
     cm = _cm(tmp_path); cm.bootstrap = True
-    out = codex.renderizar(cm)
+    out = codex.renderizar(cm).arquivos_working_dir["AGENTS.md"]
     assert "## Escopo" not in out and "## Referências" not in out
     assert "## Instruções desta sessão" in out
