@@ -54,7 +54,9 @@ def _cmd_instalar(args: list[str]) -> int:
             print("  !", d)
     bindir = ns.bin or _bin_padrao()
     pyz = ns.pyz or _pyz_padrao()
-    wrappers.gerar(bindir, pyz)
+    # sys.executable = interpretador que rodou `instalar` (>=3.10 garantido);
+    # bakear absoluto no wrapper evita `python3` puro pegar um Python antigo.
+    wrappers.gerar(bindir, pyz, sys.executable)
     print("Instalação concluída.")
     return 0
 

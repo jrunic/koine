@@ -46,11 +46,12 @@ def test_greenfield_instalar_do_pyz_e_rodar_wrapper(tmp_path):
     home = str(tmp_path / "home"); os.makedirs(home)
     bindir = os.path.join(home, "bin")
 
-    # PATH que resolve python3 para um >=3.12 (o do venv que roda os testes).
-    # /usr/bin/python3 no macOS é 3.9 e NÃO roda koine (sintaxe 3.12+); numa
-    # máquina real do Aldo o python 3.13 instalado está no PATH.
-    py3dir = os.path.dirname(sys.executable)
-    path = f"{py3dir}:/usr/bin:/bin"
+    # PATH MÍNIMO de propósito: /usr/bin/python3 no macOS é 3.9 e NÃO roda koine
+    # (sintaxe 3.12+). O `instalar` roda via sys.executable (>=3.12) e o wrapper
+    # BAKA esse interpretador absoluto — então ele funciona mesmo quando o único
+    # `python3` do PATH é o 3.9. Este PATH mínimo prova esse comportamento (o
+    # bug de `python3` puro pegaria o 3.9 e quebraria).
+    path = "/usr/bin:/bin"
 
     # 1. instalar a partir do pyz (payload do vault está ao lado do pyz)
     subprocess.run([sys.executable, pyz, "instalar", "--bin", bindir, "--pyz", pyz],
