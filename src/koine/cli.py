@@ -88,12 +88,14 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
     agente, pasta = args[0], args[1]  # P1: pasta é direct-path
     ctx_path = os.path.join(pasta, "CONTEXTO.md")
     fm, _ = frontmatter.ler(open(ctx_path, encoding="utf-8").read())
-    # índices antes do render (o adapter os referencia)
-    escopo_fm, _ = frontmatter.ler(
-        open(os.path.join(paths.config_dir(), "escopos", f"{fm['escopo']}.md"),
-             encoding="utf-8").read())
-    refs = paths.resolver_tagged(schema.Escopo.from_fm(escopo_fm).pasta_referencias)
-    indice.gerar(refs, fm.get("dominios", []))
+    # bootstrap não tem escopo nem índices; contexto.resolver trata o ramo.
+    if not fm.get("bootstrap"):
+        # índices antes do render (o adapter os referencia)
+        escopo_fm, _ = frontmatter.ler(
+            open(os.path.join(paths.config_dir(), "escopos", f"{fm['escopo']}.md"),
+                 encoding="utf-8").read())
+        refs = paths.resolver_tagged(schema.Escopo.from_fm(escopo_fm).pasta_referencias)
+        indice.gerar(refs, fm.get("dominios", []))
 
     cm = contexto.resolver(agente, pasta)
     conteudo = adapters.get(cliente).renderizar(cm)

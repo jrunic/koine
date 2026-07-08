@@ -68,3 +68,12 @@ def test_greenfield_instalar_do_pyz_e_rodar_wrapper(tmp_path):
                    check=True, capture_output=True, text=True)
     py = open(os.path.join(trab, "CLAUDE.md"), encoding="utf-8").read()
     assert _parity.normalize(py) == _parity.normalize(go)
+
+    # 3. onboarding: rodar o wrapper na PASTA CANÔNICA (CONTEXTO bootstrap)
+    canon = os.path.join(home, "koine")
+    go_b = _parity.gerar_go(canon, "hermes", home)
+    os.remove(os.path.join(canon, "CLAUDE.md"))
+    subprocess.run([wrapper, "hermes", canon], env={"HOME": home, "PATH": path},
+                   check=True, capture_output=True, text=True)
+    py_b = open(os.path.join(canon, "CLAUDE.md"), encoding="utf-8").read()
+    assert _parity.normalize(py_b) == _parity.normalize(go_b)
