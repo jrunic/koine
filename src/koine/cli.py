@@ -13,6 +13,7 @@ from koine import (
     indice,
     instalar as _instalar,
     launch,
+    mensagens,
     pasta as pasta_mod,
     paths,
     schema,
@@ -73,11 +74,60 @@ def _cmd_instalar(args: list[str]) -> int:
     # espelha term.IsTerminal(stdin) do Go (instalar.go:61)
     interativo = sys.stdin.isatty()
     canonica.configurar(vault_src, interativo=interativo)
-    if ns.para:
-        # reaproveita o --force já existente do instalar (P2, para o extrair)
-        skills.instalar_habilidades(ns.para, force=ns.force)
+    try:
+        _instalar_com_deteccao(ns.para, interativo, ns.force)
+    except (OSError, ValueError) as e:
+        # degradação graciosa, instalar.go:68-70 — skills falhando não aborta
+        print(f"aviso: skills: {e}", file=sys.stderr)
     print("Instalação concluída.")
+    # mensagem final SEMPRE imprime, mesmo com skills falhando (instalar.go:72-83)
+    print(mensagens.final_instalar(), end="")
     return 0
+
+
+def _instalar_com_deteccao(para: str | None, interativo: bool, force: bool = False) -> None:
+    """Porta de instalarComDeteccao (instalar.go:91-124): detecta harnesses no
+    PATH e instala skills com confirmação. `para` dado → instala sem prompt;
+    não-interativo → apenas informa."""
+    print("\nInstalando skills de harness:")
+    if para:
+        _instalar_skills_e_imprimir(para, force)
+        return
+    detectados = skills.detectar_harnesses()
+    if not detectados:
+        print(mensagens.orientativa_sem_harness(), end="")
+        return
+    if not interativo:
+        print("  Detectados:", ", ".join(detectados))
+        print("  → Modo não-interativo. Para instalar skills: koine instalar-habilidades --para=<harness>")
+        return
+    for h in detectados:
+        print(f"  {h} detectado → instalar skills kn-*? [S/n]: ", end="", flush=True)
+        resp = sys.stdin.readline().strip().lower()
+        if resp in ("", "s"):
+            try:
+                _instalar_skills_e_imprimir(h, force)
+            except (OSError, ValueError) as e:
+                print(f"  aviso: {e}", file=sys.stderr)  # instalar.go:116-118
+        else:
+            print(f"  → Pulado. Para instalar depois: koine instalar-habilidades --para={h}")
+
+
+def _instalar_skills_e_imprimir(h: str, force: bool = False) -> None:
+    # espelha instalarEImprimir (instalar_habilidades.go:150-167)
+    criadas, existentes, div = skills.instalar_habilidades_detalhado(h, force=force)
+    home = str(pathlib.Path.home())
+    print(f"  Skills para {h} ({os.path.join(home, *skills.HARNESS_SKILLS[h].split('/'))}):")
+    for n in criadas:
+        print(f"    + {n}")
+    for n in existentes:
+        print(f"    = {n}")
+    if not criadas and not existentes:
+        print("    (nenhuma skill kn-* encontrada em vault)")
+    if div:
+        print("  Skills divergentes preservadas (use --force para sobrescrever):")
+        for d in div:
+            print("   !", d)
 
 
 def _cmd_instalar_habilidades(args: list[str]) -> int:
