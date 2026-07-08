@@ -45,6 +45,27 @@ def gerar_go_arg(arg: str, agente: str, home: str, destino: str) -> str:
         return f.read()
 
 
+def gerar_agy_go(pasta: str, agente: str, home: str, shim_path_dir: str) -> str:
+    """Renderiza GEMINI.md pelo Go via o wrapper kn-agy: copia o oráculo para um
+    arquivo `kn-agy` (o Go decide o cliente pelo basename) e roda com um shim
+    `agy` PREPENDADO no PATH (o wrapper lança o cliente após gerar). Lê GEMINI.md."""
+    go_bin = os.environ.get("KOINE_GO_BIN", "kn-agente")
+    bindir = os.path.join(home, "_gobin_agy")
+    os.makedirs(bindir, exist_ok=True)
+    knagy = os.path.join(bindir, "kn-agy")
+    if not os.path.exists(knagy):
+        shutil.copy(go_bin, knagy)
+        os.chmod(knagy, 0o755)
+    path = shim_path_dir + os.pathsep + "/usr/bin:/bin"   # shim `agy` PREPENDADO
+    subprocess.run(
+        [knagy, agente, pasta], env={"HOME": home, "PATH": path},
+        stdin=subprocess.DEVNULL, capture_output=True, text=True,
+        check=True, timeout=30,
+    )
+    with open(os.path.join(pasta, "GEMINI.md"), encoding="utf-8") as f:
+        return f.read()
+
+
 def mostrar_go(pasta: str, agente: str, home: str) -> str:
     """stdout de `kn-agente mostrar <agente> <pasta>` num HOME isolado."""
     go_bin = os.environ.get("KOINE_GO_BIN", "kn-agente")
