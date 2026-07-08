@@ -58,6 +58,8 @@ Rode o mesmo one-liner do seu sistema. O installer substitui os atalhos `kn-*` d
 
 **Plataformas suportadas:** qualquer sistema com Python ≥ 3.12 (macOS, Linux, Windows).
 
+Guia completo — variantes (versão pinada, espelho interno), verificação e solução de problemas: [docs/guias/instalacao.md](docs/guias/instalacao.md).
+
 **Ambiente que bloqueia até o Python?** Use o modo skills: baixe `koine-skills.zip` da release e siga o `instalar-koine.md` dentro do zip.
 
 ## Primeira sessão em 3 comandos
