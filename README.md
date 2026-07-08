@@ -123,8 +123,7 @@ Ver [`CONTEXTO.md`](CONTEXTO.md) para stack, padrões e como contribuir.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install pytest
-go build -o dist/kn-agente-oracle ./cmd/kn-agente   # oráculo de paridade (até o flip)
-KOINE_GO_BIN="$PWD/dist/kn-agente-oracle" .venv/bin/pytest -q
+.venv/bin/pytest -q
 ```
 
 ## Licença

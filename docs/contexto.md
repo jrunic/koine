@@ -25,7 +25,7 @@ Koine separa quatro camadas que costumam vir embaralhadas em sistemas de "memór
 3. **Base de conhecimento** — bundle OKF-conforme, propriedade do usuário
 4. **Sistema de arquivos** — recomendado, não obrigatório
 
-O usuário adota em escada: instala o harness, roda as skills, a base nasce. Não precisa entender o que é `CLAUDE.md` ou `go:embed` para começar.
+O usuário adota em escada: instala o harness, roda as skills, a base nasce. Não precisa entender o que é `CLAUDE.md` ou zipapp para começar.
 
 ## Formato OKF
 

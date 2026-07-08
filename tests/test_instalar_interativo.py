@@ -45,8 +45,8 @@ def test_mensagem_final_lista_os_5_clientes():
         assert f"{cli} hermes koine" in m
 
 
-# e2e não-interativo vs oráculo: PATH sem harness → os DOIS lados imprimem a
-# orientativa; com harness (shim) → os DOIS listam detectados + dica não-interativa.
+# e2e não-interativo: PATH sem harness → imprime a orientativa; com harness
+# (shim) → lista detectados + dica não-interativa.
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -55,31 +55,18 @@ def _instalar(cmd_extra, home, path):
                           capture_output=True, text=True, timeout=60, stdin=subprocess.DEVNULL)
 
 
-def test_e2e_sem_harness_orientativa_nos_dois_lados(tmp_path):
-    # BLOQUEIO do advisor (finding 2): NUNCA rodar o oráculo direto de dist/ —
-    # o instalar Go cria symlinks kn-* AO LADO do binário e sujaria o repo
-    # (que o `git add -A` do Step 5 commitaria). Copiar para bindir do tmp,
-    # mesmo racional de _parity.instalar_go (docstring _parity.py:112-117).
-    import shutil as _shutil
-    gobin_dir = tmp_path / "gobin"; os.makedirs(gobin_dir)
-    go_bin = str(gobin_dir / "kn-agente")
-    _shutil.copy(os.environ["KOINE_GO_BIN"], go_bin)
+def test_e2e_sem_harness_imprime_orientativa(tmp_path):
     out = str(tmp_path / "dist")
     subprocess.run([sys.executable, os.path.join(REPO, "scripts", "build-pyz.py"), "--out", out],
                    check=True, capture_output=True, text=True)
     pyz = os.path.join(out, "koine.pyz")
     path_min = "/usr/bin:/bin"
-    hg = str(tmp_path / "hg"); os.makedirs(hg)
     hp = str(tmp_path / "hp"); os.makedirs(hp)
-    r_go = _instalar([go_bin, "instalar"], hg, path_min)
-    r_py = _instalar([sys.executable, pyz, "instalar"], hp, path_min)
-    for r in (r_go, r_py):
-        assert r.returncode == 0
-        assert "(nenhum cliente IA detectado no PATH)" in r.stdout
-        assert "Para começar sua primeira sessão com Hermes:" in r.stdout
-    # linhas-chave idênticas Go×Py (módulo kn-agente→koine na dica de comando)
-    assert "Depois de instalar um cliente" in r_go.stdout and \
-           "Depois de instalar um cliente" in r_py.stdout
+    r = _instalar([sys.executable, pyz, "instalar"], hp, path_min)
+    assert r.returncode == 0
+    assert "(nenhum cliente IA detectado no PATH)" in r.stdout
+    assert "Para começar sua primeira sessão com Hermes:" in r.stdout
+    assert "Depois de instalar um cliente" in r.stdout
 
 
 def test_e2e_com_harness_nao_interativo_lista_e_nao_instala(tmp_path):

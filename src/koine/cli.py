@@ -229,7 +229,7 @@ def _cmd_gerar(args: list[str]) -> int:
 
 def _cmd_mostrar(args: list[str]) -> int:
     agente, alvo = args[0], args[1]
-    # alvo NÃO resolve — casa o oráculo (Go passa arg cru)
+    # alvo NÃO resolve alias — comportamento congelado de `mostrar` (arg cru)
     lanc = adapters.get("claude").renderizar(_montar_cm(agente, alvo))
     print(lanc.arquivos_working_dir["CLAUDE.md"], end="")
     return 0

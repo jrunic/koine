@@ -28,3 +28,11 @@ def test_tagged_sem_prefixo_e_erro():
     import pytest
     with pytest.raises(ValueError):
         paths.resolver_tagged("refs")
+
+
+def test_ambiente_de_teste_sem_xdg():
+    # Guarda de recorrência: runners CI (GitHub Actions ubuntu) exportam XDG_*.
+    # paths.py honra XDG_* ANTES de HOME, então qualquer XDG_* visível em
+    # os.environ vaza para subprocessos ({**os.environ, "HOME": ...}) e
+    # quebra o isolamento por HOME dos fixtures. conftest._isola_xdg limpa.
+    assert not [k for k in os.environ if k.startswith("XDG_")]

@@ -1,4 +1,4 @@
-# Binários compilados
+# Binários e artefatos legados de build local
 *.exe
 *.exe~
 *.dll
@@ -13,19 +13,6 @@
 
 # Diretório de build/release
 dist/
-
-# Arquivo de teste binário
-*.test
-
-# Saída do coverage
-*.out
-
-# Vendor
-vendor/
-
-# Go workspace
-go.work
-go.work.sum
 
 # Config do mentorado (nunca commitar)
 .config/koine/

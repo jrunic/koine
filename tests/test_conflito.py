@@ -111,13 +111,19 @@ def test_materializar_faz_backup_de_arquivo_do_usuario(tmp_path, capsys):
     assert "salvo como" in capsys.readouterr().err
 
 
-def test_arquivo_gerado_pelo_go_regenera_sem_bak(koine_home):
-    # idempotência cruzada: CLAUDE.md nascido do ORÁCULO Go é reconhecido pelo
-    # marker-check do Python — regenera sem .bak
-    from tests import _parity
-    fx = koine_home
-    _parity.gerar_go(fx["trab"], "hermes", fx["home"])
-    p = os.path.join(fx["trab"], "CLAUDE.md")
-    conflito.resolver_arquivo_conflito(p)
-    assert os.path.exists(p)
-    assert not os.path.exists(p + ".bak")
+def test_arquivo_gerado_pelo_go_regenera_sem_bak(tmp_path):
+    # idempotência cruzada: CLAUDE.md nascido do Go legado (v0.3.x) é
+    # reconhecido pelo marker-check do Python — regenera sem .bak.
+    # Snapshot literal: o formato está congelado pelo próprio marcador.
+    p = tmp_path / "CLAUDE.md"
+    p.write_text(
+        conflito.MARCADOR_KOINE + "\n"
+        "# CLAUDE.md\n"
+        "*Gerado por kn-agente em 2026-07-01T10:00:00Z. Não editar — regerar com `kn-claude .`.*\n"
+        "\n"
+        "@/home/u/.config/koine/u.md\n"
+        "@/home/u/.local/share/koine/KOINE.md\n"
+    )
+    conflito.resolver_arquivo_conflito(str(p))
+    assert p.exists()
+    assert not os.path.exists(str(p) + ".bak")

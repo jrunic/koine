@@ -81,7 +81,7 @@ def montar(base: str) -> dict:
     _w(os.path.join(cfg, "teste.md"), USUARIO)
     _w(os.path.join(cfg, "escopos", "fixture.md"), ESCOPO)
     _w(os.path.join(cfg, "dominios", "tecnologia.md"), DOMINIO_TEC)
-    # KOINE.md e hermes.md vêm do vault real do repo (mesmos bytes que o Go usa)
+    # KOINE.md e hermes.md vêm do vault real do repo (mesmos bytes distribuídos)
     shutil.copy(os.path.join(REPO, "vault", "KOINE.md"),
                 os.path.join(data, "KOINE.md"))
     shutil.copy(os.path.join(REPO, "vault", "agentes", "hermes.md"),

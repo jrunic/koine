@@ -14,20 +14,18 @@ tags: [referencia, cli, kn-agente]
 
 Comando único de configuração inicial. Executa as fases:
 
-1. **Extração do vault** — embed `vault/` → `~/.local/share/koine/`
+1. **Extração do vault** — `vault/` do zip de distribuição (ao lado do `koine.pyz`) → `~/.local/share/koine/`
 2. **Plantio de domínios canônicos** — `~/.config/koine/dominios/` (universal, negocio, tecnologia, pessoal)
 3. **Wrappers de cliente** — `koine` + `kn-*` em `~/.local/bin/`, invocando o Python detectado na instalação
-4. **Pasta canônica + alias** — prompt-com-default (default `~/koine`); cria pasta; registra alias `koine` em `~/.config/koine/aliases.json`; gera `<pasta>/CONTEXTO.md` com `bootstrap: true` a partir do embed `vault/bootstrap/CONTEXTO.md`
+4. **Pasta canônica + alias** — prompt-com-default (default `~/koine`); cria pasta; registra alias `koine` em `~/.config/koine/aliases.json`; gera `<pasta>/CONTEXTO.md` com `bootstrap: true` a partir de `vault/bootstrap/CONTEXTO.md`
 5. **Skills de harness** — detecta clientes IA no PATH; para cada detectado, prompt `Y/n` para instalar skills `kn-*`. Se zero detectados, exibe orientação completa (Node.js, Homebrew em macOS, lista dos 5 clientes IA com comandos por OS)
 
 Flags:
 
-- `--force` — sobrescreve arquivos divergentes do embed sem prompt.
+- `--force` — sobrescreve arquivos divergentes do vault sem prompt.
 - `--para=<harness>` — instala skills do harness especificado sem prompt (suportados: `claude`, `agy`, `copilot`, `opencode`, `codex`).
 
-Idempotente em todas as fases. Em modo não-interativo (stdin sem TTY), aceita defaults sem prompts.
-
-Modo não-interativo é detectado via `golang.org/x/term`.
+Idempotente em todas as fases. Em modo não-interativo (stdin sem TTY, detectado via `sys.stdin.isatty()`), aceita defaults sem prompts.
 
 ### `koine gerar <agente> [pasta]`
 
@@ -44,7 +42,7 @@ Imprime em stdout o contexto resolvido — usuário, agente, escopo, índices, c
 
 Imprime versão e sai.
 
-## Wrappers de cliente IA — `kn-<cliente> <agente> [pasta] [--substituir]`
+## Wrappers de cliente IA — `kn-<cliente> <agente> [pasta]`
 
 Sintaxe canônica para abrir sessão de cliente IA com contexto Koine.
 
@@ -64,9 +62,13 @@ Sintaxe canônica para abrir sessão de cliente IA com contexto Koine.
   3. Path direto (relativo ou absoluto) que exista → usa.
   4. Fuzzy match em pastas conhecidas → oferece menu (`fzf` se disponível, fallback numerado); oferece salvar alias.
 
-### Flags
+### Conflitos em arquivos gerenciados
 
-- `--substituir` — overwrite arquivos pré-existentes nos paths gerenciados pelo adapter (`CLAUDE.md`, `GEMINI.md`, symlinks). Sem a flag, conflitos abortam com mensagem clara.
+Ao materializar (`CLAUDE.md`, `GEMINI.md`, symlinks):
+
+- Arquivo gerado pelo Koine (marcador `<!-- gerado por kn-agente -->` na 1ª linha) → regenerado sem backup.
+- Arquivo do usuário → preservado como `<nome>.bak` (nunca sobrescreve um `.bak` existente) com aviso em stderr.
+- Symlink apontando para outro alvo, ou diretório no lugar do arquivo → aborta com mensagem clara.
 
 ### Modo bootstrap
 

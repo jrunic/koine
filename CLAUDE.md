@@ -1,6 +1,6 @@
 # Contexto para Claude Code neste repositório
 
-Você está trabalhando no repositório Koine — CLI Go que injeta contexto multi-camada em harnesses de IA terminal.
+Você está trabalhando no repositório Koine — CLI Python que injeta contexto multi-camada em harnesses de IA terminal.
 
 ## Antes de fazer mudanças
 
@@ -10,16 +10,17 @@ Você está trabalhando no repositório Koine — CLI Go que injeta contexto mul
 
 ## Convenções rápidas
 
-- Código em inglês (Go); comentários em PT-BR
+- Código Python segue PEP 8; comentários em PT-BR
 - Subcomandos e flags em PT-BR (exceto `--force`)
-- Testes com stdlib `testing` — sem testify, gomock ou similares
-- Stdlib first; nova dependência externa requer ADR
-- `os.UserConfigDir`/`os.UserCacheDir` proibidos — usar `XDG_CONFIG_HOME` / `XDG_CACHE_HOME` direto com fallback `~/.config/koine/` etc.
+- Testes com pytest em `tests/`
+- Stdlib first; dependência de runtime só vendorizada puro-Python (`src/koine/_vendor/`); nova dependência externa requer ADR
+- Zero código nativo no pyz (`.pyd`/`.so`/`.dll` proibidos)
+- XDG vars (`XDG_CONFIG_HOME` etc.) direto com fallback `~/.config/koine/` etc.
 
 ## Antes de commitar
 
 ```bash
-go fmt ./... && go vet ./... && go build ./... && go test ./...
+.venv/bin/pytest -q
 ```
 
 Tudo verde antes de qualquer commit.

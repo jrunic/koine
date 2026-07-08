@@ -2,7 +2,8 @@ import os
 import stat
 import subprocess
 import sys
-from tests import _parity
+
+from koine import conflito
 from tests.fixtures import seed, shim
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -13,6 +14,19 @@ def _build(tmp) -> str:
     subprocess.run([sys.executable, os.path.join(REPO, "scripts", "build-pyz.py"),
                     "--out", out], check=True, capture_output=True, text=True)
     return os.path.join(out, "koine.pyz")
+
+
+def _assert_claude_md(conteudo: str, home: str) -> None:
+    """Formato congelado do CLAUDE.md gerado: marcador na 1ª linha + @path
+    das 4 camadas (usuário, KOINE, agente, escopo)."""
+    assert conteudo.split("\n", 1)[0] == conflito.MARCADOR_KOINE
+    for camada in (
+        os.path.join(home, ".config", "koine", "teste.md"),
+        os.path.join(home, ".local", "share", "koine", "KOINE.md"),
+        os.path.join(home, ".local", "share", "koine", "agentes", "hermes.md"),
+        os.path.join(home, ".config", "koine", "escopos", "fixture.md"),
+    ):
+        assert f"@{camada}" in conteudo, f"camada ausente: {camada}"
 
 
 def test_pyz_versao(tmp_path):
@@ -30,11 +44,9 @@ def test_pyz_sem_codigo_nativo(tmp_path):
     assert nativos == [], f"pyz carrega código nativo: {nativos}"
 
 
-def test_pyz_claude_paridade(tmp_path, monkeypatch):
+def test_pyz_claude_gera_claude_md(tmp_path):
     pyz = _build(tmp_path)
     fx = seed.montar(str(tmp_path / "fx"))
-    go = _parity.gerar_go(fx["trab"], "hermes", fx["home"])
-    os.remove(os.path.join(fx["trab"], "CLAUDE.md"))
     # shim `claude` PREPENDADO ao PATH real (esta máquina tem claude real → sem prepend, trava)
     shimdir = str(tmp_path / "shim")
     shim.instalar_shim(shimdir, "claude", str(tmp_path / "cap.txt"))
@@ -44,7 +56,7 @@ def test_pyz_claude_paridade(tmp_path, monkeypatch):
                    check=True, capture_output=True, text=True,
                    stdin=subprocess.DEVNULL, timeout=60)
     py = open(os.path.join(fx["trab"], "CLAUDE.md"), encoding="utf-8").read()
-    assert _parity.normalize(py) == _parity.normalize(go)
+    _assert_claude_md(py, fx["home"])
 
 
 def test_zip_de_distribuicao_pyz_e_vault_lado_a_lado(tmp_path):
@@ -94,20 +106,20 @@ def test_greenfield_instalar_do_pyz_e_rodar_wrapper(tmp_path):
 
     # 2. semear pasta de trabalho no HOME instalado e rodar o wrapper
     trab = seed.semear_trabalho(home)
-    go = _parity.gerar_go(trab, "hermes", home)
-    os.remove(os.path.join(trab, "CLAUDE.md"))
     subprocess.run([wrapper, "hermes", trab], env={"HOME": home, "PATH": path_launch},
                    check=True, capture_output=True, text=True,
                    stdin=subprocess.DEVNULL, timeout=60)
     py = open(os.path.join(trab, "CLAUDE.md"), encoding="utf-8").read()
-    assert _parity.normalize(py) == _parity.normalize(go)
+    _assert_claude_md(py, home)
 
     # 3. onboarding: rodar o wrapper na PASTA CANÔNICA (CONTEXTO bootstrap)
     canon = os.path.join(home, "koine")
-    go_b = _parity.gerar_go(canon, "hermes", home)
-    os.remove(os.path.join(canon, "CLAUDE.md"))
     subprocess.run([wrapper, "hermes", canon], env={"HOME": home, "PATH": path_launch},
                    check=True, capture_output=True, text=True,
                    stdin=subprocess.DEVNULL, timeout=60)
     py_b = open(os.path.join(canon, "CLAUDE.md"), encoding="utf-8").read()
-    assert _parity.normalize(py_b) == _parity.normalize(go_b)
+    assert py_b.split("\n", 1)[0] == conflito.MARCADOR_KOINE
+    assert "modo bootstrap" in py_b
+    assert f"@{os.path.join(home, '.local', 'share', 'koine', 'KOINE.md')}" in py_b
+    assert f"@{os.path.join(home, '.local', 'share', 'koine', 'agentes', 'hermes.md')}" in py_b
+    assert f"@{os.path.join(canon, 'CONTEXTO.md')}" in py_b
