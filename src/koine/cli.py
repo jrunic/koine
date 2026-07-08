@@ -125,7 +125,9 @@ def _montar_cm(agente: str, pasta: str) -> contexto.ContextoMontado:
                  encoding="utf-8").read())
         refs = paths.resolver_tagged(schema.Escopo.from_fm(escopo_fm).pasta_referencias)
         indice.gerar(refs, fm.get("dominios", []))
-    return contexto.resolver(agente, pasta)
+    cm = contexto.resolver(agente, pasta)
+    cm.pasta_abs = pasta
+    return cm
 
 
 def _materializar(lanc, pasta: str) -> None:

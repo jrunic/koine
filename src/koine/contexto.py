@@ -13,6 +13,9 @@ class ContextoMontado:
     indice_paths: list[str] = field(default_factory=list)
     contexto_path: str = ""
     bootstrap: bool = False
+    # pasta de trabalho absoluta — preenchida por cli._montar_cm; adapters com
+    # bundle externo (copilot, opencode) derivam slot e alvo de symlink dela.
+    pasta_abs: str = ""
 
 
 def _achar_usuario(cfg: str) -> str:

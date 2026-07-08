@@ -66,11 +66,11 @@ def gerar_agy_go(pasta: str, agente: str, home: str, shim_path_dir: str) -> str:
         return f.read()
 
 
-def gerar_via_wrapper_go(cliente: str, arquivo: str, pasta: str, agente: str,
-                         home: str, shim_path_dir: str) -> str:
-    """Renderiza <arquivo> pelo Go via o wrapper kn-<cliente>: copia o oráculo
-    para `kn-<cliente>` (o Go decide o cliente pelo basename) e roda com um shim
-    <cliente> PREPENDADO no PATH. Lê <pasta>/<arquivo>."""
+def rodar_wrapper_go(cliente: str, pasta: str, agente: str, home: str,
+                     shim_path_dir: str) -> None:
+    """Roda o Go via o wrapper kn-<cliente>: copia o oráculo para `kn-<cliente>`
+    (o Go decide o cliente pelo basename) e roda com um shim <cliente>
+    PREPENDADO no PATH. Não lê saída — chamador inspeciona bundle/symlink."""
     go_bin = os.environ.get("KOINE_GO_BIN", "kn-agente")
     bindir = os.path.join(home, f"_gobin_{cliente}")
     os.makedirs(bindir, exist_ok=True)
@@ -84,6 +84,12 @@ def gerar_via_wrapper_go(cliente: str, arquivo: str, pasta: str, agente: str,
         stdin=subprocess.DEVNULL, capture_output=True, text=True,
         check=True, timeout=30,
     )
+
+
+def gerar_via_wrapper_go(cliente: str, arquivo: str, pasta: str, agente: str,
+                         home: str, shim_path_dir: str) -> str:
+    """Como rodar_wrapper_go, mas lê e devolve <pasta>/<arquivo> gerado."""
+    rodar_wrapper_go(cliente, pasta, agente, home, shim_path_dir)
     with open(os.path.join(pasta, arquivo), encoding="utf-8") as f:
         return f.read()
 
@@ -137,6 +143,21 @@ def instalar_habilidades_go(home: str, harness: str) -> None:
         env={"HOME": home, "PATH": "/usr/bin:/bin"},
         stdin=subprocess.DEVNULL, capture_output=True, text=True, check=True,
     )
+
+
+def conteudos(base: str) -> dict:
+    """{caminho-relativo: conteúdo normalizado} de todos os arquivos sob base.
+    {} se ausente. Normalizado (timestamps congelados) — diff legível ao divergir,
+    ao contrário da comparação por hash."""
+    out = {}
+    if not os.path.isdir(base):
+        return out
+    for raiz, _, arqs in os.walk(base):
+        for a in arqs:
+            p = os.path.join(raiz, a)
+            with open(p, encoding="utf-8") as f:
+                out[os.path.relpath(p, base)] = normalize(f.read())
+    return out
 
 
 def arvore(base: str) -> dict:
