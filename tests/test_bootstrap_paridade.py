@@ -29,6 +29,10 @@ def test_cli_bootstrap_e2e(koine_home, monkeypatch):
     pasta = _pasta_bootstrap(koine_home["home"])
     go = _parity.gerar_go(pasta, "hermes", koine_home["home"])
     os.remove(os.path.join(pasta, "CLAUDE.md"))
+    # seam: captura o launch sem substituir o processo (execvpe mataria o pytest)
+    capturado = {}
+    monkeypatch.setattr("koine.launch.lancar",
+                        lambda cliente, pasta, **kw: capturado.update(cliente=cliente, pasta=pasta))
     rc = cli.main(["claude", "hermes", pasta])
     assert rc == 0
     py = open(os.path.join(pasta, "CLAUDE.md"), encoding="utf-8").read()

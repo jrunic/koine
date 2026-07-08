@@ -9,6 +9,10 @@ def test_koine_claude_gera_claude_md_igual_ao_go(koine_home, monkeypatch):
     go = _parity.gerar_go(koine_home["trab"], "hermes", koine_home["home"])
     os.remove(os.path.join(koine_home["trab"], "CLAUDE.md"))
 
+    # seam: captura o launch sem substituir o processo (execvpe mataria o pytest)
+    capturado = {}
+    monkeypatch.setattr("koine.launch.lancar",
+                        lambda cliente, pasta, **kw: capturado.update(cliente=cliente, pasta=pasta))
     rc = cli.main(["claude", "hermes", koine_home["trab"]])
     assert rc == 0
     py = open(os.path.join(koine_home["trab"], "CLAUDE.md"), encoding="utf-8").read()

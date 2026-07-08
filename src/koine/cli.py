@@ -10,6 +10,7 @@ from koine import (
     frontmatter,
     indice,
     instalar as _instalar,
+    launch,
     paths,
     schema,
     skills,
@@ -123,4 +124,9 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
     conteudo = adapters.get(cliente).renderizar(cm)
     with open(os.path.join(pasta, "CLAUDE.md"), "w", encoding="utf-8") as f:
         f.write(conteudo)
-    return 0
+    try:
+        launch.lancar(cliente, pasta)
+    except launch.ClienteNaoEncontrado as e:
+        print(str(e), file=sys.stderr)
+        return 1
+    return 0  # alcançado só quando lancar é monkeypatched (Unix real: execvpe substitui)

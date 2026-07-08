@@ -3,7 +3,7 @@ import stat
 import subprocess
 import sys
 from tests import _parity
-from tests.fixtures import seed
+from tests.fixtures import seed, shim
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -35,8 +35,13 @@ def test_pyz_claude_paridade(tmp_path, monkeypatch):
     fx = seed.montar(str(tmp_path / "fx"))
     go = _parity.gerar_go(fx["trab"], "hermes", fx["home"])
     os.remove(os.path.join(fx["trab"], "CLAUDE.md"))
+    # shim `claude` PREPENDADO ao PATH real (esta máquina tem claude real → sem prepend, trava)
+    shimdir = str(tmp_path / "shim")
+    shim.instalar_shim(shimdir, "claude", str(tmp_path / "cap.txt"))
+    path = shimdir + os.pathsep + os.environ["PATH"]
     subprocess.run([sys.executable, pyz, "claude", "hermes", fx["trab"]],
-                   env={**os.environ, "HOME": fx["home"]}, check=True, capture_output=True, text=True)
+                   env={**os.environ, "HOME": fx["home"], "PATH": path},
+                   check=True, capture_output=True, text=True)
     py = open(os.path.join(fx["trab"], "CLAUDE.md"), encoding="utf-8").read()
     assert _parity.normalize(py) == _parity.normalize(go)
 
@@ -52,6 +57,10 @@ def test_greenfield_instalar_do_pyz_e_rodar_wrapper(tmp_path):
     # `python3` do PATH é o 3.9. Este PATH mínimo prova esse comportamento (o
     # bug de `python3` puro pegaria o 3.9 e quebraria).
     path = "/usr/bin:/bin"
+    # shim `claude` PREPENDADO: os spawns do wrapper (2 e 3) lançam o cliente após gerar.
+    shimdir = os.path.join(home, "shim")
+    shim.instalar_shim(shimdir, "claude", os.path.join(home, "cap.txt"))
+    path_launch = shimdir + os.pathsep + path
 
     # 1. instalar a partir do pyz (payload do vault está ao lado do pyz)
     subprocess.run([sys.executable, pyz, "instalar", "--bin", bindir, "--pyz", pyz, "--para", "claude"],
@@ -66,7 +75,7 @@ def test_greenfield_instalar_do_pyz_e_rodar_wrapper(tmp_path):
     trab = seed.semear_trabalho(home)
     go = _parity.gerar_go(trab, "hermes", home)
     os.remove(os.path.join(trab, "CLAUDE.md"))
-    subprocess.run([wrapper, "hermes", trab], env={"HOME": home, "PATH": path},
+    subprocess.run([wrapper, "hermes", trab], env={"HOME": home, "PATH": path_launch},
                    check=True, capture_output=True, text=True)
     py = open(os.path.join(trab, "CLAUDE.md"), encoding="utf-8").read()
     assert _parity.normalize(py) == _parity.normalize(go)
@@ -75,7 +84,7 @@ def test_greenfield_instalar_do_pyz_e_rodar_wrapper(tmp_path):
     canon = os.path.join(home, "koine")
     go_b = _parity.gerar_go(canon, "hermes", home)
     os.remove(os.path.join(canon, "CLAUDE.md"))
-    subprocess.run([wrapper, "hermes", canon], env={"HOME": home, "PATH": path},
+    subprocess.run([wrapper, "hermes", canon], env={"HOME": home, "PATH": path_launch},
                    check=True, capture_output=True, text=True)
     py_b = open(os.path.join(canon, "CLAUDE.md"), encoding="utf-8").read()
     assert _parity.normalize(py_b) == _parity.normalize(go_b)
