@@ -161,7 +161,11 @@ def _criar_symlink(link: str, alvo: str) -> None:
 
 def _cmd_gerar(args: list[str]) -> int:
     agente = args[0]
-    pasta = pasta_mod.resolver(args[1] if len(args) >= 2 else "")
+    try:
+        pasta = pasta_mod.resolver(args[1] if len(args) >= 2 else "")
+    except pasta_mod.ResolucaoErro as e:
+        print(str(e), file=sys.stderr)
+        return 1
     lanc = adapters.get("claude").renderizar(_montar_cm(agente, pasta))
     conteudo = lanc.arquivos_working_dir["CLAUDE.md"]
     destino = os.path.join(pasta, "CLAUDE.md")
@@ -181,7 +185,11 @@ def _cmd_mostrar(args: list[str]) -> int:
 
 def _rodar_cliente(cliente: str, args: list[str]) -> int:
     agente = args[0]
-    pasta = pasta_mod.resolver(args[1] if len(args) >= 2 else "")
+    try:
+        pasta = pasta_mod.resolver(args[1] if len(args) >= 2 else "")
+    except pasta_mod.ResolucaoErro as e:
+        print(str(e), file=sys.stderr)
+        return 1
     lanc = adapters.get(cliente).renderizar(_montar_cm(agente, pasta))
     try:
         _materializar(lanc, pasta)
