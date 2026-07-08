@@ -1,6 +1,6 @@
 [project]
 name = "koine"
-version = "0.4.0-dev"
+version = "0.4.0"
 requires-python = ">=3.12"
 
 [tool.pytest.ini_options]

@@ -1,5 +1,5 @@
 ---
-descricao: Tutorial passo a passo do zero ao primeiro agente operacional configurado — instala binário, finaliza configuração, abre sessão com Hermes, completa onboarding via /kn-01
+descricao: Tutorial passo a passo do zero ao primeiro agente operacional configurado — instala o Koine (aplicação Python), finaliza configuração, abre sessão com Hermes, completa onboarding via /kn-01
 id: 202606280001
 tipo: tutorial
 status: ativo
@@ -12,7 +12,7 @@ Este tutorial leva você do zero até um Koine **totalmente configurado e pronto
 
 Ao final, você terá:
 
-- Binário `kn-agente` instalado em `~/.local/bin/` (ou equivalente Windows)
+- Koine instalado, com os wrappers `koine` e `kn-*` em `~/.local/bin/` (ou equivalente Windows)
 - Pasta canônica em `~/koine` (acessível pelo alias `koine`)
 - Arquivo de usuário em `~/.config/koine/<seu-nome>.md`
 - Primeiro escopo + pasta de referências
@@ -37,11 +37,11 @@ Escolha **um** dos quatro suportados. Sem cliente IA, o Koine instala mas você 
 - **Node.js 18+ (recomendado 22+)** — necessário para Claude Code e Copilot CLI (instalação via `npm`). Download: https://nodejs.org/
 - **Homebrew** — opcional em macOS, recomendado. Gerenciador de pacotes que facilita instalação de Node e clientes IA. Instalar: https://brew.sh/
 
-Se você rodar `kn-agente instalar` sem cliente IA detectado, o próprio binário orienta o que falta — não precisa decorar nada agora.
+Se você rodar `koine instalar` sem cliente IA detectado, o instalador orienta o que falta — não precisa decorar nada agora.
 
 ---
 
-## Passo 1 — Instalar o binário
+## Passo 1 — Instalar o Koine
 
 ### macOS / Linux
 
@@ -50,9 +50,10 @@ curl -fsSL https://github.com/jrunic/koine/releases/latest/download/install.sh |
 ```
 
 O script:
-- Detecta seu OS e arquitetura
-- Baixa o binário correto de GitHub Releases
-- Instala em `~/.local/bin/kn-agente`
+- Localiza um Python ≥ 3.12 no PATH (erro orientativo se ausente — nada é instalado pela metade)
+- Baixa o pacote `koine-<versão>.zip` de GitHub Releases
+- Extrai para `~/.local/share/koine/dist/`
+- Roda `koine instalar` (vault, wrappers `kn-*`, pasta canônica, skills)
 - Avisa se `~/.local/bin/` não está no seu PATH
 
 ### Windows (Command Prompt — recomendado em estações corporativas)
@@ -73,10 +74,10 @@ iwr -useb https://github.com/jrunic/koine/releases/latest/download/install.ps1 |
 ### Validar instalação
 
 ```bash
-kn-agente --versao
+koine versao
 ```
 
-Esperado: `kn-agente 0.2.0` (ou versão mais recente).
+Esperado: `koine 0.4.0` (ou versão mais recente).
 
 Se o comando não for encontrado, `~/.local/bin/` provavelmente não está no PATH. O instalador imprime a linha exata para adicionar ao seu shell profile. **Reabra o terminal** após adicionar.
 
@@ -85,14 +86,16 @@ Se o comando não for encontrado, `~/.local/bin/` provavelmente não está no PA
 ## Passo 2 — Finalizar configuração
 
 ```bash
-kn-agente instalar
+koine instalar
 ```
+
+O `install.sh` já executa este passo. Rode manualmente só se pulou o installer ou para reconfigurar.
 
 Este comando passa por várias fases, em ordem:
 
 ### 2.1 Extração do vault
 
-Vault (KOINE.md + agente Hermes + 5 skills + templates + sementes de domínios) é extraído do binário para `~/.local/share/koine/`.
+Vault (KOINE.md + agente Hermes + 5 skills + templates + sementes de domínios) é copiado do pacote para `~/.local/share/koine/`.
 
 ```
 Instalando vault em /Users/<você>/.local/share/koine
@@ -100,18 +103,9 @@ Plantando domínios em /Users/<você>/.config/koine/dominios
 Instalação concluída.
 ```
 
-### 2.2 Symlinks de cliente IA
+### 2.2 Wrappers de cliente IA
 
-```
-Criando symlinks de cliente IA:
-  ✓ kn-claude → /usr/local/bin/kn-agente
-  ✓ kn-agy → /usr/local/bin/kn-agente
-  ✓ kn-copilot → /usr/local/bin/kn-agente
-  ✓ kn-opencode → /usr/local/bin/kn-agente
-  ✓ kn-codex → /usr/local/bin/kn-agente
-```
-
-Os 5 wrappers ficam no mesmo diretório do binário. Você usa o que corresponde ao seu cliente IA.
+Os wrappers `koine`, `kn-claude`, `kn-agy`, `kn-copilot`, `kn-opencode` e `kn-codex` são gerados em `~/.local/bin/`, invocando o Python absoluto detectado na instalação. Quem vem de uma instalação Go v0.3.x: os antigos symlinks `kn-*` são substituídos automaticamente; qualquer outro arquivo pré-existente é preservado com aviso.
 
 ### 2.3 Pasta canônica + alias
 
@@ -138,13 +132,13 @@ Instalando skills de harness:
   claude detectado → instalar skills kn-*? [S/n]:
 ```
 
-Se você tem um cliente IA instalado, `kn-agente instalar` detecta e pergunta. Enter aceita; skills `kn-*` são symlinkadas em `~/.claude/skills/` (ou equivalente).
+Se você tem um cliente IA instalado, `koine instalar` detecta e pergunta. Enter aceita; skills `kn-*` são symlinkadas em `~/.claude/skills/` (ou equivalente).
 
 **Se nenhum cliente IA estiver instalado**, esta fase mostra mensagem orientativa com:
 - Bloco "Node.js não encontrado" (se faltar Node)
 - Bloco "Homebrew não encontrado" (se faltar Brew em macOS)
 - Lista dos 5 clientes IA com comando de instalação por OS
-- Instrução para rodar `kn-agente instalar` novamente após instalar um cliente
+- Instrução para rodar `koine instalar` novamente após instalar um cliente
 
 ### 2.5 Mensagem final
 
@@ -246,27 +240,17 @@ Detalhes na [referência de habilidades](../referencias/habilidades.md).
 
 ## Resolução de problemas
 
-### `kn-agente: command not found` após instalar
+### `koine: command not found` após instalar
 
 `~/.local/bin/` não está no seu PATH. O instalador imprime a linha exata para adicionar — siga e reabra o terminal. Em Windows, rode o comando `SetEnvironmentVariable` indicado.
 
-### macOS: "Apple não pôde verificar se kn-agente contém malware"
+### Windows: e o SmartScreen?
 
-Binários ainda não são notarizados (pode mudar em versões futuras). Solução:
+Não se aplica mais: o Koine é distribuído como código Python (`koine.pyz`), sem executável compilado. Integridade: compare o SHA-256 do zip com o `SHA256SUMS` publicado no release.
 
-```bash
-xattr -d com.apple.quarantine ~/.local/bin/kn-agente
-```
+### Nenhum cliente IA detectado em `koine instalar`
 
-Funciona normal depois.
-
-### Windows: SmartScreen alerta sobre o binário
-
-Binários ainda não são assinados (pode mudar em versões futuras). No alerta, clique **Mais informações** → **Executar mesmo assim**. Mitigação: comparar SHA-256 do binário com o publicado em `SHA256SUMS` no GitHub Release.
-
-### Nenhum cliente IA detectado em `kn-agente instalar`
-
-Esperado se você ainda não instalou. O instalador mostra orientação completa com comandos por OS. Instale um cliente, depois rode `kn-agente instalar` novamente — ele detecta.
+Esperado se você ainda não instalou. O instalador mostra orientação completa com comandos por OS. Instale um cliente, depois rode `koine instalar` novamente — ele detecta.
 
 ### Sessão Hermes não inicia `/kn-01` automaticamente
 
@@ -276,7 +260,7 @@ Verifique se `<pasta-canonica>/CONTEXTO.md` contém `bootstrap: true` no cabeça
 
 > ⚠️ **Atenção — leia antes:** os três diretórios abaixo contêm coisas diferentes. Reveja o que cada um guarda **antes** de apagar.
 >
-> - `~/.local/share/koine/` — vault readonly extraído do binário. Pode apagar à vontade; `kn-agente instalar` regenera.
+> - `~/.local/share/koine/` — vault readonly copiado do pacote. Pode apagar à vontade; `koine instalar` regenera.
 > - `~/.config/koine/` — sua configuração: arquivo de usuário, escopos, aliases, agentes operacionais, domínios. **Apagar perde todo o trabalho de onboarding** e qualquer agente que você criou depois.
 > - `~/koine/` — sua pasta canônica e o conteúdo de meta-trabalho que você acumulou ali (referências, diários do escopo `koine`, etc.). **Faça backup antes** se houver conteúdo que vale guardar.
 
@@ -297,7 +281,7 @@ rm -r ~/.local/share/koine ~/.config/koine ~/koine
 Depois rode:
 
 ```bash
-kn-agente instalar
+koine instalar
 ```
 
 E refaça o onboarding via `kn-claude hermes koine`.
@@ -306,6 +290,6 @@ E refaça o onboarding via `kn-claude hermes koine`.
 
 ## Referências
 
-- [CLI](../referencias/cli.md) — comandos `kn-agente` e wrappers
+- [CLI](../referencias/cli.md) — comandos `koine` e wrappers
 - [Habilidades](../referencias/habilidades.md) — detalhe das 5 skills `kn-*`
 - [Schema do CONTEXTO.md](../referencias/contexto-md.md) — frontmatter e validações

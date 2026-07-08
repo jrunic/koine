@@ -6,6 +6,32 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-07-08
+
+O flip do Python: o Koine passa a ser distribuído como aplicação Python (`koine.pyz`), substituindo os binários Go. Mesmos comandos `kn-*`, mesmo comportamento, mesmo estado em disco — upgrade da v0.3.x não exige migração.
+
+### Added
+
+- **Distribuição Python** — asset `koine-<versão>.zip` com `koine.pyz` (zipapp de stdlib pura — sem `.so`/`.pyd`/`.dll`) e `vault/` lado a lado. Requer Python ≥ 3.12. Sem executável compilado: nada para o antivírus bloquear além de código-fonte.
+- **Comando `koine`** — wrapper administrativo (`koine versao`, `koine instalar`, `koine instalar-habilidades`, `koine gerar`, `koine mostrar`) substitui o `kn-agente`.
+- **Modo interativo do `instalar`** portado por completo: prompt de pasta canônica com default `~/koine`, alias `koine`, `CONTEXTO.md` de bootstrap, detecção de harness com confirmação `[S/n]` e mensagem orientativa quando nenhum cliente IA é detectado.
+- **Marker-check no working dir** — arquivo regular pré-existente SEM o marcador Koine no caminho de um artefato a gerar vai para backup `.bak` (`.bak.1`, `.bak.2`, … — nunca sobrescreve backup) com aviso de uma linha; COM marcador (ou assinatura retrocompatível das versões antigas) é regenerado silenciosamente. Paridade final com o conflito da série Go; arquivos gerados pelo Go são reconhecidos pelo Python e vice-versa.
+- **Upgrade sobre instalação Go** — `koine instalar` reconhece os symlinks `kn-*` → `kn-agente` criados pela v0.3.x e os substitui pelos wrappers Python. Qualquer outro conteúdo pré-existente no caminho é preservado com aviso. `~/.config/koine/` e `~/.local/share/koine/` são lidos como estão — escopos, aliases e agentes intactos.
+
+### Changed
+
+- **Installers reescritos** — `install.sh`, `install.ps1` e `install.bat` agora: localizam um Python ≥ 3.12 no PATH (Unix: `python3.13`/`python3.12`/`python3`/`python`; Windows: `py -3`/`python`/`python3`), baixam `koine-<versão>.zip` da release, extraem para `~/.local/share/koine/dist/` e delegam ao `koine instalar`. Sem Python ≥ 3.12, terminam com orientação de instalação e **nada é instalado** (sem estado parcial).
+- **Pipeline de release** — o CI roda a suíte Python completa (incluindo os testes de paridade, com o oráculo Go compilado do fonte do repo), valida que a versão do pacote confere com a tag e publica o pacote Python. Falha de teste bloqueia a publicação.
+
+### Removed
+
+- **Binários Go dos assets de release** — `kn-agente-darwin-*`, `kn-agente-linux-*` e `kn-agente-windows-*.exe` não são mais distribuídos. A série Go permanece disponível nas tags `v0.3.x`.
+
+### Notes
+
+- **Modo skills continua como fallback** (`koine-skills.zip`) para ambientes que bloqueiam até o interpretador Python — instalação e operação inalteradas desde a 0.3.2.
+- Os caveats de assinatura/notarização das releases anteriores deixam de se aplicar: não há mais binário compilado na distribuição.
+
 ## [0.3.2] — 2026-07-07
 
 Modo skills dual-mode: o Koine passa a operar também **sem o binário**, para ambientes que bloqueiam executáveis. Além dos binários, a release agora distribui `koine-skills.zip`.
@@ -109,7 +135,10 @@ Initial public release.
 First public release. API, on-disk layout, vault contents and adapter
 behavior may evolve until 1.0.
 
-[Unreleased]: https://github.com/jrunic/koine/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/jrunic/koine/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/jrunic/koine/compare/v0.3.2...v0.4.0
+[0.3.2]: https://github.com/jrunic/koine/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/jrunic/koine/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/jrunic/koine/releases/tag/v0.3.0
 [0.2.0]: https://github.com/jrunic/koine/releases/tag/v0.2.0
 [0.1.0]: https://github.com/jrunic/koine/releases/tag/v0.1.0

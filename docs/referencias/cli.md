@@ -1,5 +1,5 @@
 ---
-descricao: Referência dos comandos do binário kn-agente e dos wrappers de cliente IA
+descricao: Referência dos comandos do CLI koine e dos wrappers de cliente IA
 id: 202606261001
 tipo: referencia
 status: ativo
@@ -8,15 +8,15 @@ tags: [referencia, cli, kn-agente]
 
 # Referência — CLI
 
-## `kn-agente` — motor administrativo
+## `koine` — motor administrativo
 
-### `kn-agente instalar [--force] [--para=<harness>]`
+### `koine instalar [--force] [--para=<harness>]`
 
 Comando único de configuração inicial. Executa as fases:
 
 1. **Extração do vault** — embed `vault/` → `~/.local/share/koine/`
 2. **Plantio de domínios canônicos** — `~/.config/koine/dominios/` (universal, negocio, tecnologia, pessoal)
-3. **Symlinks de cliente** — `kn-claude`, `kn-agy`, `kn-copilot`, `kn-opencode`, `kn-codex` no mesmo diretório do binário
+3. **Wrappers de cliente** — `koine` + `kn-*` em `~/.local/bin/`, invocando o Python detectado na instalação
 4. **Pasta canônica + alias** — prompt-com-default (default `~/koine`); cria pasta; registra alias `koine` em `~/.config/koine/aliases.json`; gera `<pasta>/CONTEXTO.md` com `bootstrap: true` a partir do embed `vault/bootstrap/CONTEXTO.md`
 5. **Skills de harness** — detecta clientes IA no PATH; para cada detectado, prompt `Y/n` para instalar skills `kn-*`. Se zero detectados, exibe orientação completa (Node.js, Homebrew em macOS, lista dos 5 clientes IA com comandos por OS)
 
@@ -29,18 +29,18 @@ Idempotente em todas as fases. Em modo não-interativo (stdin sem TTY), aceita d
 
 Modo não-interativo é detectado via `golang.org/x/term`.
 
-### `kn-agente gerar <agente> [pasta]`
+### `koine gerar <agente> [pasta]`
 
 Gera o arquivo de contexto do cliente (`CLAUDE.md`, `GEMINI.md`, etc.) na pasta, sem abrir o cliente. Útil para debug.
 
 - `<agente>` — nome do agente (`hermes` ou agente operacional do usuário).
 - `[pasta]` — opcional; default é `pwd`.
 
-### `kn-agente mostrar <agente> <pasta>`
+### `koine mostrar <agente> <pasta>`
 
 Imprime em stdout o contexto resolvido — usuário, agente, escopo, índices, contexto local. Não escreve arquivo.
 
-### `kn-agente versao` / `--versao`
+### `koine versao`
 
 Imprime versão e sai.
 
@@ -89,13 +89,13 @@ Hermes guia o usuário a criar o contexto via `/kn-02-mantem-catalogo` (fluxo co
 4. Força agente Hermes (emite warning se `<agente>` solicitado era outro).
 5. Lança o cliente.
 
-Este caminho é usado pelo `kn-agente instalar` para a pasta canônica `~/koine` — o `CONTEXTO.md` gerado instrui Hermes a iniciar `/kn-01-recebe-usuario` automaticamente. Ao final do onboarding, `/kn-01` reescreve o `CONTEXTO.md` substituindo `bootstrap: true` pelo escopo `koine` real, e o caminho de bootstrap explícito deixa de disparar.
+Este caminho é usado pelo `koine instalar` para a pasta canônica `~/koine` — o `CONTEXTO.md` gerado instrui Hermes a iniciar `/kn-01-recebe-usuario` automaticamente. Ao final do onboarding, `/kn-01` reescreve o `CONTEXTO.md` substituindo `bootstrap: true` pelo escopo `koine` real, e o caminho de bootstrap explícito deixa de disparar.
 
 Ver ADR `20260627-bootstrap-flag-em-contexto-md.md`.
 
-### `kn-agente instalar-habilidades --para=<harness>`
+### `koine instalar-habilidades --para=<harness>`
 
-Caminho administrativo separado para instalar (symlinkar) skills `kn-*` no harness alvo. Útil quando você instalou um cliente IA **depois** do `kn-agente instalar` inicial e quer adicionar as skills sem re-rodar a instalação inteira.
+Caminho administrativo separado para instalar (symlinkar) skills `kn-*` no harness alvo. Útil quando você instalou um cliente IA **depois** do `koine instalar` inicial e quer adicionar as skills sem re-rodar a instalação inteira.
 
 Harnesses suportados:
 - `claude` → `~/.claude/skills/`
@@ -103,7 +103,7 @@ Harnesses suportados:
 - `copilot` → `~/.copilot/skills/`
 - `opencode` → `~/.config/opencode/skills/`
 
-`kn-agente instalar` chama esta lógica internamente; uso direto é só para casos pontuais.
+`koine instalar` chama esta lógica internamente; uso direto é só para casos pontuais.
 
 ## Estrutura de configuração em runtime
 
