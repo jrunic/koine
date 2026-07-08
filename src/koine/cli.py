@@ -12,11 +12,12 @@ from koine import (
     instalar as _instalar,
     paths,
     schema,
+    skills,
     wrappers,
 )
 from koine._version import __version__
 
-SUBCOMANDOS = {"versao", "instalar"}  # gerar/mostrar chegam em P3
+SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades"}  # gerar/mostrar chegam em P3
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -32,6 +33,8 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if primeiro == "instalar":
             return _cmd_instalar(argv[1:])
+        if primeiro == "instalar-habilidades":
+            return _cmd_instalar_habilidades(argv[1:])
     if primeiro in adapters.REGISTRY:
         return _rodar_cliente(primeiro, argv[1:])
 
@@ -60,6 +63,21 @@ def _cmd_instalar(args: list[str]) -> int:
     wrappers.gerar(bindir, pyz, sys.executable)
     canonica.configurar(vault_src)
     print("Instalação concluída.")
+    return 0
+
+
+def _cmd_instalar_habilidades(args: list[str]) -> int:
+    p = argparse.ArgumentParser(prog="koine instalar-habilidades")
+    p.add_argument("--para", required=True)
+    p.add_argument("--force", action="store_true")
+    ns = p.parse_args(args)
+    div = skills.instalar_habilidades(ns.para, force=ns.force)
+    if div and not ns.force:
+        print("Skills divergentes preservadas (use --force para sobrescrever):")
+        for d in div:
+            print("  !", d)
+    else:
+        print(f"Skills instaladas para {ns.para}.")
     return 0
 
 

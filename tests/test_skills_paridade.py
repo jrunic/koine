@@ -68,3 +68,17 @@ def test_harness_desconhecido_erra(tmp_path, monkeypatch):
     import pytest
     with pytest.raises(ValueError):
         skills.instalar_habilidades("inexistente")
+
+
+def test_cli_instalar_habilidades(tmp_path, monkeypatch):
+    from koine import cli
+
+    home = str(tmp_path)
+    monkeypatch.setenv("HOME", home)
+    monkeypatch.delenv("XDG_DATA_HOME", raising=False)
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    from koine import instalar
+    instalar.extrair(VAULT, "0.4.0-dev")
+    rc = cli.main(["instalar-habilidades", "--para", "claude"])
+    assert rc == 0
+    assert os.path.isdir(os.path.join(home, ".claude", "skills", "kn-01-recebe-usuario"))
