@@ -112,7 +112,7 @@ def _pyz_padrao() -> str:
     return os.path.abspath(sys.argv[0])
 
 
-def _gerar_conteudo(agente: str, pasta: str) -> str:
+def _gerar_conteudo(agente: str, pasta: str, cliente: str = "claude") -> str:
     ctx_path = os.path.join(pasta, "CONTEXTO.md")
     fm, _ = frontmatter.ler(open(ctx_path, encoding="utf-8").read())
     # bootstrap não tem escopo nem índices; contexto.resolver trata o ramo.
@@ -124,8 +124,8 @@ def _gerar_conteudo(agente: str, pasta: str) -> str:
         refs = paths.resolver_tagged(schema.Escopo.from_fm(escopo_fm).pasta_referencias)
         indice.gerar(refs, fm.get("dominios", []))
     cm = contexto.resolver(agente, pasta)
-    # gerar/mostrar/cliente sempre renderizam com o adapter Claude (igual ao Go executar)
-    return adapters.get("claude").renderizar(cm)
+    # gerar/mostrar usam o default claude; o caminho do wrapper passa o cliente real.
+    return adapters.get(cliente).renderizar(cm)
 
 
 def _cmd_gerar(args: list[str]) -> int:
@@ -149,8 +149,9 @@ def _cmd_mostrar(args: list[str]) -> int:
 def _rodar_cliente(cliente: str, args: list[str]) -> int:
     agente = args[0]
     pasta = pasta_mod.resolver(args[1] if len(args) >= 2 else "")
-    conteudo = _gerar_conteudo(agente, pasta)
-    with open(os.path.join(pasta, "CLAUDE.md"), "w", encoding="utf-8") as f:
+    conteudo = _gerar_conteudo(agente, pasta, cliente)
+    destino = os.path.join(pasta, adapters.get(cliente).ARQUIVO)
+    with open(destino, "w", encoding="utf-8") as f:
         f.write(conteudo)
     try:
         launch.lancar(cliente, pasta)
