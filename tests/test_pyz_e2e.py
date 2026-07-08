@@ -41,7 +41,8 @@ def test_pyz_claude_paridade(tmp_path, monkeypatch):
     path = shimdir + os.pathsep + os.environ["PATH"]
     subprocess.run([sys.executable, pyz, "claude", "hermes", fx["trab"]],
                    env={**os.environ, "HOME": fx["home"], "PATH": path},
-                   check=True, capture_output=True, text=True)
+                   check=True, capture_output=True, text=True,
+                   stdin=subprocess.DEVNULL, timeout=60)
     py = open(os.path.join(fx["trab"], "CLAUDE.md"), encoding="utf-8").read()
     assert _parity.normalize(py) == _parity.normalize(go)
 
@@ -63,8 +64,11 @@ def test_greenfield_instalar_do_pyz_e_rodar_wrapper(tmp_path):
     path_launch = shimdir + os.pathsep + path
 
     # 1. instalar a partir do pyz (payload do vault está ao lado do pyz)
+    # stdin=DEVNULL: sem ele, pytest num terminal real herdaria o TTY e o
+    # `instalar` (isatty → interativo) abriria prompt e travaria a suíte.
     subprocess.run([sys.executable, pyz, "instalar", "--bin", bindir, "--pyz", pyz, "--para", "claude"],
-                   env={"HOME": home, "PATH": path}, check=True, capture_output=True, text=True)
+                   env={"HOME": home, "PATH": path}, check=True, capture_output=True, text=True,
+                   stdin=subprocess.DEVNULL, timeout=60)
     assert os.path.exists(os.path.join(home, ".local/share/koine/KOINE.md"))
     # skills instaladas no harness (co-requisito do onboarding)
     assert os.path.isdir(os.path.join(home, ".claude", "skills", "kn-12-prepara-contexto"))
@@ -76,7 +80,8 @@ def test_greenfield_instalar_do_pyz_e_rodar_wrapper(tmp_path):
     go = _parity.gerar_go(trab, "hermes", home)
     os.remove(os.path.join(trab, "CLAUDE.md"))
     subprocess.run([wrapper, "hermes", trab], env={"HOME": home, "PATH": path_launch},
-                   check=True, capture_output=True, text=True)
+                   check=True, capture_output=True, text=True,
+                   stdin=subprocess.DEVNULL, timeout=60)
     py = open(os.path.join(trab, "CLAUDE.md"), encoding="utf-8").read()
     assert _parity.normalize(py) == _parity.normalize(go)
 
@@ -85,6 +90,7 @@ def test_greenfield_instalar_do_pyz_e_rodar_wrapper(tmp_path):
     go_b = _parity.gerar_go(canon, "hermes", home)
     os.remove(os.path.join(canon, "CLAUDE.md"))
     subprocess.run([wrapper, "hermes", canon], env={"HOME": home, "PATH": path_launch},
-                   check=True, capture_output=True, text=True)
+                   check=True, capture_output=True, text=True,
+                   stdin=subprocess.DEVNULL, timeout=60)
     py_b = open(os.path.join(canon, "CLAUDE.md"), encoding="utf-8").read()
     assert _parity.normalize(py_b) == _parity.normalize(go_b)

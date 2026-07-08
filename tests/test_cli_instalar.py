@@ -1,3 +1,4 @@
+import io
 import os
 from koine import cli
 from tests import _parity
@@ -10,6 +11,8 @@ def test_instalar_extrai_e_cria_wrapper(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", home)
     monkeypatch.delenv("XDG_DATA_HOME", raising=False)
     monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    # blindagem pytest -s: sem capture, sys.stdin é o TTY real → isatty=True
+    monkeypatch.setattr("sys.stdin", io.StringIO())
     # vault_src explícito para o teste (não depende de localização automática)
     rc = cli.main(["instalar", "--vault", os.path.join(REPO, "vault"),
                    "--bin", str(tmp_path / "bin"), "--pyz", "/opt/koine/koine.pyz"])
@@ -28,6 +31,7 @@ def test_instalar_paridade_da_arvore(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", home_py)
     monkeypatch.delenv("XDG_DATA_HOME", raising=False)
     monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    monkeypatch.setattr("sys.stdin", io.StringIO())  # blindagem pytest -s
     cli.main(["instalar", "--vault", os.path.join(REPO, "vault"),
               "--bin", str(tmp_path / "b"), "--pyz", "x"])
     for sub in (".local/share/koine", ".config/koine/dominios"):

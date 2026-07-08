@@ -1,3 +1,4 @@
+import io
 import json
 import os
 from koine import aliases, canonica, cli
@@ -37,6 +38,7 @@ def test_instalar_completo_bate_com_go(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", home_py)
     monkeypatch.delenv("XDG_DATA_HOME", raising=False)
     monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    monkeypatch.setattr("sys.stdin", io.StringIO())  # blindagem pytest -s
     cli.main(["instalar", "--vault", VAULT, "--bin", str(tmp_path / "b"), "--pyz", "x"])
 
     # pasta canônica criada
