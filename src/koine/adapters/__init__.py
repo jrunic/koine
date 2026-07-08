@@ -1,4 +1,4 @@
-from koine.adapters import antigravity, claude, codex, copilot
+from koine.adapters import antigravity, claude, codex, copilot, opencode
 
 # registry cliente → (módulo do adapter). instalar itera isto para
 # emitir um wrapper kn-<cliente> por adapter REGISTRADO.
@@ -7,6 +7,7 @@ REGISTRY = {
     "agy": antigravity,
     "codex": codex,
     "copilot": copilot,
+    "opencode": opencode,
 }
 
 
