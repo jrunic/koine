@@ -6,6 +6,12 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.1] — 2026-07-16
+
+### Fixed
+
+- **Windows WinError 193** — `launch.lancar` agora envolve wrappers `.bat`/`.cmd` com `cmd /c` antes de passar ao `subprocess.run`. CLIs Python instalados via pip/pipx no Windows criam wrappers batch que o `CreateProcess` não consegue executar diretamente.
+
 ## [0.4.0] — 2026-07-08
 
 O flip do Python: o Koine passa a ser distribuído como aplicação Python (`koine.pyz`), substituindo os binários Go. Mesmos comandos `kn-*`, mesmo comportamento, mesmo estado em disco — upgrade da v0.3.x não exige migração.

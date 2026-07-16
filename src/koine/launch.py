@@ -20,6 +20,11 @@ def lancar(cliente: str, pasta: str, env: dict | None = None, args: list | None 
     extra = list(args or [])
     ambiente = {**os.environ, **(env or {})}
     if sys.platform == "win32":
-        return subprocess.run([binpath, *extra], cwd=pasta, env=ambiente).returncode
+        # .bat/.cmd não são executáveis Win32 — CreateProcess exige cmd.exe /c
+        if binpath.lower().endswith((".bat", ".cmd")):
+            cmd = ["cmd", "/c", binpath, *extra]
+        else:
+            cmd = [binpath, *extra]
+        return subprocess.run(cmd, cwd=pasta, env=ambiente).returncode
     os.chdir(pasta)
     os.execvpe(cliente, [cliente, *extra], ambiente)  # NÃO retorna: substitui o processo
