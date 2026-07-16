@@ -251,6 +251,9 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
     try:
         launch.lancar(cliente, pasta, env=lanc.env_vars or None, args=lanc.extra_args or None)
     except launch.ClienteNaoEncontrado as e:
-        print(str(e), file=sys.stderr)
+        print(mensagens.cliente_nao_encontrado(e.cliente), file=sys.stderr)
+        return 1
+    except launch.ClienteNaoExecutavel as e:
+        print(mensagens.cliente_nao_executavel(e.cliente, e.binpath), file=sys.stderr)
         return 1
     return 0  # alcançado só quando lancar é monkeypatched (Unix real: execvpe substitui)
