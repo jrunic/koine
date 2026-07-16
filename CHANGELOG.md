@@ -6,6 +6,16 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.2] — 2026-07-16
+
+### Fixed
+
+- **Windows WinError 193 (resolução robusta do cliente)** — no Windows o launch agora invoca o cliente via `cmd /c <cliente>` pelo nome, deixando o `cmd.exe` aplicar a mesma resolução PATHEXT do shell interativo. O guard `.bat`/`.cmd` da 0.4.1 não bastava: o `shutil.which` podia devolver uma variante que o `CreateProcess` recusava (WinError 193) mesmo havendo um `.cmd`/`.exe` válido ao lado. Se o cliente roda quando digitado no terminal, agora roda pelo `kn-<cliente>`.
+
+### Changed
+
+- **Erros de lançamento amigáveis** — cliente ausente no PATH e cliente encontrado-mas-não-executável agora produzem mensagens orientadas (diagnóstico + correção por OS) em vez de traceback Python. Exceções tipadas (`ClienteNaoEncontrado`, `ClienteNaoExecutavel`) carregam dados; a prosa vive em `mensagens`.
+
 ## [0.4.1] — 2026-07-16
 
 ### Fixed

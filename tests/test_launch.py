@@ -25,10 +25,13 @@ def test_lancar_unix_faz_chdir_e_exec(monkeypatch):
     assert capturado["args"] == ["claude"]  # sem args extras p/ claude
 
 
-def test_lancar_windows_bat_usa_cmd_c(monkeypatch):
-    """WinError 193: .bat não é executável Win32 — cmd /c é obrigatório."""
+def test_lancar_windows_resolve_via_cmd_por_nome(monkeypatch):
+    """Windows: lança via `cmd /c <cliente>` pelo NOME (não pelo binpath do
+    which) — deixa o cmd.exe escolher a variante executável e evita WinError 193
+    quando o which devolve um shim/variante que o CreateProcess recusa."""
     capturado = {}
-    monkeypatch.setattr(launch.shutil, "which", lambda c: r"C:\some\hermes.bat")
+    # which devolve uma variante qualquer — irrelevante para o comando montado
+    monkeypatch.setattr(launch.shutil, "which", lambda c: r"C:\some\codex.EXE")
     monkeypatch.setattr(launch.sys, "platform", "win32")
 
     def fake_run(cmd, **_kw):
@@ -36,27 +39,28 @@ def test_lancar_windows_bat_usa_cmd_c(monkeypatch):
         return type("R", (), {"returncode": 0})()
 
     monkeypatch.setattr(launch.subprocess, "run", fake_run)
-    launch.lancar("hermes", r"C:\pasta")
-    assert capturado["cmd"][:3] == ["cmd", "/c", r"C:\some\hermes.bat"]
+    launch.lancar("codex", r"C:\pasta", args=["-c", "x=1"])
+    assert capturado["cmd"] == ["cmd", "/c", "codex", "-c", "x=1"]
 
 
-def test_lancar_windows_exe_direto(monkeypatch):
-    capturado = {}
-    monkeypatch.setattr(launch.shutil, "which", lambda c: r"C:\some\hermes.exe")
+def test_lancar_windows_oserror_vira_cliente_nao_executavel(monkeypatch):
+    """Se o subprocess.run levantar OSError (ex.: WinError 193), vira exceção
+    tipada carregando cliente+binpath — o consumidor decide a apresentação."""
+    monkeypatch.setattr(launch.shutil, "which", lambda c: r"C:\some\codex.exe")
     monkeypatch.setattr(launch.sys, "platform", "win32")
 
-    def fake_run(cmd, **_kw):
-        capturado["cmd"] = cmd
-        return type("R", (), {"returncode": 0})()
+    def boom(cmd, **_kw):
+        raise OSError(193, "não é um aplicativo Win32 válido")
 
-    monkeypatch.setattr(launch.subprocess, "run", fake_run)
-    launch.lancar("hermes", r"C:\pasta")
-    assert capturado["cmd"][0] == r"C:\some\hermes.exe"
-    assert capturado["cmd"][:1] != ["cmd"]
+    monkeypatch.setattr(launch.subprocess, "run", boom)
+    with pytest.raises(launch.ClienteNaoExecutavel) as e:
+        launch.lancar("codex", r"C:\pasta")
+    assert e.value.cliente == "codex"
+    assert e.value.binpath == r"C:\some\codex.exe"
 
 
 def test_lancar_cliente_ausente_erra_amigavel(monkeypatch):
     monkeypatch.setattr(launch.shutil, "which", lambda c: None)
     with pytest.raises(launch.ClienteNaoEncontrado) as e:
         launch.lancar("claude", "/algum/pasta")
-    assert "não encontrado no PATH" in str(e.value)
+    assert e.value.cliente == "claude"

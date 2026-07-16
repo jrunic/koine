@@ -132,6 +132,60 @@ def _bloco_cliente_opencode(os_: str) -> str:
     return "".join(b)
 
 
+def cliente_nao_encontrado(cliente: str) -> str:
+    """Cliente NÃO está no PATH (shutil.which devolveu None). Aqui sim o
+    diagnóstico é 'não instalado ou fora do PATH'. Guia por OS."""
+    os_ = _os_atual()
+    b = [
+        f"  ✗ cliente '{cliente}' não encontrado no PATH\n",
+        "\n",
+        f"    Ou o '{cliente}' não está instalado, ou a pasta dele não está no PATH.\n",
+        "\n",
+        "    Diagnostique no MESMO terminal:\n",
+    ]
+    if os_ == "windows":
+        b += [
+            f"      where {cliente}\n",
+            "        • nada listado  → não instalado, ou a pasta não está no PATH\n",
+            f"        • lista caminho → o '{cliente}' está no PATH (reabra o terminal e tente de novo)\n",
+            "\n",
+            "    Adicionar ao PATH do usuário (sem admin; PowerShell), trocando <PASTA>:\n",
+            '      [Environment]::SetEnvironmentVariable("PATH", "<PASTA>;" + '
+            '[Environment]::GetEnvironmentVariable("PATH","User"), "User")\n',
+            "    Depois reabra o terminal.\n",
+        ]
+    else:
+        b += [
+            f"      command -v {cliente}\n",
+            f"        • vazio → instale o '{cliente}' ou adicione a pasta dele ao PATH\n",
+            "\n",
+            "    Adicionar ao PATH (no seu ~/.zshrc ou ~/.bashrc), trocando <PASTA>:\n",
+            '      export PATH="<PASTA>:$PATH"\n',
+            "    Depois reabra o terminal.\n",
+        ]
+    return "".join(b)
+
+
+def cliente_nao_executavel(cliente: str, binpath: str) -> str:
+    """Cliente FOI encontrado, mas o SO recusou executá-lo (WinError 193 & cia.).
+    NÃO é PATH — o arquivo existe. Aponta o caminho achado e como corrigir."""
+    return (
+        f"  ✗ cliente '{cliente}' encontrado, mas o Windows não conseguiu executá-lo\n"
+        "\n"
+        "    Caminho resolvido:\n"
+        f"      {binpath}\n"
+        "\n"
+        "    Este NÃO é um erro de PATH — o comando foi encontrado. O arquivo acima\n"
+        "    não é um executável Win32 válido (WinError 193): normalmente é um shim\n"
+        f"    ou atalho inválido do '{cliente}', não o executável real.\n"
+        "\n"
+        "    Como investigar (mostra TODAS as entradas no PATH):\n"
+        f"      where {cliente}\n"
+        f"    Prefira a entrada .exe ou .cmd real do '{cliente}' e ajuste o PATH para\n"
+        "    ela vir primeiro. Se persistir, reinstale o cliente e reabra o terminal.\n"
+    )
+
+
 def final_instalar() -> str:
     # porta de instalar.go:72-83 (mensagem final do onboarding)
     return (
