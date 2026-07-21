@@ -2,6 +2,7 @@ import argparse
 import os
 import pathlib
 import shutil
+import subprocess
 import sys
 
 from koine import (
@@ -277,16 +278,20 @@ def _cmd_atualizar(args: list[str]) -> int:
         return 0
 
     if sys.platform == "win32":
-        # Pai segura o alvo_pyz; delega ao filho DESTACADO (sem console → stdio
-        # para log, senão print() do filho lança WinError 6 e a troca morre muda).
-        import subprocess
-        staged_pyz = os.path.join(staging, "koine.pyz")
+        # Pai segura o alvo_pyz; delega ao filho DESTACADO. O finalizador roda o
+        # CÓDIGO ATUAL (cópia do pyz vigente), NÃO o alvo baixado — o alvo pode não
+        # ter `atualizar --finalizar` (ex.: downgrade para versão sem a feature).
+        # Rodando de uma cópia neutra, o filho não segura nem o staged nem o dist,
+        # então o os.replace(staged → dist) funciona. stdio para log: processo
+        # destacado não tem console e print() lançaria WinError 6.
+        finalizador = os.path.join(staging, "finalizador.pyz")
+        shutil.copyfile(alvo_pyz, finalizador)
         logpath = os.path.join(paths.cache_dir(), "atualizar.log")
         os.makedirs(os.path.dirname(logpath), exist_ok=True)
         logf = open(logpath, "w", encoding="utf-8")
         DETACHED = 0x00000008 | 0x00000200  # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
         subprocess.Popen(
-            [sys.executable, staged_pyz, "atualizar", "--finalizar",
+            [sys.executable, finalizador, "atualizar", "--finalizar",
              "--staging", staging, "--alvo-pyz", alvo_pyz, "--bin", bindir,
              "--versao", versao] + (["--force"] if ns.force else []),
             stdout=logf, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
