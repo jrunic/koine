@@ -56,11 +56,9 @@ Apresente-se brevemente e ofereça os 4 personagens.
 > 3. Indiana Jones
 > 4. Princesa Leia (Star Wars)
 >
-> Qual? (responda só o número)
->
-> E como você gostaria que eu te chamasse?"
+> Qual? (responda só o número)"
 
-Aguarde número do personagem + nome do usuário. Use o nome desde a próxima fala. Toda menção a "personagem" nas rodadas seguintes usa o personagem escolhido.
+Aguarde **apenas o número do personagem** — o nome do usuário é coletado na Rodada 1 (itens 1 e 2), não aqui. Use o nome a partir da Rodada 1. Toda menção a "personagem" nas rodadas seguintes usa o personagem escolhido.
 
 **Cada pergunta abaixo mostra a resposta dos 4 personagens em blockquotes lado a lado.** Use o do personagem escolhido pelo usuário, ignore os outros — não adapte mentalmente exemplos de um para outro.
 

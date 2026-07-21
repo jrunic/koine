@@ -6,6 +6,12 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.4] — 2026-07-21
+
+### Fixed
+
+- **Onboarding `kn-01-recebe-usuario` pedia o nome três vezes** — a abertura da skill perguntava "como você gostaria que eu te chamasse?" e a Rodada 1 repetia a mesma pergunta (item 2), somada ao "nome completo" (item 1), resultando em três perguntas de nome em sequência. A abertura agora coleta apenas o número do personagem-âncora; o nome é coletado uma única vez em cada campo distinto da Rodada 1 (nome completo + como te chamar).
+
 ## [0.4.3] — 2026-07-21
 
 ### Added
