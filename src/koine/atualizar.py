@@ -97,3 +97,30 @@ def _substituir_pyz(src: str, dst: str, tentativas: int = 50, intervalo: float =
             if i == tentativas - 1:
                 raise
             time.sleep(intervalo)
+
+
+def _refresh_skills(force: bool = False) -> None:
+    """Instala/atualiza skills do vault novo em cada harness detectado.
+    Idempotente; divergentes preservados salvo force. Falha por harness não aborta."""
+    for h in skills.detectar_harnesses():
+        try:
+            criadas, _exist, div = skills.instalar_habilidades_detalhado(h, force=force)
+            for n in criadas:
+                print(f"    + {h}: {n}")
+            if div:
+                print(f"    ! {h}: divergentes preservadas (use --force): {', '.join(div)}")
+        except (OSError, ValueError) as e:
+            print(f"    aviso: skills de {h}: {e}", file=sys.stderr)
+
+
+def aplicar(staging: str, alvo_pyz: str, bindir: str, versao: str, force: bool) -> None:
+    """Fase de aplicação (não-transacional; recuperável re-rodando). Extrai o
+    vault (shipped forçado, dominios do usuário preservados salvo force), troca o
+    pyz, regenera wrappers baqueando o interpretador atual e refresca skills."""
+    _instalar.extrair(os.path.join(staging, "vault"), versao,
+                      force=force, atualizar_vault=True)
+    _substituir_pyz(os.path.join(staging, "koine.pyz"), alvo_pyz)
+    wrappers.gerar(bindir, alvo_pyz, sys.executable)
+    print("Skills:")
+    _refresh_skills(force=force)
+    print(f"Koine atualizado para {versao}.")

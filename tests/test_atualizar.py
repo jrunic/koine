@@ -83,3 +83,12 @@ def test_substituir_pyz_retenta_em_permissionerror(tmp_path, monkeypatch):
     monkeypatch.setattr(atualizar.time, "sleep", lambda _: None)
     atualizar._substituir_pyz(str(src), str(dst))
     assert dst.read_bytes() == b"novo" and n["c"] == 3
+
+
+def test_refresh_skills_instala_nos_detectados(monkeypatch):
+    chamados = []
+    monkeypatch.setattr(atualizar.skills, "detectar_harnesses", lambda: ["claude", "codex"])
+    monkeypatch.setattr(atualizar.skills, "instalar_habilidades_detalhado",
+                        lambda h, force=False: (chamados.append((h, force)), (["kn-99"], [], []))[1])
+    atualizar._refresh_skills(force=True)
+    assert chamados == [("claude", True), ("codex", True)]
