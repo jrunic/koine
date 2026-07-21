@@ -55,3 +55,31 @@ def test_verifica_sha256_ok():
 def test_verifica_sha256_divergente():
     with pytest.raises(atualizar.AtualizarErro):
         atualizar.verificar_sha256(b"x", "deadbeef  koine-0.4.3.zip\n", "koine-0.4.3.zip")
+
+
+import os
+
+
+def test_substituir_pyz_sucesso(tmp_path):
+    src = tmp_path / "novo.pyz"; src.write_bytes(b"novo")
+    dst = tmp_path / "dist" / "koine.pyz"; dst.parent.mkdir(); dst.write_bytes(b"velho")
+    atualizar._substituir_pyz(str(src), str(dst))
+    assert dst.read_bytes() == b"novo" and not src.exists()
+
+
+def test_substituir_pyz_retenta_em_permissionerror(tmp_path, monkeypatch):
+    src = tmp_path / "novo.pyz"; src.write_bytes(b"novo")
+    dst = tmp_path / "koine.pyz"; dst.write_bytes(b"velho")
+    n = {"c": 0}
+    real = os.replace
+
+    def flaky(a, b):
+        n["c"] += 1
+        if n["c"] < 3:
+            raise PermissionError("em uso")
+        real(a, b)
+
+    monkeypatch.setattr(atualizar.os, "replace", flaky)
+    monkeypatch.setattr(atualizar.time, "sleep", lambda _: None)
+    atualizar._substituir_pyz(str(src), str(dst))
+    assert dst.read_bytes() == b"novo" and n["c"] == 3

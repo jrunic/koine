@@ -84,3 +84,16 @@ def verificar_sha256(dados: bytes, sums_texto: str, asset: str) -> None:
         raise AtualizarErro(
             f"hash divergente para {asset}: esperado {esperado}, obtido {real}. "
             "Download corrompido; instalação atual intacta.")
+
+
+def _substituir_pyz(src: str, dst: str, tentativas: int = 50, intervalo: float = 0.2) -> None:
+    """os.replace atômico do pyz. No Windows o processo pai pode ainda segurar o
+    dst; reitera até liberar. No POSIX acerta de primeira. Sem trampolim batch."""
+    for i in range(tentativas):
+        try:
+            os.replace(src, dst)
+            return
+        except PermissionError:
+            if i == tentativas - 1:
+                raise
+            time.sleep(intervalo)
