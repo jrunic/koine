@@ -111,6 +111,7 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
 - **Vault é readonly em runtime** — extraído do payload de distribuição pelo `koine instalar` para `~/.local/share/koine/`. Usuário é dono de `~/.config/koine/`.
 - **Marcador congelado** — `<!-- gerado por kn-agente -->` na 1ª linha de arquivos gerados; é o contrato de detecção de conflito com instalações antigas e não muda.
 - **Não commitar binários** — `dist/` e artefatos locais já cobertos pelo `.gitignore`.
+- **Mudança que afeta Windows valida em VM AppLocker antes de release** — self-update (`atualizar`), launch e wrappers. O CI é **POSIX-only e não pega bug Windows-only**: na v0.4.3 dois bugs só apareceram em Windows 11 ARM real — (1) SSL/AIA (OpenSSL da stdlib não busca CA intermediário → fallback `curl.exe`); (2) handoff finalizava com o pyz alvo baixado, que pode não ter `--finalizar` → finalizar com cópia do pyz atual. Lab reutilizável (Win11 ARM Enterprise via CrystalFetch + Fusion + AppLocker escopado a usuário restrito) em `14-projetos/20260620-criar-koine/laboratorio-windows-applocker/`.
 
 ## Decisões locais divergentes (técnicas)
 
