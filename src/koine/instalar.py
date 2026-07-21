@@ -5,7 +5,8 @@ from datetime import datetime, timezone
 from koine import paths
 
 
-def extrair(vault_src: str, versao: str, force: bool = False) -> list[str]:
+def extrair(vault_src: str, versao: str, force: bool = False,
+            atualizar_vault: bool = False) -> list[str]:
     """Extrai vault_src → XDG. dominios/ vão para ConfigDir; templates/ e
     .gitkeep são pulados. Idempotente: idêntico pula; divergente sem force é
     reportado (retornado), não sobrescrito. Retorna lista de divergências."""
@@ -33,9 +34,10 @@ def extrair(vault_src: str, versao: str, force: bool = False) -> list[str]:
             src = os.path.join(raiz, a)
             if rel.startswith("dominios/"):
                 dest = os.path.join(config_dir, rel.replace("/", os.sep))
+                _copiar(src, dest, force, divergencias)                     # usuário: preserva
             else:
                 dest = os.path.join(vault_dir, rel.replace("/", os.sep))
-            _copiar(src, dest, force, divergencias)
+                _copiar(src, dest, force or atualizar_vault, divergencias)  # shipped: refresca
 
     _gravar_meta(vault_dir, versao)
     return divergencias
