@@ -11,6 +11,7 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - **Comando `koine atualizar`** — self-update para a última release (ou versão fixada em `KOINE_VERSAO`), baixando o `.zip` do github (ou de `KOINE_BASE_URL`), verificando `SHA256SUMS`, e reaproveitando o caminho de instalação: refresca o vault shipped preservando os `dominios` do usuário, regenera os wrappers e reinstala skills nos harnesses detectados. Execução 100% Python — nenhum `.bat`/`.ps1`/powershell — para políticas que bloqueiam executáveis e powershell (ex.: Grupo Aldo). Auto-troca do pyz é in-process no POSIX e delegada a um processo-filho da versão nova no Windows (stdio em log, sem trampolim batch). No-op quando já na versão-alvo; `--force` reinstala.
+  - **Limitação/mitigação de SSL no Windows** — o OpenSSL da stdlib do Python não busca o CA intermediário via AIA, então o download direto do github pode falhar em Windows sem a cadeia completa no store (comum em máquina recém-instalada; máquina corporativa gerenciada costuma ter a cadeia provisionada). Mitigação: no Windows o download cai para o `curl.exe` do sistema (usa Schannel, que faz AIA); se o `curl` também falhar, a mensagem orienta a rodar Windows Update ou usar `KOINE_BASE_URL` apontando para um espelho. Validado em Windows 11 ARM sob AppLocker (powershell bloqueado, usuário restrito): resolução de versão, download por espelho e a auto-troca do pyz funcionam; o download direto do github depende do fallback curl.
 
 ### Fixed
 

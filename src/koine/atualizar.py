@@ -2,6 +2,7 @@
 import hashlib
 import os
 import ssl
+import subprocess
 import sys
 import tempfile
 import time
@@ -50,15 +51,33 @@ def montar_urls(tag: str, versao: str) -> tuple[str, str]:
     return f"{base}/{tag}/koine-{versao}.zip", f"{base}/{tag}/SHA256SUMS"
 
 
+def _baixar_curl(url: str) -> bytes | None:
+    """Fallback Windows: baixa via curl.exe do sistema. O OpenSSL do Python
+    (stdlib) não busca CA intermediário via AIA; o curl usa Schannel, que busca —
+    então funciona onde o urllib falha. Devolve os bytes, ou None se o curl estiver
+    ausente/falhar (aí o chamador orienta)."""
+    try:
+        r = subprocess.run(["curl", "-fsSL", url], capture_output=True, timeout=120)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return r.stdout if r.returncode == 0 and r.stdout else None
+
+
 def baixar(url: str) -> bytes:
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "koine-atualizar"})
         with urllib.request.urlopen(req, timeout=60) as resp:
             return resp.read()
     except (urllib.error.URLError, ssl.SSLError, OSError) as e:
+        if sys.platform == "win32":
+            dados = _baixar_curl(url)
+            if dados is not None:
+                return dados
         raise AtualizarErro(
-            f"falha ao baixar {url} ({e}). Verifique a conexão ou o KOINE_BASE_URL; "
-            "a instalação atual não foi tocada.") from e
+            f"falha ao baixar {url} ({e}). No Windows, a verificação SSL do Python "
+            "pode falhar por não buscar o CA intermediário (AIA); rode Windows Update "
+            "para popular os certificados, ou use KOINE_BASE_URL apontando para um "
+            "espelho. A instalação atual não foi tocada.") from e
 
 
 def baixar_sums_opcional(sha_url: str) -> str | None:
@@ -67,6 +86,10 @@ def baixar_sums_opcional(sha_url: str) -> str | None:
         with urllib.request.urlopen(req, timeout=30) as resp:
             return resp.read().decode("utf-8")
     except (urllib.error.URLError, ssl.SSLError, OSError):
+        if sys.platform == "win32":
+            dados = _baixar_curl(sha_url)
+            if dados is not None:
+                return dados.decode("utf-8")
         return None
 
 
