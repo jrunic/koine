@@ -28,3 +28,11 @@ def test_koine_claude_gera_claude_md_e_lanca(koine_home, monkeypatch):
 def test_versao(capsys):
     assert cli.main(["versao"]) == 0
     assert "koine" in capsys.readouterr().out.lower()
+
+
+def test_atualizar_falha_rede_retorna_1(monkeypatch):
+    from koine import cli, atualizar
+    def boom(force=False):
+        raise atualizar.AtualizarErro("sem rede")
+    monkeypatch.setattr(atualizar, "preparar", boom)
+    assert cli.main(["atualizar"]) == 1

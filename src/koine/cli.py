@@ -6,6 +6,7 @@ import sys
 
 from koine import (
     adapters,
+    atualizar as _atualizar,
     canonica,
     conflito,
     contexto,
@@ -22,7 +23,7 @@ from koine import (
 )
 from koine._version import __version__
 
-SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades", "gerar", "mostrar"}
+SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades", "gerar", "mostrar", "atualizar"}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -44,6 +45,8 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_gerar(argv[1:])
         if primeiro == "mostrar":
             return _cmd_mostrar(argv[1:])
+        if primeiro == "atualizar":
+            return _cmd_atualizar(argv[1:])
     if primeiro in adapters.REGISTRY:
         return _rodar_cliente(primeiro, argv[1:])
 
@@ -218,7 +221,12 @@ def _cmd_gerar(args: list[str]) -> int:
     except pasta_mod.ResolucaoErro as e:
         print(str(e), file=sys.stderr)
         return 1
-    lanc = adapters.get("claude").renderizar(_montar_cm(agente, pasta))
+    try:
+        cm = _montar_cm(agente, pasta)
+    except contexto.AgenteNaoEncontrado as e:
+        print(mensagens.agente_nao_encontrado(e.agente, e.disponiveis), file=sys.stderr)
+        return 1
+    lanc = adapters.get("claude").renderizar(cm)
     conteudo = lanc.arquivos_working_dir["CLAUDE.md"]
     destino = os.path.join(pasta, "CLAUDE.md")
     with open(destino, "w", encoding="utf-8") as f:
@@ -230,8 +238,65 @@ def _cmd_gerar(args: list[str]) -> int:
 def _cmd_mostrar(args: list[str]) -> int:
     agente, alvo = args[0], args[1]
     # alvo NÃO resolve alias — comportamento congelado de `mostrar` (arg cru)
-    lanc = adapters.get("claude").renderizar(_montar_cm(agente, alvo))
+    try:
+        cm = _montar_cm(agente, alvo)
+    except contexto.AgenteNaoEncontrado as e:
+        print(mensagens.agente_nao_encontrado(e.agente, e.disponiveis), file=sys.stderr)
+        return 1
+    lanc = adapters.get("claude").renderizar(cm)
     print(lanc.arquivos_working_dir["CLAUDE.md"], end="")
+    return 0
+
+
+def _cmd_atualizar(args: list[str]) -> int:
+    p = argparse.ArgumentParser(prog="koine atualizar")
+    p.add_argument("--force", action="store_true")
+    # ramo interno de finalização no Windows (pai destacado já saiu):
+    p.add_argument("--finalizar", action="store_true", help=argparse.SUPPRESS)
+    p.add_argument("--staging", default=None, help=argparse.SUPPRESS)
+    p.add_argument("--alvo-pyz", dest="alvo_pyz", default=None, help=argparse.SUPPRESS)
+    p.add_argument("--bin", default=None, help=argparse.SUPPRESS)
+    p.add_argument("--versao", default=None, help=argparse.SUPPRESS)
+    ns = p.parse_args(args)
+
+    alvo_pyz = ns.alvo_pyz or _pyz_padrao()
+    bindir = ns.bin or _bin_padrao()
+
+    # Fase 2 (Windows): roda do pyz staged; aplica após o pai liberar o alvo.
+    if ns.finalizar:
+        _atualizar.aplicar(ns.staging, alvo_pyz, bindir, ns.versao, force=ns.force)
+        return 0
+
+    # Fase 1: resolve + baixa para staging (no-op sai aqui).
+    try:
+        staging, versao = _atualizar.preparar(force=ns.force)
+    except _atualizar.AtualizarErro as e:
+        print(str(e), file=sys.stderr)
+        return 1
+    if staging is None:
+        return 0
+
+    if sys.platform == "win32":
+        # Pai segura o alvo_pyz; delega ao filho DESTACADO (sem console → stdio
+        # para log, senão print() do filho lança WinError 6 e a troca morre muda).
+        import subprocess
+        staged_pyz = os.path.join(staging, "koine.pyz")
+        logpath = os.path.join(paths.cache_dir(), "atualizar.log")
+        os.makedirs(os.path.dirname(logpath), exist_ok=True)
+        logf = open(logpath, "w", encoding="utf-8")
+        DETACHED = 0x00000008 | 0x00000200  # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
+        subprocess.Popen(
+            [sys.executable, staged_pyz, "atualizar", "--finalizar",
+             "--staging", staging, "--alvo-pyz", alvo_pyz, "--bin", bindir,
+             "--versao", versao] + (["--force"] if ns.force else []),
+            stdout=logf, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+            creationflags=DETACHED, close_fds=True)
+        print(f"Baixado {versao}. Aplicando em segundo plano — confirme com "
+              f"`koine versao` em alguns segundos (log: {logpath}).")
+        return 0
+
+    # POSIX: sem lock, aplica in-process.
+    _atualizar.aplicar(staging, alvo_pyz, bindir, versao, force=ns.force)
     return 0
 
 
@@ -242,7 +307,12 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
     except pasta_mod.ResolucaoErro as e:
         print(str(e), file=sys.stderr)
         return 1
-    lanc = adapters.get(cliente).renderizar(_montar_cm(agente, pasta))
+    try:
+        cm = _montar_cm(agente, pasta)
+    except contexto.AgenteNaoEncontrado as e:
+        print(mensagens.agente_nao_encontrado(e.agente, e.disponiveis), file=sys.stderr)
+        return 1
+    lanc = adapters.get(cliente).renderizar(cm)
     try:
         _materializar(lanc, pasta)
     except conflito.ConflitoErro as e:

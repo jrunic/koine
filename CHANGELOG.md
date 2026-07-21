@@ -6,6 +6,21 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.3] — 2026-07-21
+
+### Added
+
+- **Comando `koine atualizar`** — self-update para a última release (ou versão fixada em `KOINE_VERSAO`), baixando o `.zip` do github (ou de `KOINE_BASE_URL`), verificando `SHA256SUMS`, e reaproveitando o caminho de instalação: refresca o vault shipped preservando os `dominios` do usuário, regenera os wrappers e reinstala skills nos harnesses detectados. Execução 100% Python — nenhum `.bat`/`.ps1`/powershell — para políticas que bloqueiam executáveis e powershell (ex.: Grupo Aldo). Auto-troca do pyz é in-process no POSIX e delegada a um processo-filho da versão nova no Windows (stdio em log, sem trampolim batch). No-op quando já na versão-alvo; `--force` reinstala.
+
+### Fixed
+
+- **Agente de usuário não carregava (regressão do port Python)** — `contexto.resolver` procurava agentes só em `vault/agentes` (`~/.local/share/koine/`), onde vive apenas o `hermes` distribuído. Agentes criados pela `kn-03-cria-agente` moram em `config/agentes` (`~/.config/koine/`) e nunca eram achados — em qualquer OS. O path era montado sem validar existência, então seguia silencioso e o agente simplesmente não entrava no contexto da sessão. A série Go lia do `config` (por isso o defeito não aparecia até rodar o build Python). Agora `_achar_agente` busca `config/agentes` primeiro (override do usuário) e `vault/agentes` depois (distribuído). Afeta os 5 adapters — `resolver` é compartilhado.
+- **Resolução do agente é case-insensitive** — o nome vinha do arg do CLI com a caixa crua (`Leia`), mas o slug em disco é lowercase (`leia.md`). Casar por caixa crua só resolvia em FS case-insensitive (macOS/Windows), sumindo o agente em FS case-sensitive (Linux/OpenClaw). O match agora ignora caixa contra os arquivos reais.
+
+### Changed
+
+- **Agente ausente falha alto** — nome que não casa com nenhum agente agora levanta `AgenteNaoEncontrado` (tipada, carrega o nome pedido + lista de disponíveis unindo usuário e distribuídos); `cli`/`mensagens` decidem prosa e política. Antes: path inexistente propagado em silêncio. Padrão `ClienteNaoEncontrado`/`ClienteNaoExecutavel`.
+
 ## [0.4.2] — 2026-07-16
 
 ### Fixed
