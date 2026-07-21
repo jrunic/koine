@@ -4,6 +4,17 @@ from dataclasses import dataclass, field
 from koine import frontmatter, paths, schema
 
 
+class AgenteNaoEncontrado(Exception):
+    """Nenhum arquivo de agente casa com o nome pedido. Carrega dados (nome +
+    disponíveis); cli/mensagens decidem prosa e política. Padrão
+    ClienteNaoEncontrado (launch.py)."""
+
+    def __init__(self, agente: str, disponiveis: list[str]):
+        self.agente = agente
+        self.disponiveis = disponiveis
+        super().__init__(agente)
+
+
 @dataclass
 class ContextoMontado:
     usuario_path: str = ""
@@ -30,6 +41,31 @@ def _achar_usuario_opcional(cfg: str) -> str:
     return os.path.join(cfg, mds[0]) if len(mds) == 1 else ""
 
 
+def _achar_agente(cfg: str, data: str, agente: str) -> str:
+    """Resolve o path do agente casando o nome (ignorando caixa) contra os
+    arquivos reais. Duas casas: agentes de usuário vivem em config/agentes
+    (kn-03-cria-agente grava lá); o agente distribuído (hermes) vive em
+    vault/agentes. Busca config primeiro (override do usuário), depois vault.
+
+    Duas armadilhas resolvidas de uma vez:
+    - diretório: sem olhar config, agente de usuário nunca é achado (só hermes);
+    - caixa: o slug é lowercase (leia.md), mas o arg do CLI pode vir 'Leia'.
+      Casar por caixa crua só resolve em FS case-insensitive (macOS/Windows),
+      sumindo o agente silenciosamente em FS case-sensitive (Linux/OpenClaw)."""
+    alvo = f"{agente}.md".lower()
+    disponiveis: list[str] = []
+    for base in (os.path.join(cfg, "agentes"), os.path.join(data, "agentes")):
+        try:
+            arquivos = os.listdir(base)
+        except FileNotFoundError:
+            continue
+        for f in arquivos:
+            if f.lower() == alvo:
+                return os.path.join(base, f)
+        disponiveis += [f[:-3] for f in arquivos if f.endswith(".md")]
+    raise AgenteNaoEncontrado(agente, sorted(set(disponiveis)))
+
+
 def resolver(agente: str, pasta: str) -> ContextoMontado:
     cfg, data = paths.config_dir(), paths.vault_dir()
     ctx_path = os.path.join(pasta, "CONTEXTO.md")
@@ -52,7 +88,7 @@ def resolver(agente: str, pasta: str) -> ContextoMontado:
     escopo = schema.Escopo.from_fm(efm)
     refs = paths.resolver_tagged(escopo.pasta_referencias)
 
-    agente_path = os.path.join(data, "agentes", f"{agente}.md")
+    agente_path = _achar_agente(cfg, data, agente)
 
     return ContextoMontado(
         usuario_path=_achar_usuario(cfg),

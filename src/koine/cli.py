@@ -218,7 +218,12 @@ def _cmd_gerar(args: list[str]) -> int:
     except pasta_mod.ResolucaoErro as e:
         print(str(e), file=sys.stderr)
         return 1
-    lanc = adapters.get("claude").renderizar(_montar_cm(agente, pasta))
+    try:
+        cm = _montar_cm(agente, pasta)
+    except contexto.AgenteNaoEncontrado as e:
+        print(mensagens.agente_nao_encontrado(e.agente, e.disponiveis), file=sys.stderr)
+        return 1
+    lanc = adapters.get("claude").renderizar(cm)
     conteudo = lanc.arquivos_working_dir["CLAUDE.md"]
     destino = os.path.join(pasta, "CLAUDE.md")
     with open(destino, "w", encoding="utf-8") as f:
@@ -230,7 +235,12 @@ def _cmd_gerar(args: list[str]) -> int:
 def _cmd_mostrar(args: list[str]) -> int:
     agente, alvo = args[0], args[1]
     # alvo NÃO resolve alias — comportamento congelado de `mostrar` (arg cru)
-    lanc = adapters.get("claude").renderizar(_montar_cm(agente, alvo))
+    try:
+        cm = _montar_cm(agente, alvo)
+    except contexto.AgenteNaoEncontrado as e:
+        print(mensagens.agente_nao_encontrado(e.agente, e.disponiveis), file=sys.stderr)
+        return 1
+    lanc = adapters.get("claude").renderizar(cm)
     print(lanc.arquivos_working_dir["CLAUDE.md"], end="")
     return 0
 
@@ -242,7 +252,12 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
     except pasta_mod.ResolucaoErro as e:
         print(str(e), file=sys.stderr)
         return 1
-    lanc = adapters.get(cliente).renderizar(_montar_cm(agente, pasta))
+    try:
+        cm = _montar_cm(agente, pasta)
+    except contexto.AgenteNaoEncontrado as e:
+        print(mensagens.agente_nao_encontrado(e.agente, e.disponiveis), file=sys.stderr)
+        return 1
+    lanc = adapters.get(cliente).renderizar(cm)
     try:
         _materializar(lanc, pasta)
     except conflito.ConflitoErro as e:

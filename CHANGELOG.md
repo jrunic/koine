@@ -6,6 +6,15 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Agente de usuário não carregava (regressão do port Python)** — `contexto.resolver` procurava agentes só em `vault/agentes` (`~/.local/share/koine/`), onde vive apenas o `hermes` distribuído. Agentes criados pela `kn-03-cria-agente` moram em `config/agentes` (`~/.config/koine/`) e nunca eram achados — em qualquer OS. O path era montado sem validar existência, então seguia silencioso e o agente simplesmente não entrava no contexto da sessão. A série Go lia do `config` (por isso o defeito não aparecia até rodar o build Python). Agora `_achar_agente` busca `config/agentes` primeiro (override do usuário) e `vault/agentes` depois (distribuído). Afeta os 5 adapters — `resolver` é compartilhado.
+- **Resolução do agente é case-insensitive** — o nome vinha do arg do CLI com a caixa crua (`Leia`), mas o slug em disco é lowercase (`leia.md`). Casar por caixa crua só resolvia em FS case-insensitive (macOS/Windows), sumindo o agente em FS case-sensitive (Linux/OpenClaw). O match agora ignora caixa contra os arquivos reais.
+
+### Changed
+
+- **Agente ausente falha alto** — nome que não casa com nenhum agente agora levanta `AgenteNaoEncontrado` (tipada, carrega o nome pedido + lista de disponíveis unindo usuário e distribuídos); `cli`/`mensagens` decidem prosa e política. Antes: path inexistente propagado em silêncio. Padrão `ClienteNaoEncontrado`/`ClienteNaoExecutavel`.
+
 ## [0.4.2] — 2026-07-16
 
 ### Fixed

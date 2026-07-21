@@ -166,6 +166,19 @@ def cliente_nao_encontrado(cliente: str) -> str:
     return "".join(b)
 
 
+def agente_nao_encontrado(agente: str, disponiveis: list[str]) -> str:
+    """Nenhum agente casa com o nome pedido (contexto.AgenteNaoEncontrado).
+    Lista os disponíveis para o usuário corrigir o nome."""
+    lista = "\n".join(f"      • {d}" for d in disponiveis) if disponiveis \
+        else "      (nenhum agente cadastrado — rode /kn-03-cria-agente)"
+    return (
+        f"  ✗ agente '{agente}' não encontrado\n"
+        "\n"
+        "    Agentes disponíveis:\n"
+        f"{lista}\n"
+    )
+
+
 def cliente_nao_executavel(cliente: str, binpath: str) -> str:
     """Cliente FOI encontrado, mas o SO recusou executá-lo (WinError 193 & cia.).
     NÃO é PATH — o arquivo existe. Aponta o caminho achado e como corrigir."""
