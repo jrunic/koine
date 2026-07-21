@@ -92,3 +92,20 @@ def test_refresh_skills_instala_nos_detectados(monkeypatch):
                         lambda h, force=False: (chamados.append((h, force)), (["kn-99"], [], []))[1])
     atualizar._refresh_skills(force=True)
     assert chamados == [("claude", True), ("codex", True)]
+
+
+from koine._version import __version__
+
+
+def test_preparar_noop_quando_ja_na_versao(monkeypatch, capsys):
+    monkeypatch.setenv("KOINE_VERSAO", f"v{__version__}")
+    baixou = {"n": 0}
+    monkeypatch.setattr(atualizar, "baixar", lambda url: baixou.__setitem__("n", baixou["n"] + 1))
+    assert atualizar.preparar(force=False) == (None, __version__)
+    assert baixou["n"] == 0
+    assert __version__ in capsys.readouterr().out
+
+
+def test_mensagem_ja_recente():
+    from koine import mensagens
+    assert "0.4.3" in mensagens.atualizar_ja_recente("0.4.3")

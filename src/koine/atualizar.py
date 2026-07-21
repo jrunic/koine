@@ -124,3 +124,29 @@ def aplicar(staging: str, alvo_pyz: str, bindir: str, versao: str, force: bool) 
     print("Skills:")
     _refresh_skills(force=force)
     print(f"Koine atualizado para {versao}.")
+
+
+def preparar(force: bool = False) -> tuple[str | None, str]:
+    """Resolve versão; no-op (sem baixar) se já estamos nela; senão baixa +
+    verifica + extrai para staging. Devolve (staging, versao) — staging=None no
+    no-op. `versao` sempre volta (evita re-derivar do pyz)."""
+    tag, versao = resolver_versao()
+    if versao == __version__ and not force:
+        print(mensagens.atualizar_ja_recente(versao))
+        return None, versao
+    zip_url, sha_url = montar_urls(tag, versao)
+    asset = f"koine-{versao}.zip"
+    dados = baixar(zip_url)
+    sums = baixar_sums_opcional(sha_url)
+    if sums is not None:
+        verificar_sha256(dados, sums, asset)
+    else:
+        print(f"aviso: {asset} sem SHA256SUMS na origem — seguindo sem verificação.")
+    staging = tempfile.mkdtemp(prefix="koine-upd-")
+    zip_path = os.path.join(staging, asset)
+    with open(zip_path, "wb") as f:
+        f.write(dados)
+    with zipfile.ZipFile(zip_path) as z:
+        z.extractall(staging)
+    os.remove(zip_path)
+    return staging, versao

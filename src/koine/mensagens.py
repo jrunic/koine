@@ -210,3 +210,7 @@ def final_instalar() -> str:
         "  Copilot CLI:  kn-copilot hermes koine\n"
         "  OpenCode:     kn-opencode hermes koine\n"
         "  Codex CLI:    kn-codex hermes koine\n")
+
+
+def atualizar_ja_recente(versao: str) -> str:
+    return f"Koine já está na versão {versao}."
