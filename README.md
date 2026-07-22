@@ -62,6 +62,16 @@ Guia completo — variantes (versão pinada, espelho interno), verificação e s
 
 **Ambiente que bloqueia até o Python?** Use o modo skills: baixe `koine-skills.zip` da release e siga o `instalar-koine.md` dentro do zip.
 
+### Atualização
+
+Depois de instalado, atualize para a última versão com um comando:
+
+```bash
+koine atualizar
+```
+
+Baixa a release mais recente, verifica o `SHA256SUMS`, refresca o vault (preservando seus domínios) e regenera os wrappers. Roda 100% em Python — sem PowerShell e sem executável — para estações corporativas com política restritiva. Fixe uma versão com `KOINE_VERSAO=vX.Y.Z koine atualizar` ou aponte um espelho interno com `KOINE_BASE_URL`. Detalhes em [docs/referencias/cli.md](docs/referencias/cli.md#koine-atualizar---force).
+
 ## Primeira sessão em 3 comandos
 
 ```bash
