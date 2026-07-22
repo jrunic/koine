@@ -64,6 +64,25 @@ Rode o mesmo comando de instalação do seu sistema. O installer:
 
 A geração de contexto é equivalente à do Go — a sessão seguinte continua de onde parou.
 
+## Atualização (v0.4.x → última)
+
+Com o Koine já instalado, atualize com um comando:
+
+```bash
+koine atualizar
+```
+
+Resolve a última release, baixa `koine-<versao>.zip` + `SHA256SUMS`, valida o hash e reaproveita o caminho de instalação: refresca o vault shipped (preservando seus `dominios`), regenera os wrappers `kn-*` e reinstala skills nos harnesses detectados. É no-op quando você já está na última versão; `--force` reinstala mesmo assim. Roda 100% em Python — sem `.bat`/`.ps1`/powershell.
+
+Variantes:
+
+- `KOINE_VERSAO=vX.Y.Z koine atualizar` — vai (ou volta) para uma versão específica.
+- `KOINE_BASE_URL=<url> koine atualizar` — baixa de um espelho interno (github bloqueado).
+
+No Windows, se o download direto do github falhar por cadeia de certificado incompleta, o comando cai automaticamente para o `curl.exe` do sistema; persistindo a falha, a mensagem orienta rodar Windows Update ou usar `KOINE_BASE_URL`. Referência completa do subcomando: [referencias/cli.md](../referencias/cli.md#koine-atualizar---force).
+
+Se a sua versão atual **não tem** o `koine atualizar` (anterior à 0.4.3), atualize uma vez pela instalação manual (seção abaixo ou o one-liner) — dali em diante `koine atualizar` basta.
+
 ## Passo a passo manual — o que os installers fazem
 
 **Este passo a passo é exatamente o que `install.sh` (macOS/Linux) e `install.ps1` (Windows) automatizam** — o `install.bat` é só um atalho que baixa e executa o `install.ps1` com `-ExecutionPolicy Bypass`, para estações onde scripts PowerShell são bloqueados por política. Use esta seção para instalar à mão (ex.: auditoria em ambiente corporativo, máquina sem acesso direto ao GitHub) ou para entender o que roda na sua máquina. Nenhum passo exige administrador.

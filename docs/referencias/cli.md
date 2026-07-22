@@ -27,6 +27,28 @@ Flags:
 
 Idempotente em todas as fases. Em modo não-interativo (stdin sem TTY, detectado via `sys.stdin.isatty()`), aceita defaults sem prompts.
 
+### `koine atualizar [--force]`
+
+Self-update para a última release. Fases:
+
+1. **Resolução da versão** — segue o redirect de `releases/latest` do github; ou usa a tag fixada em `KOINE_VERSAO`. No-op quando já na versão-alvo (a menos de `--force`).
+2. **Download + verificação** — baixa `koine-<versao>.zip` e `SHA256SUMS` (do github ou de `KOINE_BASE_URL`) e valida o hash antes de aplicar.
+3. **Aplicação** — reaproveita o caminho de instalação: refresca o vault shipped preservando os `dominios` do usuário, regenera os wrappers e reinstala skills nos harnesses detectados.
+4. **Auto-troca do pyz** — in-process no POSIX; no Windows delega a um processo-filho da versão nova (stdio em log em `~/.cache/koine/atualizar.log`), sem trampolim `.bat`/`.ps1`.
+
+Execução 100% Python — nenhum `.bat`/`.ps1`/powershell — para políticas que bloqueiam executáveis e powershell.
+
+Flags:
+
+- `--force` — reinstala mesmo quando já na versão-alvo.
+
+Variáveis de ambiente:
+
+- `KOINE_VERSAO=vX.Y.Z` — fixa a versão-alvo (pula a resolução `latest`).
+- `KOINE_BASE_URL=<url>` — espelho de onde baixar o zip/`SHA256SUMS`, para ambientes com github bloqueado.
+
+No Windows, se o download direto do github falhar por cadeia de certificado incompleta (o OpenSSL da stdlib não busca o CA intermediário via AIA), o download cai automaticamente para o `curl.exe` do sistema (Schannel, faz AIA); persistindo a falha, a mensagem orienta rodar Windows Update ou usar `KOINE_BASE_URL`.
+
 ### `koine gerar <agente> [pasta]`
 
 Gera o arquivo de contexto do cliente (`CLAUDE.md`, `GEMINI.md`, etc.) na pasta, sem abrir o cliente. Útil para debug.
