@@ -5,6 +5,7 @@ a troca declarada `kn-agente instalar` → `koine instalar` no rodapé) e da
 mensagem final de cmd/kn-agente/instalar.go:73-86.
 """
 
+import os
 import platform
 import shutil
 
@@ -196,6 +197,63 @@ def cliente_nao_executavel(cliente: str, binpath: str) -> str:
         f"      where {cliente}\n"
         f"    Prefira a entrada .exe ou .cmd real do '{cliente}' e ajuste o PATH para\n"
         "    ela vir primeiro. Se persistir, reinstale o cliente e reabra o terminal.\n"
+    )
+
+
+def pasta_sem_contexto_nao_onboarded(cliente: str) -> str:
+    """Launch numa pasta sem CONTEXTO.md e SEM usuário configurado (nunca fez
+    onboarding). Não roda /kn-01 numa pasta aleatória — redireciona ao setup
+    canônico, onde o onboarding tem lugar próprio (~/koine)."""
+    return (
+        "  Esta pasta não tem um CONTEXTO.md configurado, e você ainda não fez\n"
+        "  o onboarding do Koine.\n"
+        "\n"
+        "  Configure o Koine primeiro (uma vez só):\n"
+        "    koine instalar\n"
+        f"    kn-{cliente} hermes koine\n"
+        "\n"
+        "  Dentro dessa sessão, o Hermes conduz o onboarding. Depois volte a esta\n"
+        "  pasta e abra a sessão normalmente.\n"
+    )
+
+
+def pasta_sem_contexto_admin(pasta: str) -> str:
+    """`gerar`/`mostrar` numa pasta sem CONTEXTO.md válido. Comandos
+    administrativos não materializam nada — orientam a configurar via launch."""
+    return (
+        f"  Esta pasta não tem um CONTEXTO.md configurado:\n"
+        f"    {pasta}\n"
+        "\n"
+        "  Para configurá-la, abra uma sessão aqui com o Hermes:\n"
+        "    kn-claude hermes .\n"
+        "  (troque `kn-claude` pelo wrapper do seu cliente: kn-agy, kn-copilot,\n"
+        "  kn-opencode, kn-codex). O Hermes cria o CONTEXTO.md desta pasta.\n"
+    )
+
+
+def contexto_malformado(pasta: str) -> str:
+    """CONTEXTO.md existe com conteúdo, mas o frontmatter não declara `escopo:`
+    nem `bootstrap:`. Não sobrescreve (pode ser trabalho do usuário) — pede
+    correção."""
+    return (
+        f"  O CONTEXTO.md desta pasta existe mas está incompleto:\n"
+        f"    {os.path.join(pasta, 'CONTEXTO.md')}\n"
+        "\n"
+        "  Falta declarar `escopo:` no frontmatter (YAML no topo do arquivo).\n"
+        "  Corrija o frontmatter, ou remova/esvazie o arquivo e abra a sessão com\n"
+        "  o Hermes (`kn-<cliente> hermes .`) para o Koine reconfigurá-la.\n"
+    )
+
+
+def contexto_conflito(ctx: str) -> str:
+    """O CONTEXTO.md que seria materializado é um symlink ou diretório —
+    escrever por cima perderia dado (ex.: symlink de sessão opencode/copilot)."""
+    return (
+        f"  Não consigo criar o CONTEXTO.md — o caminho já existe e não é um\n"
+        f"  arquivo regular:\n"
+        f"    {ctx}\n"
+        "\n"
+        "  É um symlink ou diretório. Resolva manualmente e tente de novo.\n"
     )
 
 

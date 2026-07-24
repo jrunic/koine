@@ -6,6 +6,20 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.5] — 2026-07-24
+
+### Added
+
+- **Flags do usuário são repassadas ao cliente IA** — os wrappers `kn-<cliente>` passam a aceitar flags que vão direto para o cliente lançado. Ex.: `kn-claude hermes . --chrome` liga a integração "Claude in Chrome" naquela sessão; `kn-codex hermes . --model o3` idem para o Codex. O usuário escolhe quando ligar cada flag — o Koine separa os posicionais (agente, pasta) das flags (prefixo `-`) e repassa o resto ao launch (`execvpe` no Unix, `cmd /c` no Windows). Flags com valor podem ir após `--` literal (`kn-claude hermes . -- --model sonnet`). As flags do usuário compõem com as `EXTRA_ARGS` do adapter (ex.: o `-c` do Codex), sem substituí-las.
+
+### Fixed
+
+- **Abrir sessão numa pasta sem `CONTEXTO.md` configurado dava traceback Python** — lançar um cliente (`kn-<cliente> <agente> <pasta>`) numa pasta de trabalho nova, sem `CONTEXTO.md` (ou com o arquivo vazio), falhava com `FileNotFoundError`/`KeyError` cru em vez de guiar o usuário. Reproduzido em produção no Grupo Aldo (Windows corporativo). Agora o launch **auto-guia**: se o usuário já fez onboarding, o Koine materializa um `CONTEXTO.md` de bootstrap e o Hermes conduz a criação do contexto real da pasta via `/kn-02-mantem-catalogo` (Fluxo 3); se ainda não fez onboarding, orienta a rodar `koine instalar` + `kn-<cliente> hermes koine` (sem disparar o onboarding `/kn-01` numa pasta arbitrária). `CONTEXTO.md` com conteúdo mas frontmatter incompleto (sem `escopo:` nem `bootstrap:`) é **preservado** com mensagem de correção — nunca sobrescrito.
+
+### Changed
+
+- **`gerar`/`mostrar` numa pasta sem `CONTEXTO.md` válido falham com mensagem amigável** — antes propagavam o mesmo traceback do launch. Comandos administrativos não materializam nada; orientam a configurar a pasta abrindo uma sessão com o Hermes.
+
 ## [0.4.4] — 2026-07-21
 
 ### Fixed

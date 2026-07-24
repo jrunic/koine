@@ -26,7 +26,7 @@ def test_launch_e2e_wrapper_lanca_claude_na_pasta(tmp_path):
     assert os.path.exists(os.path.join(fx["trab"], "CLAUDE.md"))   # gerou antes de lançar
     linhas = open(captura).read().splitlines()
     assert os.path.realpath(linhas[0]) == os.path.realpath(fx["trab"])  # cwd == pasta
-    assert linhas[1:] == [""] or linhas[1:] == []                  # sem args extras p/ claude
+    assert linhas[1:] == [""] or linhas[1:] == []                  # sem flags → sem args extras
 
 
 def test_launch_e2e_cliente_ausente_falha_amigavel(tmp_path):

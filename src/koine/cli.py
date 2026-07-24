@@ -8,6 +8,7 @@ import sys
 from koine import (
     adapters,
     atualizar as _atualizar,
+    bootstrap as _bootstrap,
     canonica,
     conflito,
     contexto,
@@ -222,6 +223,10 @@ def _cmd_gerar(args: list[str]) -> int:
     except pasta_mod.ResolucaoErro as e:
         print(str(e), file=sys.stderr)
         return 1
+    if _bootstrap.classificar(pasta) in (
+            _bootstrap.AUSENTE, _bootstrap.VAZIO, _bootstrap.MALFORMADO):
+        print(mensagens.pasta_sem_contexto_admin(pasta), file=sys.stderr)
+        return 1
     try:
         cm = _montar_cm(agente, pasta)
     except contexto.AgenteNaoEncontrado as e:
@@ -239,6 +244,10 @@ def _cmd_gerar(args: list[str]) -> int:
 def _cmd_mostrar(args: list[str]) -> int:
     agente, alvo = args[0], args[1]
     # alvo NÃO resolve alias — comportamento congelado de `mostrar` (arg cru)
+    if _bootstrap.classificar(alvo) in (
+            _bootstrap.AUSENTE, _bootstrap.VAZIO, _bootstrap.MALFORMADO):
+        print(mensagens.pasta_sem_contexto_admin(alvo), file=sys.stderr)
+        return 1
     try:
         cm = _montar_cm(agente, alvo)
     except contexto.AgenteNaoEncontrado as e:
@@ -305,12 +314,49 @@ def _cmd_atualizar(args: list[str]) -> int:
     return 0
 
 
+def _separar_args(args: list[str]) -> tuple[list[str], list[str]]:
+    """Separa os posicionais do koine (agente, pasta) dos args repassados ao
+    cliente IA. Tudo após `--` é repassado literal (útil p/ flags com valor,
+    ex.: `-- --model sonnet`). Antes de `--`, tokens com prefixo `-` são flags
+    do cliente (ex.: `kn-claude hermes . --chrome`); os demais são posicionais.
+    O usuário escolhe quando ligar cada flag — a lib só repassa."""
+    if "--" in args:
+        i = args.index("--")
+        antes, passa = args[:i], args[i + 1:]
+    else:
+        antes, passa = args, []
+    posicionais = [a for a in antes if not a.startswith("-")]
+    flags = [a for a in antes if a.startswith("-")]
+    return posicionais, flags + passa
+
+
 def _rodar_cliente(cliente: str, args: list[str]) -> int:
-    agente = args[0]
+    posicionais, extras_usuario = _separar_args(args)
+    if not posicionais:
+        print("uso: kn-<cliente> <agente> [pasta] [--flag-do-cliente ...] "
+              "[-- flags-com-valor]", file=sys.stderr)
+        return 2
+    agente = posicionais[0]
     try:
-        pasta = pasta_mod.resolver(args[1] if len(args) >= 2 else "")
+        pasta = pasta_mod.resolver(posicionais[1] if len(posicionais) >= 2 else "")
     except pasta_mod.ResolucaoErro as e:
         print(str(e), file=sys.stderr)
+        return 1
+    # auto-guiar: pasta de sessão sem CONTEXTO.md válido (só o launch trata).
+    estado = _bootstrap.classificar(pasta)
+    if estado in (_bootstrap.AUSENTE, _bootstrap.VAZIO):
+        if not _bootstrap.usuario_onboarded(paths.config_dir()):
+            print(mensagens.pasta_sem_contexto_nao_onboarded(cliente), file=sys.stderr)
+            return 1
+        ctx = os.path.join(pasta, "CONTEXTO.md")
+        if os.path.islink(ctx) or os.path.isdir(ctx):
+            print(mensagens.contexto_conflito(ctx), file=sys.stderr)
+            return 1
+        with open(ctx, "w", encoding="utf-8") as f:
+            f.write(_bootstrap.CONTEXTO_CONFIGURA_PASTA)
+        # resolver vê `bootstrap: true` e força Hermes — o agente pedido é ignorado.
+    elif estado == _bootstrap.MALFORMADO:
+        print(mensagens.contexto_malformado(pasta), file=sys.stderr)
         return 1
     try:
         cm = _montar_cm(agente, pasta)
@@ -323,8 +369,9 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
     except conflito.ConflitoErro as e:
         print(str(e), file=sys.stderr)
         return 1
+    args_cliente = (lanc.extra_args or []) + extras_usuario
     try:
-        launch.lancar(cliente, pasta, env=lanc.env_vars or None, args=lanc.extra_args or None)
+        launch.lancar(cliente, pasta, env=lanc.env_vars or None, args=args_cliente or None)
     except launch.ClienteNaoEncontrado as e:
         print(mensagens.cliente_nao_encontrado(e.cliente), file=sys.stderr)
         return 1
