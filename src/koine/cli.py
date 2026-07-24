@@ -8,6 +8,7 @@ import sys
 from koine import (
     adapters,
     atualizar as _atualizar,
+    bootstrap as _bootstrap,
     canonica,
     conflito,
     contexto,
@@ -222,6 +223,10 @@ def _cmd_gerar(args: list[str]) -> int:
     except pasta_mod.ResolucaoErro as e:
         print(str(e), file=sys.stderr)
         return 1
+    if _bootstrap.classificar(pasta) in (
+            _bootstrap.AUSENTE, _bootstrap.VAZIO, _bootstrap.MALFORMADO):
+        print(mensagens.pasta_sem_contexto_admin(pasta), file=sys.stderr)
+        return 1
     try:
         cm = _montar_cm(agente, pasta)
     except contexto.AgenteNaoEncontrado as e:
@@ -239,6 +244,10 @@ def _cmd_gerar(args: list[str]) -> int:
 def _cmd_mostrar(args: list[str]) -> int:
     agente, alvo = args[0], args[1]
     # alvo NÃO resolve alias — comportamento congelado de `mostrar` (arg cru)
+    if _bootstrap.classificar(alvo) in (
+            _bootstrap.AUSENTE, _bootstrap.VAZIO, _bootstrap.MALFORMADO):
+        print(mensagens.pasta_sem_contexto_admin(alvo), file=sys.stderr)
+        return 1
     try:
         cm = _montar_cm(agente, alvo)
     except contexto.AgenteNaoEncontrado as e:
@@ -311,6 +320,22 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
         pasta = pasta_mod.resolver(args[1] if len(args) >= 2 else "")
     except pasta_mod.ResolucaoErro as e:
         print(str(e), file=sys.stderr)
+        return 1
+    # auto-guiar: pasta de sessão sem CONTEXTO.md válido (só o launch trata).
+    estado = _bootstrap.classificar(pasta)
+    if estado in (_bootstrap.AUSENTE, _bootstrap.VAZIO):
+        if not _bootstrap.usuario_onboarded(paths.config_dir()):
+            print(mensagens.pasta_sem_contexto_nao_onboarded(cliente), file=sys.stderr)
+            return 1
+        ctx = os.path.join(pasta, "CONTEXTO.md")
+        if os.path.islink(ctx) or os.path.isdir(ctx):
+            print(mensagens.contexto_conflito(ctx), file=sys.stderr)
+            return 1
+        with open(ctx, "w", encoding="utf-8") as f:
+            f.write(_bootstrap.CONTEXTO_CONFIGURA_PASTA)
+        # resolver vê `bootstrap: true` e força Hermes — o agente pedido é ignorado.
+    elif estado == _bootstrap.MALFORMADO:
+        print(mensagens.contexto_malformado(pasta), file=sys.stderr)
         return 1
     try:
         cm = _montar_cm(agente, pasta)
