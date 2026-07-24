@@ -314,10 +314,31 @@ def _cmd_atualizar(args: list[str]) -> int:
     return 0
 
 
+def _separar_args(args: list[str]) -> tuple[list[str], list[str]]:
+    """Separa os posicionais do koine (agente, pasta) dos args repassados ao
+    cliente IA. Tudo após `--` é repassado literal (útil p/ flags com valor,
+    ex.: `-- --model sonnet`). Antes de `--`, tokens com prefixo `-` são flags
+    do cliente (ex.: `kn-claude hermes . --chrome`); os demais são posicionais.
+    O usuário escolhe quando ligar cada flag — a lib só repassa."""
+    if "--" in args:
+        i = args.index("--")
+        antes, passa = args[:i], args[i + 1:]
+    else:
+        antes, passa = args, []
+    posicionais = [a for a in antes if not a.startswith("-")]
+    flags = [a for a in antes if a.startswith("-")]
+    return posicionais, flags + passa
+
+
 def _rodar_cliente(cliente: str, args: list[str]) -> int:
-    agente = args[0]
+    posicionais, extras_usuario = _separar_args(args)
+    if not posicionais:
+        print("uso: kn-<cliente> <agente> [pasta] [--flag-do-cliente ...] "
+              "[-- flags-com-valor]", file=sys.stderr)
+        return 2
+    agente = posicionais[0]
     try:
-        pasta = pasta_mod.resolver(args[1] if len(args) >= 2 else "")
+        pasta = pasta_mod.resolver(posicionais[1] if len(posicionais) >= 2 else "")
     except pasta_mod.ResolucaoErro as e:
         print(str(e), file=sys.stderr)
         return 1
@@ -348,8 +369,9 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
     except conflito.ConflitoErro as e:
         print(str(e), file=sys.stderr)
         return 1
+    args_cliente = (lanc.extra_args or []) + extras_usuario
     try:
-        launch.lancar(cliente, pasta, env=lanc.env_vars or None, args=lanc.extra_args or None)
+        launch.lancar(cliente, pasta, env=lanc.env_vars or None, args=args_cliente or None)
     except launch.ClienteNaoEncontrado as e:
         print(mensagens.cliente_nao_encontrado(e.cliente), file=sys.stderr)
         return 1
