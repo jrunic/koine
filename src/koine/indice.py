@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import datetime, timezone
 
 from koine import frontmatter, paths, schema
@@ -26,7 +27,17 @@ def gerar(pasta_refs: str, dominios: list[str]) -> None:
             # contratos OKF só são ignorados na raiz
             if "/" not in rel and (a in _CONTRATOS_RAIZ or a.startswith("kn-indice-")):
                 continue
-            fm, _ = frontmatter.ler(open(full, encoding="utf-8").read())
+            try:
+                fm, _ = frontmatter.ler(open(full, encoding="utf-8").read())
+            except Exception as e:
+                # Um arquivo com frontmatter inválido não pode derrubar o
+                # launch inteiro: cataloga o resto, avisa qual arquivo corrigir.
+                print(
+                    f"aviso: frontmatter inválido em {rel}, referência ignorada "
+                    f"no índice ({type(e).__name__}). Corrija o YAML do arquivo.",
+                    file=sys.stderr,
+                )
+                continue
             for d in fm.get("dominios", []) or []:
                 if d in entradas:
                     entradas[d].append((rel, fm.get("description", "") or ""))

@@ -124,8 +124,8 @@ Monte o `<slug>.md`:
 ```markdown
 ---
 type: <Pessoa | Organizacao | Decisao | Aprendizado | Evento | ...>
-title: <Title>
-description: <1 linha densa>
+title: "<Title>"
+description: "<1 linha densa>"
 dominios: [<dom1>, <dom2>]
 tags: [<keywords livres>]
 <campos recomendados do domínio>
@@ -135,6 +135,8 @@ tags: [<keywords livres>]
 
 <corpo conforme estrutura típica do type>
 ```
+
+**Cite `title` e `description` com aspas duplas.** O gerador de índice lê esse frontmatter como YAML; um valor não-citado com dois-pontos-espaço no meio (ex.: `funcional: gog v0.34.1`) quebra o parse e a referência some do `kn-indice`. Aspas duplas em toda a linha eliminam o risco. Se o próprio texto tiver aspas duplas, escape-as com `\"`.
 
 Mostre o arquivo completo para confirmação antes de gravar.
 

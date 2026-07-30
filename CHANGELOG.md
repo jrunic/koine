@@ -6,6 +6,16 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.6] — 2026-07-30
+
+### Fixed
+
+- **Um arquivo de referência com frontmatter inválido derrubava o launch inteiro** — abrir uma sessão (`kn-<cliente> <agente> <pasta>`) falhava com traceback cru de `yaml.scanner.ScannerError` quando qualquer `.md` da pasta-referências do escopo tinha YAML malformado — tipicamente uma `description` não-citada com dois-pontos-espaço no meio (ex.: `description: Ferramenta instalada e funcional: gog v0.34.1`). Reproduzido em produção. O gerador de índice agora **isola por arquivo**: cataloga o resto da pasta e emite um `aviso:` no stderr nomeando o arquivo a corrigir, em vez de abortar a sessão.
+
+### Changed
+
+- **`kn-11-mantem-referencia` passa a citar `title` e `description` com aspas duplas** no template de materialização, eliminando na origem o YAML inválido que a skill podia gerar quando a `description` continha dois-pontos.
+
 ## [0.4.5] — 2026-07-24
 
 ### Added
