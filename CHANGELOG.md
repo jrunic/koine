@@ -6,6 +6,12 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.7] — 2026-07-30
+
+### Fixed
+
+- **`koine atualizar` falhava com `SSL: CERTIFICATE_VERIFY_FAILED` no macOS** — o OpenSSL do Python (stdlib) não achava o bundle de CA e a atualização abortava logo no passo de resolver a última versão, sem recuperação. O fallback via curl do sistema existia mas estava restrito ao Windows. Agora vale em **qualquer plataforma** (Keychain no macOS, Schannel no Windows, CA bundle no Linux) e cobre também `resolver_versao` — que antes não tinha fallback nenhum. `koine atualizar` passa a se autocurar onde o curl do SO alcança a rede. Reproduzido em produção (macOS). Observação: como o próprio `atualizar` é o que quebra, máquinas já travadas se recuperam reinstalando via `install.sh` (que é 100% curl); a partir da 0.4.7 o problema não recorre.
+
 ## [0.4.6] — 2026-07-30
 
 ### Fixed

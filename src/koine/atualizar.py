@@ -20,6 +20,21 @@ class AtualizarErro(Exception):
     """Falha de rede/resolução/verificação, com mensagem pronta ao usuário."""
 
 
+def _resolver_versao_curl(url: str) -> str | None:
+    """Fallback do resolver_versao via curl do sistema. O OpenSSL do Python
+    (stdlib) pode não achar o CA (macOS sem bundle; Windows sem AIA); o curl
+    usa o trust store do SO (Keychain/Schannel), então resolve onde o urllib
+    falha. Segue o redirect de releases/latest e devolve a URL final, ou None
+    se o curl estiver ausente/falhar."""
+    try:
+        r = subprocess.run(
+            ["curl", "-fsSLSI", "-o", os.devnull, "-w", "%{url_effective}", url],
+            capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else None
+
+
 def resolver_versao() -> tuple[str, str]:
     """(tag, versao). KOINE_VERSAO fixa a tag; senão segue o redirect de
     releases/latest no github. Não baixa o pacote."""
@@ -28,15 +43,18 @@ def resolver_versao() -> tuple[str, str]:
         tag = pin if pin.startswith("v") else f"v{pin}"
         return tag, tag[1:]
     url = f"https://github.com/{REPO}/releases/latest"
+    final = None
     try:
         req = urllib.request.Request(
             url, method="HEAD", headers={"User-Agent": "koine-atualizar"})
         with urllib.request.urlopen(req, timeout=30) as resp:
             final = resp.geturl()
     except (urllib.error.URLError, ssl.SSLError, OSError) as e:
-        raise AtualizarErro(
-            f"não foi possível resolver a última versão pelo github ({e}). "
-            "Fixe a versão: KOINE_VERSAO=vX.Y.Z koine atualizar") from e
+        final = _resolver_versao_curl(url)
+        if final is None:
+            raise AtualizarErro(
+                f"não foi possível resolver a última versão pelo github ({e}). "
+                "Fixe a versão: KOINE_VERSAO=vX.Y.Z koine atualizar") from e
     tag = final.rstrip("/").rsplit("/", 1)[-1]
     if not tag.startswith("v"):
         raise AtualizarErro(
@@ -52,9 +70,11 @@ def montar_urls(tag: str, versao: str) -> tuple[str, str]:
 
 
 def _baixar_curl(url: str) -> bytes | None:
-    """Fallback Windows: baixa via curl.exe do sistema. O OpenSSL do Python
-    (stdlib) não busca CA intermediário via AIA; o curl usa Schannel, que busca —
-    então funciona onde o urllib falha. Devolve os bytes, ou None se o curl estiver
+    """Fallback via curl do sistema, em qualquer plataforma. O OpenSSL do Python
+    (stdlib) pode não verificar o cert: no macOS quando falta o bundle de CA, no
+    Windows quando não busca o CA intermediário via AIA. O curl usa o trust store
+    do SO (Keychain no macOS, Schannel no Windows, CA bundle no Linux), então
+    funciona onde o urllib falha. Devolve os bytes, ou None se o curl estiver
     ausente/falhar (aí o chamador orienta)."""
     try:
         r = subprocess.run(["curl", "-fsSL", url], capture_output=True, timeout=120)
@@ -69,15 +89,14 @@ def baixar(url: str) -> bytes:
         with urllib.request.urlopen(req, timeout=60) as resp:
             return resp.read()
     except (urllib.error.URLError, ssl.SSLError, OSError) as e:
-        if sys.platform == "win32":
-            dados = _baixar_curl(url)
-            if dados is not None:
-                return dados
+        dados = _baixar_curl(url)
+        if dados is not None:
+            return dados
         raise AtualizarErro(
-            f"falha ao baixar {url} ({e}). No Windows, a verificação SSL do Python "
-            "pode falhar por não buscar o CA intermediário (AIA); rode Windows Update "
-            "para popular os certificados, ou use KOINE_BASE_URL apontando para um "
-            "espelho. A instalação atual não foi tocada.") from e
+            f"falha ao baixar {url} ({e}). A verificação SSL do Python falhou e o "
+            "curl do sistema não resolveu (ausente ou também sem certificados). "
+            "Reinstale via install.sh (usa o curl do SO) ou aponte KOINE_BASE_URL "
+            "para um espelho. A instalação atual não foi tocada.") from e
 
 
 def baixar_sums_opcional(sha_url: str) -> str | None:
@@ -86,10 +105,9 @@ def baixar_sums_opcional(sha_url: str) -> str | None:
         with urllib.request.urlopen(req, timeout=30) as resp:
             return resp.read().decode("utf-8")
     except (urllib.error.URLError, ssl.SSLError, OSError):
-        if sys.platform == "win32":
-            dados = _baixar_curl(sha_url)
-            if dados is not None:
-                return dados.decode("utf-8")
+        dados = _baixar_curl(sha_url)
+        if dados is not None:
+            return dados.decode("utf-8")
         return None
 
 

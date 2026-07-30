@@ -111,33 +111,26 @@ def test_mensagem_ja_recente():
     assert "0.4.3" in mensagens.atualizar_ja_recente("0.4.3")
 
 
-def test_baixar_fallback_curl_no_windows(monkeypatch):
-    """SSL falha no urllib; no Windows cai pro curl.exe (Schannel faz AIA)."""
-    monkeypatch.setattr(atualizar.sys, "platform", "win32")
+def test_baixar_fallback_curl_qualquer_plataforma(monkeypatch):
+    """SSL falha no urllib; cai pro curl do sistema — em qualquer plataforma
+    (macOS Keychain, Windows Schannel, Linux CA bundle)."""
+    for plat in ("darwin", "linux", "win32"):
+        monkeypatch.setattr(atualizar.sys, "platform", plat)
 
-    def urlopen_falha(req, timeout=60):
-        raise atualizar.ssl.SSLError("cert")
-    monkeypatch.setattr(atualizar.urllib.request, "urlopen", urlopen_falha)
+        def urlopen_falha(req, timeout=60):
+            raise atualizar.ssl.SSLError("cert")
+        monkeypatch.setattr(atualizar.urllib.request, "urlopen", urlopen_falha)
 
-    class R:
-        returncode = 0
-        stdout = b"ZIPBYTES"
-    monkeypatch.setattr(atualizar.subprocess, "run", lambda *a, **k: R())
-    assert atualizar.baixar("https://x/y.zip") == b"ZIPBYTES"
+        class R:
+            returncode = 0
+            stdout = b"ZIPBYTES"
+        monkeypatch.setattr(atualizar.subprocess, "run", lambda *a, **k: R())
+        assert atualizar.baixar("https://x/y.zip") == b"ZIPBYTES"
 
 
-def test_baixar_sem_curl_fora_do_windows_levanta(monkeypatch):
+def test_baixar_sem_curl_levanta_com_orientacao(monkeypatch):
+    """SSL falha e curl ausente/falha → erro orientativo, em qualquer plataforma."""
     monkeypatch.setattr(atualizar.sys, "platform", "darwin")
-
-    def urlopen_falha(req, timeout=60):
-        raise atualizar.ssl.SSLError("cert")
-    monkeypatch.setattr(atualizar.urllib.request, "urlopen", urlopen_falha)
-    with pytest.raises(atualizar.AtualizarErro):
-        atualizar.baixar("https://x/y.zip")
-
-
-def test_baixar_curl_falha_tambem_levanta_com_orientacao(monkeypatch):
-    monkeypatch.setattr(atualizar.sys, "platform", "win32")
 
     def urlopen_falha(req, timeout=60):
         raise atualizar.ssl.SSLError("cert")
@@ -149,4 +142,36 @@ def test_baixar_curl_falha_tambem_levanta_com_orientacao(monkeypatch):
     monkeypatch.setattr(atualizar.subprocess, "run", lambda *a, **k: R())
     with pytest.raises(atualizar.AtualizarErro) as ei:
         atualizar.baixar("https://x/y.zip")
-    assert "KOINE_BASE_URL" in str(ei.value)
+    assert "install.sh" in str(ei.value)
+
+
+def test_resolver_versao_fallback_curl(monkeypatch):
+    """resolver_versao: SSL falha no urllib HEAD; curl segue o redirect e
+    devolve a tag final (o passo que travou a Renata no macOS)."""
+    monkeypatch.delenv("KOINE_VERSAO", raising=False)
+
+    def urlopen_falha(req, timeout=30):
+        raise atualizar.ssl.SSLError("cert")
+    monkeypatch.setattr(atualizar.urllib.request, "urlopen", urlopen_falha)
+
+    class R:
+        returncode = 0
+        stdout = "https://github.com/jrunic/koine/releases/tag/v1.2.3"
+    monkeypatch.setattr(atualizar.subprocess, "run", lambda *a, **k: R())
+    assert atualizar.resolver_versao() == ("v1.2.3", "1.2.3")
+
+
+def test_resolver_versao_sem_curl_levanta(monkeypatch):
+    """SSL falha e curl indisponível → erro orientativo com KOINE_VERSAO."""
+    monkeypatch.delenv("KOINE_VERSAO", raising=False)
+
+    def urlopen_falha(req, timeout=30):
+        raise atualizar.ssl.SSLError("cert")
+    monkeypatch.setattr(atualizar.urllib.request, "urlopen", urlopen_falha)
+
+    def sem_curl(*a, **k):
+        raise OSError("curl ausente")
+    monkeypatch.setattr(atualizar.subprocess, "run", sem_curl)
+    with pytest.raises(atualizar.AtualizarErro) as ei:
+        atualizar.resolver_versao()
+    assert "KOINE_VERSAO" in str(ei.value)
