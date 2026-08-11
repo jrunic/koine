@@ -222,6 +222,8 @@ Replica a resolução de contexto e a geração de artefatos do wrapper: escreve
 
 ## `kn-21-escreve-design`
 
+> As quatro skills da família `kn-2N` formam uma sequência. Para pré-requisitos, ordem de uso e solução de problemas ponta a ponta, ver o guia [A marca do escopo](../guias/marca-do-escopo.md).
+
 **Base da família de marca.** Roda uma vez por marca; revisada quando a identidade muda.
 
 Escreve o `DESIGN.md` — cores, tipografia, formas e tom visual em tokens legíveis por máquina. Varre o que já existe (CSS do projeto, manual de marca, site) antes de entrevistar, e pergunta só o que a varredura não respondeu.

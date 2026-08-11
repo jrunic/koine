@@ -129,7 +129,7 @@ Detalhes em [`docs/referencias/habilidades.md`](docs/referencias/habilidades.md)
 **Começando do zero?** [Tutorial — Onboarding completo](docs/tutoriais/onboarding-completo.md)
 
 - [Tutoriais](docs/tutoriais/) — passo a passo para começar
-- [Guias](docs/guias/) — como resolver problemas específicos
+- [Guias](docs/guias/) — como resolver problemas específicos, incluindo [a marca do escopo](docs/guias/marca-do-escopo.md) (família `kn-2N`: pré-requisitos, ordem de uso, o que cada skill produz)
 - [Referências](docs/referencias/) — CLI, schema do `CONTEXTO.md`, habilidades, formato OKF
 - [Explicações](docs/explicacoes/) — por que cada decisão de design
 - [Decisões](docs/decisoes/) — ADRs
