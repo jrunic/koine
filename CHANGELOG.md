@@ -6,6 +6,35 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.1] — 2026-08-11
+
+### Ferramentas externas da família `kn-2N`
+
+As skills de marca dependem de duas ferramentas que **não vêm no pacote do Koine** — instale só o ramo que for usar. O `/kn-21-escreve-design` funciona sem nenhuma das duas (precisa apenas de Node.js, para o linter do schema).
+
+**`imagio`** — geração de imagem, usado pelo `/kn-22-gera-imagem`. Python 3.12+.
+
+```bash
+pipx install git+https://github.com/jrunic/imagio.git@production
+imagio instalar
+```
+
+O `imagio instalar` verifica o ambiente e conduz a configuração da credencial; ele não instala o próprio pacote. Cada geração é uma chamada paga ao provedor — no backend `gemini`, exige créditos pré-pagos.
+
+**`prelo`** — Markdown em PDF de marca, usado pelo `/kn-23-gera-marca-prelo` e pelo `/kn-24-gera-pdf`. Node.js 22+, versão mínima **1.2.1**.
+
+```bash
+git clone https://github.com/jrunic/prelo
+cd prelo
+npm install                              # inclui o Chrome do Puppeteer
+npm run fonts
+ln -s "$PWD/cli.js" ~/.local/bin/prelo
+```
+
+As versões mínimas do prelo têm consequência visível: abaixo da **1.2.0**, imagem com caminho relativo renderiza quebrada e o comando ainda reporta sucesso; abaixo da **1.2.1**, uma marca com logo perde o arquivo na instalação e a regra CSS aponta para o vazio.
+
+Passo a passo completo em [A marca do escopo](docs/guias/marca-do-escopo.md).
+
 ### Changed
 
 - **Skills `kn-*` são de todo agente, não do Hermes.** A referência de habilidades afirmava que agentes operacionais derivados "normalmente não invocam skills `kn-*`" — contradizendo o próprio método, já que `conceitos/agentes.md` diz que tecnicamente todos podem invocar tudo. A regra correta: as skills são do método e estão disponíveis em qualquer sessão; o Hermes é o agente **recomendado** para as operações do próprio Koine, sobretudo as de grande monta, não o único autorizado.
@@ -225,7 +254,8 @@ Initial public release.
 First public release. API, on-disk layout, vault contents and adapter
 behavior may evolve until 1.0.
 
-[Unreleased]: https://github.com/jrunic/koine/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/jrunic/koine/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/jrunic/koine/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/jrunic/koine/compare/v0.4.7...v0.5.0
 [0.4.0]: https://github.com/jrunic/koine/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/jrunic/koine/compare/v0.3.1...v0.3.2
