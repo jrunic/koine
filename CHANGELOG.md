@@ -6,9 +6,11 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-08-11
+
 ### Added
 
-- **Família `kn-2N` — marca e design.** Três skills novas no vault, para escopos que produzem material visual:
+- **Família `kn-2N` — marca e design.** Quatro skills novas no vault, para escopos que produzem material visual:
   - `kn-21-escreve-design` — escreve o `DESIGN.md` da marca na pasta-referências do escopo. Varre o que já existe (CSS do projeto, manual de marca, site) antes de entrevistar. Frontmatter híbrido: as chaves da Ficha Koine e o schema `@google/design.md` convivem no mesmo bloco, verificado nas duas direções (o linter aceita as chaves extras; o gerador de índice cataloga o arquivo normalmente).
   - `kn-22-gera-imagem` — compõe o prompt a partir do `DESIGN.md` e gera imagem via [`imagio`](https://github.com/jrunic/imagio). Prompt aprovado pelo usuário antes de toda chamada, porque cada execução gasta dinheiro; prompts de série ficam registrados na marca para que as peças seguintes saiam coerentes.
   - `kn-23-gera-marca-prelo` — deriva `tokens.css` + `config.json` + fontes para o [`prelo`](https://github.com/jrunic/prelo), fazendo Markdown virar PDF na identidade da marca. Emite só a camada de tokens: a estrutura visual pertence à ferramenta.
@@ -16,7 +18,7 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- **`docs/referencias/habilidades.md`** passa a documentar as 9 skills do vault. A referência dizia "5 skills" e omitia a `kn-12-prepara-contexto`, presente desde julho. A tabela de numeração ganhou a faixa `kn-21`–`kn-29` (marca e design) e explicitou `kn-31`–`kn-89` como reservado.
+- **`docs/referencias/habilidades.md`** passa a documentar as 10 skills do vault. A referência dizia "5 skills" e omitia a `kn-12-prepara-contexto`, presente desde julho. A tabela de numeração ganhou a faixa `kn-21`–`kn-29` (marca e design) e explicitou `kn-31`–`kn-89` como reservado.
 
 ## [0.4.7] — 2026-07-30
 
@@ -215,7 +217,8 @@ Initial public release.
 First public release. API, on-disk layout, vault contents and adapter
 behavior may evolve until 1.0.
 
-[Unreleased]: https://github.com/jrunic/koine/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/jrunic/koine/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/jrunic/koine/compare/v0.4.7...v0.5.0
 [0.4.0]: https://github.com/jrunic/koine/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/jrunic/koine/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/jrunic/koine/compare/v0.3.0...v0.3.1
