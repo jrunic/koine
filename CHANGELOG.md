@@ -6,6 +6,13 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **Skills `kn-*` são de todo agente, não do Hermes.** A referência de habilidades afirmava que agentes operacionais derivados "normalmente não invocam skills `kn-*`" — contradizendo o próprio método, já que `conceitos/agentes.md` diz que tecnicamente todos podem invocar tudo. A regra correta: as skills são do método e estão disponíveis em qualquer sessão; o Hermes é o agente **recomendado** para as operações do próprio Koine, sobretudo as de grande monta, não o único autorizado.
+- **`/kn-99-encerra-sessao` fecha toda sessão, com qualquer agente.** Era descrito como oferta condicional ("oferece `/kn-99` se houve algo catalogável") no `KOINE.md`, no arquivo do Hermes e no template de agente derivado da `/kn-03-cria-agente`. Passa a ser padrão de fechamento — sessão que não fecha assim não vira memória para o usuário do futuro. Agentes derivados criados a partir de agora nascem com o encerramento como padrão.
+- **`docs/tutoriais/onboarding-completo.md`** dizia "5 skills" em dois pontos, defasado desde a entrada da `kn-12` em julho. A tabela de skills úteis ganhou as quatro da família `kn-2N`.
+- **ADR `20260621` §13** recebeu emenda datada registrando a subdivisão da faixa cotidiana (`kn-11`–`kn-19` genérica, `kn-21`–`kn-29` marca e design, `kn-31`–`kn-89` reservado). A decisão original não muda — subdividir é o que o espaço entre faixas previa.
+
 ## [0.5.0] — 2026-08-11
 
 ### Added

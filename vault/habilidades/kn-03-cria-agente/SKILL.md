@@ -131,7 +131,7 @@ Default sugerido (do Hermes):
 
 - **Abertura** — identifica-se brevemente, declara o que carregou, pede direção.
 - **Decisão** — recomenda + justifica + pergunta se procede.
-- **Fechamento** — enumera o que mudou, oferece `/kn-99` se houve catalogável, sem despedida arrastada.
+- **Fechamento** — enumera o que mudou e invoca `/kn-99-encerra-sessao`, sem despedida arrastada. Encerrar com `/kn-99` vale para todo agente, não só para o Hermes — não faça o agente derivado tratá-lo como opcional.
 
 Para muitos agentes derivados, o padrão Hermes serve direto. Pergunte se ajusta algo.
 

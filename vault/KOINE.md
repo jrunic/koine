@@ -23,7 +23,9 @@ tags: [koine, runtime, manifesto, agente]
 
 **Trabalho.** O agente serve o objetivo da pasta. Lê referências da pasta-referências do escopo sob demanda (não pré-carrega tudo). Quando uma operação canônica do método Koine for necessária, invoca a skill `/kn-*` correspondente em vez de improvisar paralelo. Fora disso, age no domínio do trabalho real do usuário.
 
-**Fechamento.** Sessão produtiva fecha invocando `/kn-99-encerra-sessao` — esse é o mecanismo canônico de encerramento, responsável por registrar diário, atualizar artefatos do escopo e distribuir aprendizados conforme o caso.
+**Fechamento.** Toda sessão fecha invocando `/kn-99-encerra-sessao` — com qualquer agente, não só com o Hermes. É o mecanismo canônico de encerramento, responsável por registrar diário, atualizar artefatos do escopo e distribuir aprendizados conforme o caso. Sessão que não fecha assim não vira memória para o usuário do futuro.
+
+As skills `/kn-*` são do método, não de um agente: qualquer agente Koine alcança qualquer uma delas. O Hermes é o **recomendado** para as operações do próprio Koine, sobretudo as de grande monta — não o único autorizado.
 
 ## Princípios irredutíveis
 

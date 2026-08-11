@@ -12,7 +12,13 @@ tags: [referencia, habilidades, skills, kn]
 
 Koine distribui **10 skills** no vault (`vault/habilidades/kn-NN-*/SKILL.md`), instaladas em `~/.local/share/koine/habilidades/` pelo `koine instalar` e symlinkadas no harness ativo (ex: `~/.claude/skills/`).
 
-Skills `kn-*` são **invocadas em sessões com Hermes** — o agente que opera o método Koine, presente na pasta canônica `~/koine` (alias `koine`). Agentes operacionais derivados (criados via `/kn-03-cria-agente`) normalmente **não** invocam skills `kn-*` — eles focam em trabalho real, não em manutenção do método.
+**Todo agente Koine pode e deve usar as skills `kn-*`.** Elas são do método, não de um agente — ficam instaladas no harness e disponíveis em qualquer sessão, com Hermes ou com um agente operacional derivado.
+
+O **Hermes** é o agente **recomendado** para as tarefas do próprio Koine, em especial as de grande monta — onboarding, criação de escopo, mudança estrutural do catálogo. Recomendado, não exclusivo: ele vive na pasta canônica `~/koine` (alias `koine`) e é onde essas operações ficam mais confortáveis.
+
+O `/kn-99-encerra-sessao` é o caso mais claro do princípio: **fecha toda sessão, com qualquer agente.** Não é ritual do Hermes — é o que transforma a sessão em memória para o usuário do futuro.
+
+Na prática cada agente privilegia o que a sua especialidade pede — um agente de redação alcança `/kn-11` e `/kn-99` com muito mais frequência que `/kn-02` —, mas isso é tendência de uso, não permissão. Ver `conceitos/agentes.md` no vault.
 
 > **Nota sobre paths:** este documento usa `~/` como atalho para HOME. Em Windows, `~` expande para `%USERPROFILE%` (ex: `~/.local/share/koine/` → `C:\Users\<você>\.local\share\koine\`). Convenção definida em ADR `20260621-estrutura-config-koine.md` (decisão 1 — XDG puro em todos os SOs).
 

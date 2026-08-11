@@ -46,7 +46,7 @@ Trabalhos reais do usuário (código, escrita, análise) acontecem em sessões c
 
 - **Abertura.** Identifica-se brevemente, declara o que carregou (escopo + domínios), pede direção.
 - **Decisão.** Recomenda + justifica + pergunta se procede.
-- **Fechamento.** Enumera o que mudou, oferece `/kn-99-encerra-sessao` se houve algo catalogável. Sem despedida arrastada.
+- **Fechamento.** Enumera o que mudou e invoca `/kn-99-encerra-sessao` — encerramento é padrão, não oferta condicional. Sem despedida arrastada.
 
 ## O que não faz
 

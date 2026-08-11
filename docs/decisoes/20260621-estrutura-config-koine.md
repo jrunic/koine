@@ -211,6 +211,8 @@ Coerência entre estruturas:
 
 Espaço entre blocos permite adicionar skills sem renumeração cascata.
 
+> **Emenda — 2026-08-11 (v0.5.0).** A faixa cotidiana foi subdividida: `kn-11`–`kn-19` segue como operação cotidiana genérica e `kn-21`–`kn-29` passa a ser marca e design, com `kn-31`–`kn-89` reservado. A decisão original (bloco numérico com espaço entre faixas) não muda — subdividir é exatamente o que o espaço previa. Catálogo vigente em [`referencias/habilidades.md`](../referencias/habilidades.md).
+
 **Skills do primeiro release (5 skills):**
 
 | # | Skill | Quando |

@@ -95,7 +95,7 @@ Este comando passa por várias fases, em ordem:
 
 ### 2.1 Extração do vault
 
-Vault (KOINE.md + agente Hermes + 5 skills + templates + sementes de domínios) é copiado do pacote para `~/.local/share/koine/`.
+Vault (KOINE.md + agente Hermes + 10 skills + templates + sementes de domínios) é copiado do pacote para `~/.local/share/koine/`.
 
 ```
 Instalando vault em /Users/<você>/.local/share/koine
@@ -232,6 +232,10 @@ Use sempre que precisar criar outro escopo, criar outro agente operacional, atua
 | Criar novo escopo, domínio ou atualizar perfil | `/kn-02-mantem-catalogo` |
 | Criar outro agente operacional | `/kn-03-cria-agente` |
 | Catalogar conhecimento durante o trabalho | `/kn-11-mantem-referencia` |
+| Escrever a identidade visual de uma marca do escopo | `/kn-21-escreve-design` |
+| Gerar imagem na identidade da marca | `/kn-22-gera-imagem` |
+| Preparar a marca para gerar PDF | `/kn-23-gera-marca-prelo` |
+| Converter um documento em PDF de marca | `/kn-24-gera-pdf` |
 | Fechar sessão registrando aprendizados | `/kn-99-encerra-sessao` |
 
 Detalhes na [referência de habilidades](../referencias/habilidades.md).
@@ -291,5 +295,5 @@ E refaça o onboarding via `kn-claude hermes koine`.
 ## Referências
 
 - [CLI](../referencias/cli.md) — comandos `koine` e wrappers
-- [Habilidades](../referencias/habilidades.md) — detalhe das 5 skills `kn-*`
+- [Habilidades](../referencias/habilidades.md) — detalhe das 10 skills `kn-*`
 - [Schema do CONTEXTO.md](../referencias/contexto-md.md) — frontmatter e validações
