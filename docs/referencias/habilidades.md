@@ -1,5 +1,5 @@
 ---
-descricao: Referência das 5 skills kn-* distribuídas no vault — propósito, trigger, quando invocar, o que produz
+descricao: Referência das 10 skills kn-* distribuídas no vault — propósito, trigger, quando invocar, o que produz
 id: 202606280002
 tipo: referencia
 status: ativo
@@ -10,7 +10,7 @@ tags: [referencia, habilidades, skills, kn]
 
 ## Visão geral
 
-Koine distribui **5 skills** no vault (`vault/habilidades/kn-NN-*/SKILL.md`), instaladas em `~/.local/share/koine/habilidades/` pelo `koine instalar` e symlinkadas no harness ativo (ex: `~/.claude/skills/`).
+Koine distribui **10 skills** no vault (`vault/habilidades/kn-NN-*/SKILL.md`), instaladas em `~/.local/share/koine/habilidades/` pelo `koine instalar` e symlinkadas no harness ativo (ex: `~/.claude/skills/`).
 
 Skills `kn-*` são **invocadas em sessões com Hermes** — o agente que opera o método Koine, presente na pasta canônica `~/koine` (alias `koine`). Agentes operacionais derivados (criados via `/kn-03-cria-agente`) normalmente **não** invocam skills `kn-*` — eles focam em trabalho real, não em manutenção do método.
 
@@ -23,7 +23,9 @@ Bloco numérico significa categoria de uso:
 | Bloco | Categoria | Frequência |
 |---|---|---|
 | `kn-01` a `kn-09` | Jornada inicial + manutenção da estrutura Koine | Raro |
-| `kn-11` a `kn-89` | Operações cotidianas durante o trabalho | Frequente |
+| `kn-11` a `kn-19` | Operações cotidianas durante o trabalho | Frequente |
+| `kn-21` a `kn-29` | Marca e design — identidade visual do escopo | Pontual |
+| `kn-31` a `kn-89` | Reservado para famílias futuras | — |
 | `kn-99` | Fechamento de sessão | Sempre por último |
 
 Espaço entre blocos permite adicionar skills futuras sem renumeração cascata.
@@ -36,6 +38,11 @@ Espaço entre blocos permite adicionar skills futuras sem renumeração cascata.
 | **kn-02-mantem-catalogo** | `/kn-02-mantem-catalogo` | Quando precisa criar/ajustar | Manutenção pontual da estrutura — 4 fluxos individuais (arquivo do usuário, escopo, contexto de pasta, domínio) |
 | **kn-03-cria-agente** | `/kn-03-cria-agente` | Quando emerge tipo de sessão recorrente com voz distinta | Criar agente operacional derivado especializado em um tipo de trabalho |
 | **kn-11-mantem-referencia** | `/kn-11-mantem-referencia` | Frequente — durante o trabalho real | Catalogar conhecimento (pessoa, decisão, aprendizado, evento) na pasta-referências do escopo atual |
+| **kn-12-prepara-contexto** | `/kn-12-prepara-contexto` | Quando o binário não está disponível | Gerar `CLAUDE.md` e índices de domínio no modo skills |
+| **kn-21-escreve-design** | `/kn-21-escreve-design` | 1× por marca, revisada quando a identidade muda | Escrever o `DESIGN.md` da marca na pasta-referências do escopo |
+| **kn-22-gera-imagem** | `/kn-22-gera-imagem` | Quando a sessão precisa de peça visual | Compor prompt a partir do `DESIGN.md` e gerar imagem via `imagio` |
+| **kn-23-gera-marca-prelo** | `/kn-23-gera-marca-prelo` | 1× por marca, regerada quando o `DESIGN.md` muda | Derivar `tokens.css` + `config.json` + fontes para o `prelo` |
+| **kn-24-gera-pdf** | `/kn-24-gera-pdf` | Frequente — sempre que há documento a entregar | Converter um `.md` em PDF na marca, resolvendo imagens e frontmatter |
 | **kn-99-encerra-sessao** | `/kn-99-encerra-sessao` | Sempre, ao final da sessão | Sintetizar a sessão, escrever diário, distribuir aprendizados para os destinos canônicos |
 
 ---
@@ -189,6 +196,120 @@ Encerra uma sessão Koine — sintetiza o que aconteceu, escreve diário na past
 
 ---
 
+## `kn-12-prepara-contexto`
+
+**Roda quando o binário `kn-agente` não está disponível** — ambientes que bloqueiam até o interpretador Python.
+
+Replica a resolução de contexto e a geração de artefatos do wrapper: escreve o `CLAUDE.md` da pasta de trabalho e os `kn-indice-<dominio>.md` da pasta-referências.
+
+**Quando invocar:**
+- Ao final de `/kn-01-recebe-usuario`, no modo skills
+- Para regenerar índices depois de catalogar referências, sem reabrir a sessão pelo wrapper
+
+**Outputs:**
+- `<pasta-de-trabalho>/CLAUDE.md`
+- `<pasta-referencias>/kn-indice-<dominio>.md`
+
+**SKILL.md:** `~/.local/share/koine/habilidades/kn-12-prepara-contexto/SKILL.md`
+
+---
+
+## `kn-21-escreve-design`
+
+**Base da família de marca.** Roda uma vez por marca; revisada quando a identidade muda.
+
+Escreve o `DESIGN.md` — cores, tipografia, formas e tom visual em tokens legíveis por máquina. Varre o que já existe (CSS do projeto, manual de marca, site) antes de entrevistar, e pergunta só o que a varredura não respondeu.
+
+O arquivo carrega **frontmatter híbrido**: as chaves da Ficha Koine (que o fazem aparecer no `kn-indice`) e o schema `@google/design.md` (que o linter valida) convivem no mesmo bloco.
+
+**Quando invocar:**
+- O escopo passou a produzir material visual e cada peça está sendo decidida do zero
+- A marca mudou de paleta ou tipografia
+
+**Inputs:**
+- Sessão num escopo com pasta-referências válida
+- Node.js para o linter (`npx @google/design.md lint`)
+
+**Outputs:**
+- `<pasta-referencias>/marcas/<slug>/DESIGN.md`
+- `index.md` e `log.md` atualizados
+
+**Skills relacionadas:**
+- `/kn-22-gera-imagem` e `/kn-23-gera-marca-prelo` — ambas consomem o arquivo que esta skill escreve
+
+**SKILL.md:** `~/.local/share/koine/habilidades/kn-21-escreve-design/SKILL.md`
+
+---
+
+## `kn-22-gera-imagem`
+
+**Cada execução gasta dinheiro.** O prompt vai à aprovação do usuário antes de toda chamada.
+
+Compõe o prompt em três camadas — identidade da marca, linha visual da série, sujeito da peça — e chama a CLI [`imagio`](https://github.com/jrunic/imagio). A inteligência está na composição: o `imagio` não lê identidade visual nem decide estilo.
+
+**Quando invocar:**
+- A sessão precisa de avatar, capa, ilustração ou símbolo, e o escopo já tem marca escrita
+
+**Inputs:**
+- `DESIGN.md` da marca
+- `imagio` instalado e com credencial ativa
+
+**Outputs:**
+- Arquivo de imagem no destino escolhido (entregável da sessão → pasta de trabalho; peça reutilizável da marca → `marcas/<slug>/imagens/`)
+- Prompt aprovado registrado em `## Imagens` no `DESIGN.md`, quando a peça pertence a uma série
+
+**SKILL.md:** `~/.local/share/koine/habilidades/kn-22-gera-imagem/SKILL.md`
+
+---
+
+## `kn-23-gera-marca-prelo`
+
+Deriva o payload de marca do [`prelo`](https://github.com/jrunic/prelo) a partir do `DESIGN.md`, para que Markdown vire PDF na identidade da marca.
+
+Escreve **apenas a camada de tokens**. A estrutura visual pertence ao prelo (`templates/base.css`) e chega pelo upgrade da ferramenta — marca que carrega CSS estrutural é um fork silencioso.
+
+**Quando invocar:**
+- Marca nova precisa gerar PDF
+- O `DESIGN.md` mudou cor ou tipografia (o payload fica defasado)
+
+**Inputs:**
+- `DESIGN.md` da marca
+- `prelo` instalado (Node.js 22+)
+
+**Outputs:**
+- `<pasta-referencias>/marcas/<slug>/prelo/{tokens.css, config.json, fonts/}`
+- Comando `prelo instalar` emitido para o usuário executar
+- PDF de amostra para verificação
+
+**SKILL.md:** `~/.local/share/koine/habilidades/kn-23-gera-marca-prelo/SKILL.md`
+
+---
+
+## `kn-24-gera-pdf`
+
+**A skill de uso cotidiano da marca.** Enquanto `/kn-21` e `/kn-23` rodam uma vez por marca, esta roda toda vez que há documento a entregar.
+
+Converte um `.md` do trabalho em PDF na identidade do escopo, garantindo que o documento sai inteiro. Confere no disco cada imagem local antes de converter — o prelo avisa que a imagem falta, mas não interrompe, e o furo só aparece depois de o documento ter sido enviado. Também remove o frontmatter, que sem `--strip-frontmatter` vira conteúdo impresso acima do primeiro título.
+
+**Quando invocar:**
+- Relatório, proposta, análise ou peça precisa sair em PDF de marca
+
+**Inputs:**
+- Um `.md`, a marca instalada em `<XDG_DATA_HOME>/prelo/brands/`
+- `prelo` ≥ 1.2.0 (Node.js 22+) — versão anterior não resolve caminho relativo de imagem
+
+**Outputs:**
+- PDF ao lado do `.md` original (entregável do trabalho, não memória do escopo)
+- O `.md` canônico é convertido direto, sem cópia intermediária
+
+**Skills relacionadas:**
+- `/kn-23-gera-marca-prelo` — produz a marca que esta consome
+- `/kn-21-escreve-design` — onde se corrige cor ou tipografia errada no PDF
+
+**SKILL.md:** `~/.local/share/koine/habilidades/kn-24-gera-pdf/SKILL.md`
+
+---
+
 ## Onde os SKILL.md vivem
 
 Após `koine instalar`:
@@ -199,6 +320,11 @@ Após `koine instalar`:
 ├── kn-02-mantem-catalogo/SKILL.md
 ├── kn-03-cria-agente/SKILL.md
 ├── kn-11-mantem-referencia/SKILL.md
+├── kn-12-prepara-contexto/SKILL.md
+├── kn-21-escreve-design/SKILL.md
+├── kn-22-gera-imagem/SKILL.md
+├── kn-23-gera-marca-prelo/SKILL.md
+├── kn-24-gera-pdf/SKILL.md
 └── kn-99-encerra-sessao/SKILL.md
 ```
 

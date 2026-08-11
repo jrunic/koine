@@ -114,6 +114,19 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
 - **SSL do Python falha em qualquer SO → fallback curl do sistema** — o OpenSSL da stdlib pode não verificar o cert: no Windows por não buscar o CA intermediário via AIA, no macOS por faltar o bundle de CA. O curl do SO usa o trust store nativo (Schannel/Keychain/CA bundle) e funciona onde o urllib falha. `atualizar` usa esse fallback em `resolver_versao`/`baixar`/sums desde a v0.4.7 (antes era win32-only; a v0.4.6 da Renata travou no macOS). Máquina já travada se recupera reinstalando via `install.sh` (100% curl) — `KOINE_VERSAO=... koine atualizar` NÃO resolve (morre igual no download).
 - **Mudança que afeta Windows valida em VM AppLocker antes de release** — self-update (`atualizar`), launch e wrappers. O CI é **POSIX-only e não pega bug Windows-only**: na v0.4.3 o handoff finalizava com o pyz alvo baixado, que pode não ter `--finalizar` → finalizar com cópia do pyz atual. Lab reutilizável (Win11 ARM Enterprise via CrystalFetch + Fusion + AppLocker escopado a usuário restrito) em `14-projetos/20260620-criar-koine/laboratorio-windows-applocker/`.
 
+## Família `kn-2N` espelha o `jd-cria-design` do brain
+
+As três skills de marca (`kn-21`/`kn-22`/`kn-23`) são a versão portável do skill interno `jd-cria-design` do Jedi Brain: mesma doutrina, dependências públicas (`npx @google/design.md`, `imagio`, `prelo`) e destinos em pasta-referências de escopo em vez de taxonomia do brain.
+
+As duas famílias compartilham o mapeamento `DESIGN.md → tokens do prelo`. **Mudança no `MAPA-TOKENS.md` do `jd-cria-design` toca a `kn-23` também** — e vice-versa. Não há mecanismo de sincronia; é conferência manual quando o vocabulário de tokens do prelo mudar.
+
+Estavam em sincronia em 2026-08-09, quando o prelo v1.1.0 moveu a estrutura CSS para a ferramenta e ambas passaram a emitir `tokens.css`.
+
+**Versões mínimas das ferramentas externas:**
+
+- `prelo` ≥ **1.2.0** para a `/kn-24-gera-pdf` — resolve caminho relativo contra a pasta do `.md`. Abaixo dela a skill não funciona sem contorno, e o contorno passou a ser nocivo: reescrever link relativo para absoluto faz o prelo gravar o caminho da máquina de origem dentro do PDF.
+- `prelo` ≥ **1.2.1** para logo de marca na `/kn-23-gera-marca-prelo` — a cópia de `images/` na instalação entrou nessa versão. Antes dela a imagem ficava para trás e a regra CSS apontava para o vazio.
+
 ## Decisões locais divergentes (técnicas)
 
 - **PyYAML vendorizado, não pip-instalado** — o pyz precisa ser autocontido numa máquina que só tem o interpretador; `src/koine/_vendor/` entra no `sys.path` do pacote.

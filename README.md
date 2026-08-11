@@ -105,6 +105,11 @@ Distribuídas no vault e disponíveis após `koine instalar`:
 | `/kn-02-mantem-catalogo` | Criar/ajustar arquivo do usuário, escopo, contexto de pasta, ou domínio |
 | `/kn-03-cria-agente` | Criar novo agente operacional especializado em um tipo de trabalho |
 | `/kn-11-mantem-referencia` | Catalogar conhecimento (pessoa, decisão, aprendizado) durante o trabalho |
+| `/kn-12-prepara-contexto` | Regenerar `CLAUDE.md` e índices de domínio sem o binário (modo skills) |
+| `/kn-21-escreve-design` | Escrever o `DESIGN.md` de uma marca do escopo — cores, tipografia, tom visual |
+| `/kn-22-gera-imagem` | Gerar imagem na identidade da marca via [`imagio`](https://github.com/jrunic/imagio) |
+| `/kn-23-gera-marca-prelo` | Derivar o payload de marca do [`prelo`](https://github.com/jrunic/prelo) para PDF na identidade |
+| `/kn-24-gera-pdf` | Converter um `.md` do trabalho em PDF na marca do escopo |
 | `/kn-99-encerra-sessao` | Fechar sessão escrevendo diário e distribuindo aprendizados |
 
 Detalhes em [`docs/referencias/habilidades.md`](docs/referencias/habilidades.md).
