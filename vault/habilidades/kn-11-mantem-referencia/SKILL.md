@@ -136,7 +136,7 @@ tags: [<keywords livres>]
 <corpo conforme estrutura típica do type>
 ```
 
-**Cite `title` e `description` com aspas duplas.** O gerador de índice lê esse frontmatter como YAML; um valor não-citado com dois-pontos-espaço no meio (ex.: `funcional: gog v0.34.1`) quebra o parse e a referência some do `kn-indice`. Aspas duplas em toda a linha eliminam o risco. Se o próprio texto tiver aspas duplas, escape-as com `\"`.
+**Cite `title` e `description` com aspas duplas.** O gerador de índice lê esse frontmatter como YAML; um valor não-citado com dois-pontos-espaço no meio (ex.: `funcional: gog v0.34.1`) é inválido. O Koine repara na leitura e avisa, mas o arquivo segue torto para qualquer outra ferramenta e o `koine validar` vai apontá-lo. Aspas duplas em toda a linha eliminam o risco. Se o próprio texto tiver aspas duplas, escape-as com `\"`.
 
 Mostre o arquivo completo para confirmação antes de gravar.
 

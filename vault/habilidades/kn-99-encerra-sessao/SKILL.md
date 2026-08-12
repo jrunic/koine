@@ -102,8 +102,8 @@ Estrutura:
 ```markdown
 ---
 type: Diario
-title: <Descrição legível>
-description: <1 linha — síntese da sessão>
+title: "<Descrição legível>"
+description: "<1 linha — síntese da sessão>"
 data: AAAA-MM-DD
 escopo: <slug-escopo>
 agente: <nome do agente que conduziu>
@@ -141,6 +141,8 @@ tags: [diario, sessao, <descricao>]
 
 <Transcrição literal de TODAS as mensagens do usuário nesta sessão. Sem seleção. Sem paráfrase. Sem reordenamento. Tudo o que o usuário escreveu, do início ao fim, na ordem em que escreveu.>
 ```
+
+**Cite `title`, `description` e `descricao` com aspas duplas.** O frontmatter é YAML: valor não-citado com dois-pontos-espaço no meio (ex.: `Vendas B2B: metas`) é inválido. O Koine repara na leitura e avisa, mas o arquivo segue torto para qualquer outra ferramenta e o `koine validar` vai apontá-lo. Se o texto tiver aspas duplas, escape com `\"`.
 
 **Voz do Usuário** é seção obrigatória — não opcional. Função: proteger contra deriva de interpretação do agente. Quando o usuário relê o diário daqui a semanas ou meses, vê o que **ele** disse, não o que o agente entendeu. Sem seleção (incluir até "ok", "segue", correções triviais), sem paráfrase ("o usuário pediu X" não conta — colar o que ele escreveu), sem reordenamento. Mensagens vão na ordem cronológica em que aconteceram.
 

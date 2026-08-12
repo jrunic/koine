@@ -147,7 +147,7 @@ def test_baixar_sem_curl_levanta_com_orientacao(monkeypatch):
 
 def test_resolver_versao_fallback_curl(monkeypatch):
     """resolver_versao: SSL falha no urllib HEAD; curl segue o redirect e
-    devolve a tag final (o passo que travou a Renata no macOS)."""
+    devolve a tag final (o passo que travava no macOS)."""
     monkeypatch.delenv("KOINE_VERSAO", raising=False)
 
     def urlopen_falha(req, timeout=30):

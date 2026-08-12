@@ -2,7 +2,7 @@
 id: 202606271400
 tipo: decisao
 status: aceito
-description: ADR — schema do CONTEXTO.md ganha campo opcional `bootstrap: bool` para sinalizar modo bootstrap explícito gerado por kn-agente instalar
+description: "ADR — schema do CONTEXTO.md ganha campo opcional `bootstrap: bool` para sinalizar modo bootstrap explícito gerado por kn-agente instalar"
 tags: [adr, koine, contexto, schema, bootstrap, onboarding]
 ---
 

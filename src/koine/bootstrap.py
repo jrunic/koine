@@ -64,12 +64,30 @@ def classificar(pasta: str) -> str:
         return MALFORMADO
     if not texto.strip():
         return VAZIO
-    fm, _ = frontmatter.ler(texto)
+    try:
+        fm, _ = frontmatter.ler(texto)
+    except frontmatter.FrontmatterInvalido:
+        # YAML que nem o reparo salva → malformado: erro amigável, nunca clobber.
+        # Frontmatter ruim é dado ruim numa pasta, não motivo para o Koine cair.
+        return MALFORMADO
     if fm.get("bootstrap"):
         return BOOTSTRAP
     if fm.get("escopo"):
         return VALIDO
     return MALFORMADO
+
+
+def erro_frontmatter(pasta: str) -> frontmatter.FrontmatterInvalido | None:
+    """Por que o CONTEXTO.md desta pasta é MALFORMADO: YAML irreparável (devolve
+    o erro, com linha e coluna) ou frontmatter só incompleto (devolve None).
+    Só o caminho de erro paga essa releitura."""
+    try:
+        frontmatter.ler_arquivo(os.path.join(pasta, "CONTEXTO.md"))
+    except frontmatter.FrontmatterInvalido as e:
+        return e
+    except OSError:
+        return None
+    return None
 
 
 def usuario_onboarded(cfg: str) -> bool:

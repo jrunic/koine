@@ -72,6 +72,14 @@ koine atualizar
 
 Baixa a release mais recente, verifica o `SHA256SUMS`, refresca o vault (preservando seus domínios) e regenera os wrappers. Roda 100% em Python — sem PowerShell e sem executável — para estações corporativas com política restritiva. Fixe uma versão com `KOINE_VERSAO=vX.Y.Z koine atualizar` ou aponte um espelho interno com `KOINE_BASE_URL`. Detalhes em [docs/referencias/cli.md](docs/referencias/cli.md#koine-atualizar---force).
 
+### Conferir os arquivos de configuração
+
+```bash
+koine validar
+```
+
+Varre o frontmatter da sua configuração e da pasta atual e aponta o que está torto — valor com `:` sem aspas (o Koine lê, mas outras ferramentas não) e YAML que nem ele consegue ler, com linha e coluna. Não escreve nada.
+
 ## Primeira sessão em 3 comandos
 
 ```bash

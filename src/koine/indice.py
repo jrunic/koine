@@ -28,10 +28,11 @@ def gerar(pasta_refs: str, dominios: list[str]) -> None:
             if "/" not in rel and (a in _CONTRATOS_RAIZ or a.startswith("kn-indice-")):
                 continue
             try:
-                fm, _ = frontmatter.ler(open(full, encoding="utf-8").read())
+                fm, _ = frontmatter.ler_arquivo(full)
             except Exception as e:
-                # Um arquivo com frontmatter inválido não pode derrubar o
-                # launch inteiro: cataloga o resto, avisa qual arquivo corrigir.
+                # Segunda linha de defesa: o `ler_arquivo` já repara o que dá
+                # (valor com `:` sem aspas). O que sobra aqui é irreparável —
+                # cataloga o resto, avisa qual arquivo corrigir.
                 print(
                     f"aviso: frontmatter inválido em {rel}, referência ignorada "
                     f"no índice ({type(e).__name__}). Corrija o YAML do arquivo.",
@@ -56,7 +57,11 @@ def _ler_sinopse(cfg: str, dom: str) -> str:
             f"_Domínio `{dom}` não plantado. Rode `kn-agente instalar` ou "
             f"`/kn-02-mantem-catalogo` (fluxo dominio)._"
         )
-    dfm, _ = frontmatter.ler(open(path, encoding="utf-8").read())
+    try:
+        dfm, _ = frontmatter.ler_arquivo(path, normalizar_disco=True)
+    except frontmatter.FrontmatterInvalido as e:
+        # domínio ilegível degrada a sinopse, não derruba o launch
+        return f"_Domínio `{dom}` com frontmatter inválido — {e}._"
     sinopse = schema.Dominio.from_fm(dfm).sinopse
     if not sinopse:
         return f"_Domínio `{dom}` sem sinopse — corrija o frontmatter de {path}._"
@@ -64,13 +69,12 @@ def _ler_sinopse(cfg: str, dom: str) -> str:
 
 
 def _escrever(path, dom, sinopse, itens):
-    linhas = [
-        "---",
-        "tipo: indice",
-        f"dominio: {dom}",
-        f"gerado: {datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}",
-        f"entradas: {len(itens)}",
-        "---",
+    linhas = frontmatter.compor({
+        "tipo": "indice",
+        "dominio": dom,
+        "gerado": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+        "entradas": len(itens),
+    }).split("\n") + [
         "",
         "## Domínio",
         "",

@@ -36,7 +36,7 @@ def test_pyz_versao(tmp_path):
 
 
 def test_pyz_sem_codigo_nativo(tmp_path):
-    # restrição-âncora do port: nada de .pyd/.so/.dll cruza o AV do Aldo.
+    # restrição-âncora do port: nada de .pyd/.so/.dll cruza o AV corporativo.
     import zipfile
     pyz = _build(tmp_path)
     with zipfile.ZipFile(pyz) as z:

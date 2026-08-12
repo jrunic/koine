@@ -15,6 +15,29 @@ class AgenteNaoEncontrado(Exception):
         super().__init__(agente)
 
 
+class EscopoNaoEncontrado(Exception):
+    """O CONTEXTO.md declara um `escopo:` que não existe em config/escopos.
+    Dado do usuário, não defeito: erro nomeado em vez de FileNotFoundError cru."""
+
+    def __init__(self, escopo: str, disponiveis: list[str]):
+        self.escopo = escopo
+        self.disponiveis = disponiveis
+        super().__init__(escopo)
+
+
+def resolver_escopo_path(cfg: str, slug: str) -> str:
+    """Path do escopo, ou EscopoNaoEncontrado listando os cadastrados."""
+    p = os.path.join(cfg, "escopos", f"{slug}.md")
+    if os.path.exists(p):
+        return p
+    try:
+        disp = sorted(f[:-3] for f in os.listdir(os.path.join(cfg, "escopos"))
+                      if f.endswith(".md"))
+    except FileNotFoundError:
+        disp = []
+    raise EscopoNaoEncontrado(slug, disp)
+
+
 @dataclass
 class ContextoMontado:
     usuario_path: str = ""
@@ -69,7 +92,7 @@ def _achar_agente(cfg: str, data: str, agente: str) -> str:
 def resolver(agente: str, pasta: str) -> ContextoMontado:
     cfg, data = paths.config_dir(), paths.vault_dir()
     ctx_path = os.path.join(pasta, "CONTEXTO.md")
-    fm, _ = frontmatter.ler(open(ctx_path, encoding="utf-8").read())
+    fm, _ = frontmatter.ler_arquivo(ctx_path, normalizar_disco=True)
 
     if fm.get("bootstrap"):
         return ContextoMontado(
@@ -83,8 +106,8 @@ def resolver(agente: str, pasta: str) -> ContextoMontado:
     escopo_slug = fm["escopo"]
     doms = fm.get("dominios", [])
 
-    escopo_path = os.path.join(cfg, "escopos", f"{escopo_slug}.md")
-    efm, _ = frontmatter.ler(open(escopo_path, encoding="utf-8").read())
+    esc_path = resolver_escopo_path(cfg, escopo_slug)
+    efm, _ = frontmatter.ler_arquivo(esc_path, normalizar_disco=True)
     escopo = schema.Escopo.from_fm(efm)
     refs = paths.resolver_tagged(escopo.pasta_referencias)
 
@@ -94,7 +117,7 @@ def resolver(agente: str, pasta: str) -> ContextoMontado:
         usuario_path=_achar_usuario(cfg),
         koine_path=os.path.join(data, "KOINE.md"),
         agente_path=agente_path,
-        escopo_path=escopo_path,
+        escopo_path=esc_path,
         indice_paths=[os.path.join(refs, f"kn-indice-{d}.md") for d in doms],
         contexto_path=ctx_path,
     )
