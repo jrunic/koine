@@ -1,6 +1,6 @@
 ---
 name: kn-01-recebe-usuario
-description: Onboarding completo do novo usuário Koine — meta-skill conduz primeira sessão com 4 personagens-âncora (Bruce Wayne, Hermione, Indy, Leia) com exemplos completos inline por personagem em cada pergunta, 4 rodadas estruturadas (arquivo do usuário, primeiro escopo, primeira pasta de trabalho, agente operacional), e ao final substitui CONTEXTO.md de bootstrap por configuração real. Roda uma única vez por usuário, automaticamente disparada quando Hermes detecta `bootstrap: true` no CONTEXTO.md da pasta canônica.
+description: "Onboarding completo do novo usuário Koine — meta-skill conduz primeira sessão com 4 personagens-âncora (Bruce Wayne, Hermione, Indy, Leia) com exemplos completos inline por personagem em cada pergunta, 4 rodadas estruturadas (arquivo do usuário, primeiro escopo, primeira pasta de trabalho, agente operacional), e ao final substitui CONTEXTO.md de bootstrap por configuração real. Roda uma única vez por usuário, automaticamente disparada quando Hermes detecta `bootstrap: true` no CONTEXTO.md da pasta canônica."
 id: 202606221400
 projeto: koine
 tipo: habilidade
@@ -193,8 +193,8 @@ Ao final das 7 perguntas, monte o arquivo `~/.config/koine/<primeiro-nome>.md` c
 ```markdown
 ---
 type: User
-title: <Nome completo>
-description: <descrição em 1 linha derivada do papel principal>
+title: "<Nome completo>"
+description: "<descrição em 1 linha derivada do papel principal>"
 nome: <Nome completo>
 idioma: <pt-BR | en-US | ...>
 timezone: <America/Sao_Paulo | ...>
@@ -208,6 +208,8 @@ tags: [usuario, <slug-do-primeiro-nome>]
 
 <Currículo curto>
 ```
+
+**Cite `title`, `description` e `descricao` com aspas duplas.** O frontmatter é YAML: valor não-citado com dois-pontos-espaço no meio (ex.: `Vendas B2B: metas`) é inválido. O Koine repara na leitura e avisa, mas o arquivo segue torto para qualquer outra ferramenta e o `koine validar` vai apontá-lo. Se o texto tiver aspas duplas, escape com `\"`.
 
 #### Confirmação
 
@@ -548,7 +550,7 @@ Cria `<pasta>/CONTEXTO.md` com Ficha Koine:
 ---
 escopo: <apelido-escopo-da-rodada-2>
 dominios: [<lista>]
-descricao: <frase do item 2>
+descricao: "<frase do item 2>"
 tags: [contexto, <slug-da-pasta>]
 ---
 
@@ -559,6 +561,8 @@ tags: [contexto, <slug-da-pasta>]
 Esta pasta acumula padrões, decisões e referências de alcance local.
 Atualize conforme o trabalho avançar.
 ```
+
+**Cite `title`, `description` e `descricao` com aspas duplas.** O frontmatter é YAML: valor não-citado com dois-pontos-espaço no meio (ex.: `Vendas B2B: metas`) é inválido. O Koine repara na leitura e avisa, mas o arquivo segue torto para qualquer outra ferramenta e o `koine validar` vai apontá-lo. Se o texto tiver aspas duplas, escape com `\"`.
 
 #### Confirmação
 
@@ -651,8 +655,8 @@ Ao retornar de `/kn-03-cria-agente`, apresente o resumo:
 ```yaml
 ---
 type: Scope
-title: Koine — Meta-trabalho
-description: Pasta canônica de meta-trabalho com o método Koine
+title: "Koine — Meta-trabalho"
+description: "Pasta canônica de meta-trabalho com o método Koine"
 escopo: koine
 pasta-referencias: home:koine
 proprietario: <apelido-do-usuario>
@@ -673,7 +677,7 @@ Stakeholders: o próprio usuário e Hermes. Foco operacional: configuração e m
 ---
 escopo: koine
 dominios: [universal]
-descricao: Pasta canônica de meta-trabalho com o método Koine
+descricao: "Pasta canônica de meta-trabalho com o método Koine"
 tags: [contexto, koine]
 ---
 

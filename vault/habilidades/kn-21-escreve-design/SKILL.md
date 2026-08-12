@@ -67,7 +67,7 @@ tags: [marca, design, <slug-marca>]
 # Schema @google/design.md — o que o linter valida
 version: alpha
 name: <Nome da Marca>
-description: <uma linha densa; serve aos dois contratos>
+description: "<uma linha densa; serve aos dois contratos>"
 colors:
   primary: "<hex>"
 typography:

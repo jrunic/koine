@@ -6,6 +6,69 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.2] — 2026-08-11
+
+### Corrigido — frontmatter escrito à mão não derruba mais o Koine
+
+`descricao: Vendas B2B: acompanhamento e metas` — dois-pontos sem aspas, a forma
+natural de escrever em português — matava o launch inteiro com um `ScannerError` de
+20 linhas antes de o cliente IA abrir. Reproduzido em produção em máquina de usuário.
+
+- **Leitura tolerante.** `frontmatter.ler` tenta o parse estrito e, só quando ele
+  falha, recita o valor das linhas `chave: valor` que sozinhas não parseiam. Cada
+  linha é testada isolada: uma linha já válida no mesmo bloco (`descricao: "Vendas:
+  meta"`) atravessa intacta. O reparo nunca roda sobre arquivo que já é válido.
+- **Aviso em vez de silêncio.** Quando repara, o Koine avisa no stderr nomeando o
+  arquivo e o campo — tolerar dado ruim não é escondê-lo.
+- **Erro nomeado no que não tem reparo.** TAB, indentação quebrada e frontmatter que
+  não é `chave: valor` viram `FrontmatterInvalido` com arquivo, linha e coluna, e uma
+  mensagem que explica onde pôr a mão. Antes, o segundo caso estourava `AttributeError`.
+- **Rede em todo o caminho de launch.** As seis leituras de frontmatter
+  (CONTEXTO.md ×3, escopo ×2, domínio) estavam desprotegidas; a v0.4.6 tinha coberto
+  só o walker do índice. `classificar` degrada para `malformado` em vez de propagar.
+- **Escopo inexistente também deixou de ser traceback.** `escopo:` apontando para um
+  slug que não existe agora lista os escopos cadastrados.
+
+### Adicionado — `koine validar [pasta]`
+
+Varre o frontmatter da config do usuário e da pasta e reporta o que está torto, sem
+escrever nada: **⚠ reparável** (o Koine lê, mas o arquivo segue inválido para outras
+ferramentas) e **✗ inválido** (com linha e coluna). Sai `1` quando há achados.
+
+Contrapartida necessária do reparo: sem ele, o arquivo torto no disco nunca seria
+corrigido — só remendado a cada leitura.
+
+### Adicionado — o arquivo torto é consertado, não só remendado
+
+Reparar na leitura não conserta nada: o arquivo no disco continua inválido para
+qualquer outra ferramenta, e o usuário nunca fica sabendo que há o que corrigir.
+Agora o Koine escreve a correção.
+
+- **No launch**, os arquivos de configuração que ele carrega (`CONTEXTO.md` da
+  pasta, escopo, domínio) são normalizados no disco — máquina que escreveu YAML
+  torto se cura na primeira sessão, sem comando nenhum. Só a linha do valor sem
+  aspas muda; o original vai para `.bak`.
+- **`koine validar --corrigir`** faz o mesmo em lote, aí sim incluindo a
+  pasta-referências do escopo. Ela fica fora do automático de propósito:
+  reescrever a base de conhecimento do usuário é coisa que só se faz a pedido.
+- O que o Koine **não** sabe consertar nunca é reescrito, e o documento remendado
+  é reparseado antes de ser gravado — a correção automática não tem caminho para
+  produzir algo pior que o original.
+- Valor citado sai entre aspas duplas, como a documentação sempre recomendou;
+  aspas simples só quando o valor tem `"` ou `\` (caminho do Windows entre aspas
+  duplas vira escape inválido).
+- O gerador de índice passou a emitir o próprio frontmatter pelo compositor: um
+  domínio chamado `vendas: b2b` fazia o Koine gravar YAML inválido em arquivo
+  gerado por ele mesmo.
+
+### Alterado
+
+- Skills que escrevem frontmatter (`kn-01`, `kn-03`, `kn-11`, `kn-21`, `kn-99`) citam
+  `title`/`description`/`descricao` com aspas duplas no template e explicam por quê.
+  Era o próprio Koine ensinando o usuário a escrever o YAML que derrubava o Koine.
+- Referência com dois-pontos sem aspas passa a **entrar** no `kn-indice` (reparada)
+  em vez de ser pulada com aviso, como fazia desde a v0.4.6.
+
 ## [0.5.1] — 2026-08-11
 
 ### Ferramentas externas da família `kn-2N`
@@ -81,7 +144,7 @@ Passo a passo completo em [A marca do escopo](docs/guias/marca-do-escopo.md).
 
 ### Fixed
 
-- **Abrir sessão numa pasta sem `CONTEXTO.md` configurado dava traceback Python** — lançar um cliente (`kn-<cliente> <agente> <pasta>`) numa pasta de trabalho nova, sem `CONTEXTO.md` (ou com o arquivo vazio), falhava com `FileNotFoundError`/`KeyError` cru em vez de guiar o usuário. Reproduzido em produção no Grupo Aldo (Windows corporativo). Agora o launch **auto-guia**: se o usuário já fez onboarding, o Koine materializa um `CONTEXTO.md` de bootstrap e o Hermes conduz a criação do contexto real da pasta via `/kn-02-mantem-catalogo` (Fluxo 3); se ainda não fez onboarding, orienta a rodar `koine instalar` + `kn-<cliente> hermes koine` (sem disparar o onboarding `/kn-01` numa pasta arbitrária). `CONTEXTO.md` com conteúdo mas frontmatter incompleto (sem `escopo:` nem `bootstrap:`) é **preservado** com mensagem de correção — nunca sobrescrito.
+- **Abrir sessão numa pasta sem `CONTEXTO.md` configurado dava traceback Python** — lançar um cliente (`kn-<cliente> <agente> <pasta>`) numa pasta de trabalho nova, sem `CONTEXTO.md` (ou com o arquivo vazio), falhava com `FileNotFoundError`/`KeyError` cru em vez de guiar o usuário. Reproduzido em produção em ambiente Windows corporativo. Agora o launch **auto-guia**: se o usuário já fez onboarding, o Koine materializa um `CONTEXTO.md` de bootstrap e o Hermes conduz a criação do contexto real da pasta via `/kn-02-mantem-catalogo` (Fluxo 3); se ainda não fez onboarding, orienta a rodar `koine instalar` + `kn-<cliente> hermes koine` (sem disparar o onboarding `/kn-01` numa pasta arbitrária). `CONTEXTO.md` com conteúdo mas frontmatter incompleto (sem `escopo:` nem `bootstrap:`) é **preservado** com mensagem de correção — nunca sobrescrito.
 
 ### Changed
 
@@ -97,7 +160,7 @@ Passo a passo completo em [A marca do escopo](docs/guias/marca-do-escopo.md).
 
 ### Added
 
-- **Comando `koine atualizar`** — self-update para a última release (ou versão fixada em `KOINE_VERSAO`), baixando o `.zip` do github (ou de `KOINE_BASE_URL`), verificando `SHA256SUMS`, e reaproveitando o caminho de instalação: refresca o vault shipped preservando os `dominios` do usuário, regenera os wrappers e reinstala skills nos harnesses detectados. Execução 100% Python — nenhum `.bat`/`.ps1`/powershell — para políticas que bloqueiam executáveis e powershell (ex.: Grupo Aldo). Auto-troca do pyz é in-process no POSIX e delegada a um processo-filho da versão nova no Windows (stdio em log, sem trampolim batch). No-op quando já na versão-alvo; `--force` reinstala.
+- **Comando `koine atualizar`** — self-update para a última release (ou versão fixada em `KOINE_VERSAO`), baixando o `.zip` do github (ou de `KOINE_BASE_URL`), verificando `SHA256SUMS`, e reaproveitando o caminho de instalação: refresca o vault shipped preservando os `dominios` do usuário, regenera os wrappers e reinstala skills nos harnesses detectados. Execução 100% Python — nenhum `.bat`/`.ps1`/powershell — para políticas corporativas que bloqueiam executáveis e powershell. Auto-troca do pyz é in-process no POSIX e delegada a um processo-filho da versão nova no Windows (stdio em log, sem trampolim batch). No-op quando já na versão-alvo; `--force` reinstala.
   - **Limitação/mitigação de SSL no Windows** — o OpenSSL da stdlib do Python não busca o CA intermediário via AIA, então o download direto do github pode falhar em Windows sem a cadeia completa no store (comum em máquina recém-instalada; máquina corporativa gerenciada costuma ter a cadeia provisionada). Mitigação: no Windows o download cai para o `curl.exe` do sistema (usa Schannel, que faz AIA); se o `curl` também falhar, a mensagem orienta a rodar Windows Update ou usar `KOINE_BASE_URL` apontando para um espelho. Validado em Windows 11 ARM sob AppLocker (powershell bloqueado, usuário restrito): resolução de versão, download por espelho e a auto-troca do pyz funcionam; o download direto do github depende do fallback curl.
 
 ### Fixed

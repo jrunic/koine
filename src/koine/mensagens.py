@@ -245,6 +245,44 @@ def contexto_malformado(pasta: str) -> str:
     )
 
 
+def escopo_nao_encontrado(escopo: str, disponiveis: list[str]) -> str:
+    """CONTEXTO.md aponta para um escopo que não existe em config/escopos.
+    Erra-se o slug com facilidade; listar os cadastrados resolve na hora."""
+    lista = "\n".join(f"      • {d}" for d in disponiveis) if disponiveis \
+        else "      (nenhum escopo cadastrado — rode /kn-02-mantem-catalogo)"
+    return (
+        f"  ✗ escopo '{escopo}' não encontrado\n"
+        "\n"
+        "    O CONTEXTO.md desta pasta aponta para um escopo que não existe.\n"
+        "    Escopos cadastrados:\n"
+        f"{lista}\n"
+        "\n"
+        "    Corrija o campo `escopo:` do CONTEXTO.md, ou crie o escopo com\n"
+        "    /kn-02-mantem-catalogo (fluxo escopo).\n"
+    )
+
+
+def frontmatter_invalido(erro) -> str:
+    """YAML do frontmatter que nem o reparo automático salva (tab, indentação
+    quebrada, bloco que não é `chave: valor`). Nomeia arquivo, linha e coluna —
+    o usuário nunca viu YAML na vida e precisa saber onde pôr a mão."""
+    local = erro.arquivo or "(frontmatter)"
+    if erro.linha:
+        local += f"\n    linha {erro.linha}" + (f", coluna {erro.coluna}" if erro.coluna else "")
+    return (
+        "  ✗ frontmatter inválido — não consegui ler o YAML do topo do arquivo:\n"
+        f"    {local}\n"
+        f"\n    Detalhe: {erro.motivo}\n"
+        "\n"
+        "    O frontmatter é o bloco entre `---` no começo do arquivo, e cada\n"
+        "    linha é `chave: valor`. Causas comuns:\n"
+        "      • TAB no lugar de espaços (YAML só aceita espaço)\n"
+        "      • valor com `:` ou aspas soltas — cite entre aspas duplas:\n"
+        '          descricao: "Vendas: meta e funil"\n'
+        "      • linha sem `chave:` no começo\n"
+    )
+
+
 def contexto_conflito(ctx: str) -> str:
     """O CONTEXTO.md que seria materializado é um symlink ou diretório —
     escrever por cima perderia dado (ex.: symlink de sessão opencode/copilot)."""

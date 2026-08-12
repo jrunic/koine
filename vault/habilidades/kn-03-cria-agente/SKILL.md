@@ -160,8 +160,8 @@ Materialize `~/.config/koine/agentes/<nome>.md` seguindo a anatomia do `conceito
 ```markdown
 ---
 type: Agent
-title: <Title>
-description: <Description>
+title: "<Title>"
+description: "<Description>"
 origem: usuario
 escopo: koine
 status: ativo
@@ -201,6 +201,8 @@ tags: [agente, <nome>]
 
 <Bullets da Rodada 8.>
 ```
+
+**Cite `title`, `description` e `descricao` com aspas duplas.** O frontmatter é YAML: valor não-citado com dois-pontos-espaço no meio (ex.: `Vendas B2B: metas`) é inválido. O Koine repara na leitura e avisa, mas o arquivo segue torto para qualquer outra ferramenta e o `koine validar` vai apontá-lo. Se o texto tiver aspas duplas, escape com `\"`.
 
 **Mostre o arquivo completo** para confirmação antes de gravar.
 

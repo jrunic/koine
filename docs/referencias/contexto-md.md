@@ -25,10 +25,21 @@ YAML delimitado por `---` no topo do arquivo.
 
 | Campo | Tipo | Descrição |
 |---|---|---|
-| `descricao` | string | Resumo curto do propósito da pasta. |
+| `descricao` | string | Resumo curto do propósito da pasta. Cite entre aspas duplas. |
 | `tipo` | string | Costume Koine: `contexto`. |
 | `status` | string | `ativo`, `arquivado` etc. — informativo. |
 | `tags` | lista | Tags adicionais para o usuário. |
+
+### Valores com `:` precisam de aspas
+
+O frontmatter é YAML, e nele um valor não-citado com dois-pontos-espaço no meio é inválido:
+
+```yaml
+descricao: Processo comercial: acompanhamento de vendas   # inválido
+descricao: "Processo comercial: acompanhamento de vendas" # certo
+```
+
+O Koine repara esse caso na leitura e avisa no stderr — a sessão não quebra por causa de um dois-pontos. Mas o arquivo continua inválido para qualquer outra ferramenta que o leia, e `koine validar` aponta os arquivos nessa situação. TAB no lugar de espaço não tem reparo: o Koine recusa o arquivo nomeando linha e coluna.
 
 ## Corpo do arquivo
 

@@ -64,7 +64,7 @@ def test_wrapper_windows_bat_usa_interpretador(tmp_path, monkeypatch):
 
 
 def test_wrapper_windows_default_python(tmp_path, monkeypatch):
-    # Sem interpretador → fallback `python` no Windows (o que a TI do Aldo instalou).
+    # Sem interpretador → fallback `python` no Windows (o que a TI corporativa costuma instalar).
     monkeypatch.setattr(wrappers, "_is_windows", lambda: True)
     bindir = str(tmp_path / "bin")
     caminho = _claude(wrappers.gerar(bindir, r"C:\koine\koine.pyz"))

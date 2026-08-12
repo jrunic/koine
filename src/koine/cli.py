@@ -21,17 +21,21 @@ from koine import (
     paths,
     schema,
     skills,
+    validar as _validar,
     wrappers,
 )
 from koine._version import __version__
 
-SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades", "gerar", "mostrar", "atualizar"}
+SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades", "gerar", "mostrar",
+               "validar", "atualizar"}
 
 
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     if not argv:
-        print("uso: koine <cliente|subcomando> ...", file=sys.stderr)
+        print("uso: koine <cliente|subcomando> ...\n"
+              "subcomandos: instalar, instalar-habilidades, gerar, mostrar, "
+              "validar, atualizar, versao", file=sys.stderr)
         return 2
 
     primeiro = argv[0]
@@ -47,6 +51,8 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_gerar(argv[1:])
         if primeiro == "mostrar":
             return _cmd_mostrar(argv[1:])
+        if primeiro == "validar":
+            return _cmd_validar(argv[1:])
         if primeiro == "atualizar":
             return _cmd_atualizar(argv[1:])
     if primeiro in adapters.REGISTRY:
@@ -173,13 +179,13 @@ def _pyz_padrao() -> str:
 
 def _montar_cm(agente: str, pasta: str) -> contexto.ContextoMontado:
     ctx_path = os.path.join(pasta, "CONTEXTO.md")
-    fm, _ = frontmatter.ler(open(ctx_path, encoding="utf-8").read())
+    fm, _ = frontmatter.ler_arquivo(ctx_path, normalizar_disco=True)
     # bootstrap não tem escopo nem índices; contexto.resolver trata o ramo.
     if not fm.get("bootstrap"):
         # índices antes do render (o adapter os referencia)
-        escopo_fm, _ = frontmatter.ler(
-            open(os.path.join(paths.config_dir(), "escopos", f"{fm['escopo']}.md"),
-                 encoding="utf-8").read())
+        escopo_fm, _ = frontmatter.ler_arquivo(
+            contexto.resolver_escopo_path(paths.config_dir(), fm["escopo"]),
+            normalizar_disco=True)
         refs = paths.resolver_tagged(schema.Escopo.from_fm(escopo_fm).pasta_referencias)
         indice.gerar(refs, fm.get("dominios", []))
     cm = contexto.resolver(agente, pasta)
@@ -216,6 +222,24 @@ def _criar_symlink(link: str, alvo: str) -> None:
         shutil.copyfile(alvo, link)  # Windows sem Developer Mode: cópia regenerada por sessão
 
 
+def _cmd_validar(args: list[str]) -> int:
+    """Varre o frontmatter da config do usuário e da pasta dada (default: a
+    atual). Sem `--corrigir`, não escreve nada. Sai 1 quando sobra algo a
+    corrigir — serve de gate em script."""
+    cfg = paths.config_dir()
+    alvos = [a for a in args if not a.startswith("-")] or [os.getcwd()]
+    # a pasta-referências do escopo mora fora da config e é onde vivem as
+    # referências da /kn-11 — varrer só a config deixaria de fora justo elas
+    refs = [r for r in (_validar.refs_do_escopo(a, cfg) for a in alvos) if r]
+    achados = _validar.varrer([cfg] + alvos + refs)
+    if "--corrigir" not in args:
+        print(_validar.relatorio(achados), end="")
+        return 1 if achados else 0
+    corrigidos, pendentes = _validar.corrigir(achados)
+    print(_validar.relatorio_correcao(corrigidos, pendentes), end="")
+    return 1 if pendentes else 0
+
+
 def _cmd_gerar(args: list[str]) -> int:
     agente = args[0]
     try:
@@ -225,12 +249,20 @@ def _cmd_gerar(args: list[str]) -> int:
         return 1
     if _bootstrap.classificar(pasta) in (
             _bootstrap.AUSENTE, _bootstrap.VAZIO, _bootstrap.MALFORMADO):
-        print(mensagens.pasta_sem_contexto_admin(pasta), file=sys.stderr)
+        erro = _bootstrap.erro_frontmatter(pasta)
+        print(mensagens.frontmatter_invalido(erro) if erro
+              else mensagens.pasta_sem_contexto_admin(pasta), file=sys.stderr)
         return 1
     try:
         cm = _montar_cm(agente, pasta)
     except contexto.AgenteNaoEncontrado as e:
         print(mensagens.agente_nao_encontrado(e.agente, e.disponiveis), file=sys.stderr)
+        return 1
+    except frontmatter.FrontmatterInvalido as e:
+        print(mensagens.frontmatter_invalido(e), file=sys.stderr)
+        return 1
+    except contexto.EscopoNaoEncontrado as e:
+        print(mensagens.escopo_nao_encontrado(e.escopo, e.disponiveis), file=sys.stderr)
         return 1
     lanc = adapters.get("claude").renderizar(cm)
     conteudo = lanc.arquivos_working_dir["CLAUDE.md"]
@@ -246,12 +278,20 @@ def _cmd_mostrar(args: list[str]) -> int:
     # alvo NÃO resolve alias — comportamento congelado de `mostrar` (arg cru)
     if _bootstrap.classificar(alvo) in (
             _bootstrap.AUSENTE, _bootstrap.VAZIO, _bootstrap.MALFORMADO):
-        print(mensagens.pasta_sem_contexto_admin(alvo), file=sys.stderr)
+        erro = _bootstrap.erro_frontmatter(alvo)
+        print(mensagens.frontmatter_invalido(erro) if erro
+              else mensagens.pasta_sem_contexto_admin(alvo), file=sys.stderr)
         return 1
     try:
         cm = _montar_cm(agente, alvo)
     except contexto.AgenteNaoEncontrado as e:
         print(mensagens.agente_nao_encontrado(e.agente, e.disponiveis), file=sys.stderr)
+        return 1
+    except frontmatter.FrontmatterInvalido as e:
+        print(mensagens.frontmatter_invalido(e), file=sys.stderr)
+        return 1
+    except contexto.EscopoNaoEncontrado as e:
+        print(mensagens.escopo_nao_encontrado(e.escopo, e.disponiveis), file=sys.stderr)
         return 1
     lanc = adapters.get("claude").renderizar(cm)
     print(lanc.arquivos_working_dir["CLAUDE.md"], end="")
@@ -356,12 +396,20 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
             f.write(_bootstrap.CONTEXTO_CONFIGURA_PASTA)
         # resolver vê `bootstrap: true` e força Hermes — o agente pedido é ignorado.
     elif estado == _bootstrap.MALFORMADO:
-        print(mensagens.contexto_malformado(pasta), file=sys.stderr)
+        erro = _bootstrap.erro_frontmatter(pasta)
+        print(mensagens.frontmatter_invalido(erro) if erro
+              else mensagens.contexto_malformado(pasta), file=sys.stderr)
         return 1
     try:
         cm = _montar_cm(agente, pasta)
     except contexto.AgenteNaoEncontrado as e:
         print(mensagens.agente_nao_encontrado(e.agente, e.disponiveis), file=sys.stderr)
+        return 1
+    except frontmatter.FrontmatterInvalido as e:
+        print(mensagens.frontmatter_invalido(e), file=sys.stderr)
+        return 1
+    except contexto.EscopoNaoEncontrado as e:
+        print(mensagens.escopo_nao_encontrado(e.escopo, e.disponiveis), file=sys.stderr)
         return 1
     lanc = adapters.get(cliente).renderizar(cm)
     try:

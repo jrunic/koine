@@ -60,6 +60,21 @@ Gera o arquivo de contexto do cliente (`CLAUDE.md`, `GEMINI.md`, etc.) na pasta,
 
 Imprime em stdout o contexto resolvido — usuário, agente, escopo, índices, contexto local. Não escreve arquivo.
 
+### `koine validar [pasta]`
+
+Varre o frontmatter de todo `.md` sob `~/.config/koine/` e sob `pasta` (default: a atual) e reporta o que está torto. Não escreve nada.
+
+Dois estados de achado:
+
+- **⚠ reparável** — YAML inválido que o Koine lê reparando (valor com `:` sem aspas). A sessão funciona; o arquivo continua inválido para qualquer outra ferramenta.
+- **✗ inválido** — nem o reparo salva (TAB no lugar de espaço, indentação quebrada, bloco que não é `chave: valor`). Nomeia linha e coluna.
+
+Sai `0` quando não há nada a corrigir e `1` quando há — serve de gate em script.
+
+Com `--corrigir`, os arquivos **reparáveis** são normalizados no disco: o valor ganha aspas, o original vai para `<arquivo>.bak` e o resto do arquivo fica byte a byte igual. Os **inválidos** nunca são reescritos — o Koine só mexe no que sabe consertar, e continua saindo `1` enquanto sobrar algum.
+
+Os arquivos de configuração que o launch carrega (`CONTEXTO.md` da pasta, escopo, domínio) já são normalizados sozinhos ao abrir a sessão. A pasta-referências fica de fora do automático de propósito: reescrever a sua base de conhecimento é coisa que o Koine só faz quando você pede.
+
 ### `koine versao`
 
 Imprime versão e sai.

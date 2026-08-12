@@ -175,7 +175,7 @@ def test_mostrar_ausente_erra(koine_home, monkeypatch, capsys):
     assert "CONTEXTO.md" in capsys.readouterr().err
 
 
-# ---- codex (cliente do Patrick/Aldo, adapter INLINE) pelo auto-guiar -------
+# ---- codex (adapter INLINE) pelo auto-guiar -------
 
 def test_launch_codex_onboarded_ausente_materializa(koine_home, monkeypatch):
     monkeypatch.setenv("HOME", koine_home["home"])
