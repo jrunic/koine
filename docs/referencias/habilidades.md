@@ -1,5 +1,5 @@
 ---
-descricao: Referência das 10 skills kn-* distribuídas no vault — propósito, trigger, quando invocar, o que produz
+descricao: Referência das 11 skills kn-* distribuídas no vault — propósito, trigger, quando invocar, o que produz
 id: 202606280002
 tipo: referencia
 status: ativo
@@ -10,7 +10,7 @@ tags: [referencia, habilidades, skills, kn]
 
 ## Visão geral
 
-Koine distribui **10 skills** no vault (`vault/habilidades/kn-NN-*/SKILL.md`), instaladas em `~/.local/share/koine/habilidades/` pelo `koine instalar` e symlinkadas no harness ativo (ex: `~/.claude/skills/`).
+Koine distribui **11 skills** no vault (`vault/habilidades/kn-NN-*/SKILL.md`), instaladas em `~/.local/share/koine/habilidades/` pelo `koine instalar` e **copiadas** dali para a pasta de skills de cada harness detectado (ex: `~/.claude/skills/`, `~/.config/opencode/skills/`).
 
 **Todo agente Koine pode e deve usar as skills `kn-*`.** Elas são do método, não de um agente — ficam instaladas no harness e disponíveis em qualquer sessão, com Hermes ou com um agente operacional derivado.
 
@@ -45,6 +45,7 @@ Espaço entre blocos permite adicionar skills futuras sem renumeração cascata.
 | **kn-03-cria-agente** | `/kn-03-cria-agente` | Quando emerge tipo de sessão recorrente com voz distinta | Criar agente operacional derivado especializado em um tipo de trabalho |
 | **kn-11-mantem-referencia** | `/kn-11-mantem-referencia` | Frequente — durante o trabalho real | Catalogar conhecimento (pessoa, decisão, aprendizado, evento) na pasta-referências do escopo atual |
 | **kn-12-prepara-contexto** | `/kn-12-prepara-contexto` | Quando o binário não está disponível | Gerar `CLAUDE.md` e índices de domínio no modo skills |
+| **kn-13-sabatina-plano** | `/kn-13-sabatina-plano` | Quando é preciso entender antes de decidir | Entrevista socrática que confere o que o usuário afirma contra a evidência real, afia o vocabulário no `GLOSSARIO.md` e registra a decisão que passa nos três critérios |
 | **kn-21-escreve-design** | `/kn-21-escreve-design` | 1× por marca, revisada quando a identidade muda | Escrever o `DESIGN.md` da marca na pasta-referências do escopo |
 | **kn-22-gera-imagem** | `/kn-22-gera-imagem` | Quando a sessão precisa de peça visual | Compor prompt a partir do `DESIGN.md` e gerar imagem via `imagio` |
 | **kn-23-gera-marca-prelo** | `/kn-23-gera-marca-prelo` | 1× por marca, regerada quando o `DESIGN.md` muda | Derivar `tokens.css` + `config.json` + fontes para o `prelo` |
@@ -220,6 +221,39 @@ Replica a resolução de contexto e a geração de artefatos do wrapper: escreve
 
 ---
 
+## `kn-13-sabatina-plano`
+
+> Para como preparar a sessão, escolher a fonte de evidência e resolver o que costuma sair errado, ver o guia [Sabatinar um processo](../guias/sabatinar-um-processo.md).
+
+**Roda quando é preciso entender antes de decidir.** Serve tanto para software quanto para trabalho sem código nenhum — um processo que só existe na cabeça de quem executa, uma rotina que mora numa planilha.
+
+Entrevista socrática: percorre a árvore de decisões uma por vez, sempre com a recomendação do agente junto da pergunta, e confere o que o usuário afirma contra uma fonte de evidência declarada na abertura. É essa conferência que separa a sabatina de uma anotação.
+
+Enquanto a conversa acontece, o vocabulário resolvido é gravado no `GLOSSARIO.md` no mesmo turno, e a decisão que passa nos três critérios — difícil de reverter, surpreendente sem contexto, resultado de compromisso real — vira registro com as alternativas recusadas e o motivo.
+
+**Quando invocar:**
+- Um processo precisa ser formalizado e ninguém escreveu como ele funciona
+- Um plano precisa ser testado antes de virar trabalho
+- Duas pessoas usam a mesma palavra querendo dizer coisas diferentes
+
+**Não use para:** catalogar conhecimento já formado (`/kn-11-mantem-referencia`) nem fechar a sessão (`/kn-99-encerra-sessao`).
+
+**Inputs:**
+- Nenhum obrigatório — a entrevista roda em qualquer pasta, inclusive sem `CONTEXTO.md`
+- Uma fonte de evidência: planilha, relatório, procedimento, contrato ou código
+
+**Outputs (conforme o alcance escolhido pelo usuário):**
+- Alcance de pasta — `GLOSSARIO.md` na pasta de trabalho; decisão em `CONTEXTO.md` ou em `<slug>.md` na raiz da pasta
+- Alcance de escopo — `GLOSSARIO.md` na pasta-referências, apontado por uma seção no arquivo do escopo; decisão como referência `type: Decisao` via `/kn-11`
+
+**Skills relacionadas:**
+- `/kn-11-mantem-referencia` — materializa a decisão quando o alcance é de escopo
+- `/kn-12-prepara-contexto` — regenera os índices depois de a sabatina gravar no escopo
+
+**SKILL.md:** `~/.local/share/koine/habilidades/kn-13-sabatina-plano/SKILL.md`
+
+---
+
 ## `kn-21-escreve-design`
 
 > As quatro skills da família `kn-2N` formam uma sequência. Para pré-requisitos, ordem de uso e solução de problemas ponta a ponta, ver o guia [A marca do escopo](../guias/marca-do-escopo.md).
@@ -329,6 +363,7 @@ Após `koine instalar`:
 ├── kn-03-cria-agente/SKILL.md
 ├── kn-11-mantem-referencia/SKILL.md
 ├── kn-12-prepara-contexto/SKILL.md
+├── kn-13-sabatina-plano/SKILL.md
 ├── kn-21-escreve-design/SKILL.md
 ├── kn-22-gera-imagem/SKILL.md
 ├── kn-23-gera-marca-prelo/SKILL.md
@@ -336,14 +371,16 @@ Após `koine instalar`:
 └── kn-99-encerra-sessao/SKILL.md
 ```
 
-E symlinks no harness ativo (ex: Claude Code):
+E uma **cópia** em cada harness detectado (ex: Claude Code):
 
 ```
 ~/.claude/skills/
-├── kn-01-recebe-usuario → ~/.local/share/koine/habilidades/kn-01-recebe-usuario
-├── kn-02-mantem-catalogo → ~/.local/share/koine/habilidades/kn-02-mantem-catalogo
+├── kn-01-recebe-usuario/SKILL.md
+├── kn-02-mantem-catalogo/SKILL.md
 └── (...)
 ```
+
+Cópia, não symlink: symlink no Windows exige privilégio de administrador, que o público-alvo não tem. A cópia é idempotente e não-destrutiva — diretório idêntico é pulado, divergente é reportado e preservado, e só `--force` sobrescreve.
 
 Cliente IA descobre skills automaticamente.
 

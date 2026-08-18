@@ -114,6 +114,7 @@ Distribuídas no vault e disponíveis após `koine instalar`:
 | `/kn-03-cria-agente` | Criar novo agente operacional especializado em um tipo de trabalho |
 | `/kn-11-mantem-referencia` | Catalogar conhecimento (pessoa, decisão, aprendizado) durante o trabalho |
 | `/kn-12-prepara-contexto` | Regenerar `CLAUDE.md` e índices de domínio sem o binário (modo skills) |
+| `/kn-13-sabatina-plano` | Sabatinar um plano ou processo — entrevista que confere o que você afirma contra a evidência real |
 | `/kn-21-escreve-design` | Escrever o `DESIGN.md` de uma marca do escopo — cores, tipografia, tom visual |
 | `/kn-22-gera-imagem` | Gerar imagem na identidade da marca via [`imagio`](https://github.com/jrunic/imagio) |
 | `/kn-23-gera-marca-prelo` | Derivar o payload de marca do [`prelo`](https://github.com/jrunic/prelo) para PDF na identidade |
@@ -137,7 +138,7 @@ Detalhes em [`docs/referencias/habilidades.md`](docs/referencias/habilidades.md)
 **Começando do zero?** [Tutorial — Onboarding completo](docs/tutoriais/onboarding-completo.md)
 
 - [Tutoriais](docs/tutoriais/) — passo a passo para começar
-- [Guias](docs/guias/) — como resolver problemas específicos, incluindo [a marca do escopo](docs/guias/marca-do-escopo.md) (família `kn-2N`: pré-requisitos, ordem de uso, o que cada skill produz)
+- [Guias](docs/guias/) — como resolver problemas específicos, incluindo [a marca do escopo](docs/guias/marca-do-escopo.md) (família `kn-2N`: pré-requisitos, ordem de uso, o que cada skill produz) e [sabatinar um processo](docs/guias/sabatinar-um-processo.md) (como preparar e conduzir a `/kn-13`)
 - [Referências](docs/referencias/) — CLI, schema do `CONTEXTO.md`, habilidades, formato OKF
 - [Explicações](docs/explicacoes/) — por que cada decisão de design
 - [Decisões](docs/decisoes/) — ADRs
