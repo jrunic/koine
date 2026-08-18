@@ -49,6 +49,20 @@ Tudo após o frontmatter é prosa livre. O agente IA carrega o conteúdo inteiro
 - Padrões específicos desta pasta
 - Pendências em curso
 - Aprendizados emergentes durante as sessões (Hermes pode editar)
+- Referências de alcance de pasta — arquivo solto na raiz, com o nome e uma linha de descrição
+- A fonte de evidência da pasta (ver abaixo)
+
+### Fonte de evidência — convenção da `/kn-13`
+
+A `/kn-13-sabatina-plano` confere o que o usuário afirma contra uma fonte real, e pergunta qual é na abertura da sessão. Quando a pasta trabalha sempre contra a mesma fonte, declará-la no corpo do `CONTEXTO.md` evita repetir a pergunta a cada sabatina:
+
+```md
+## Fonte de evidência
+
+`planilha-contratacoes.xlsx` nesta pasta — o registro real dos processos, exportado do sistema toda segunda.
+```
+
+Não é campo de frontmatter e não é obrigatória: é prosa que o agente lê. Sem ela, a `/kn-13` pergunta; com ela, confirma em uma linha e segue.
 
 ## Exemplo
 

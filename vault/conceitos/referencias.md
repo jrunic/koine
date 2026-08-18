@@ -58,6 +58,7 @@ A pasta apontada por `pasta-referencias:` no escopo é a **raiz de um OKF** — 
 ├── index.md                       # contrato OKF (directory listing)
 ├── log.md                         # contrato OKF (append-only de mutações)
 ├── kn-indice-<slug-dominio>.md    # gerado pelo kn-agente, um por domínio declarado
+├── GLOSSARIO.md                   # vocabulário do escopo (opcional, ver abaixo)
 ├── <slug>.md                      # referências na raiz
 └── <subpasta>/                    # subpastas livres, organizadas pelo usuário
     └── <slug>.md
@@ -66,6 +67,7 @@ A pasta apontada por `pasta-referencias:` no escopo é a **raiz de um OKF** — 
 - `index.md` e `log.md` são **contratos OKF** — sempre presentes na raiz, mantidos pela skill `/kn-11`.
 - `kn-indice-<slug-dominio>.md` são **derivados** — regenerados pelo `kn-agente` a cada invocação a partir do frontmatter das referências; nunca editados à mão. Ficam na raiz.
 - `<slug>.md` são as **unidades** — uma por arquivo, identificadas por slug em kebab-case. Podem viver na raiz ou em subpastas.
+- `GLOSSARIO.md` é o **vocabulário do escopo** — aparece quando a `/kn-13-sabatina-plano` resolve um termo com alcance de escopo. **Não é uma referência catalogada:** não leva Ficha Koine, não entra no `index.md` e não aparece em nenhum `kn-indice-*`. Quem o torna descoberto é uma seção `## Glossário` no arquivo do escopo, apontando o caminho.
 
 Subpastas são esperadas — pasta-referências pode crescer para centenas de itens, e organizar por categoria ajuda a navegação humana. O domínio (via frontmatter) faz o filtro programático; a subpasta faz o filtro visual. São complementares, não duplicadas.
 
@@ -97,7 +99,7 @@ Categorias canônicas (não exaustivas — usuário pode introduzir novos `type`
 
 - **`Pessoa`** — perfil humano relevante ao escopo (sócio, cliente, contato, parceiro).
 - **`Organizacao`** — empresa, instituição, órgão (cliente, parceiro, fornecedor, regulador).
-- **`Decisao`** — decisão tomada com motivação registrada (decisão estrutural, decisão tática consequente). Equivalente a ADR no domínio de software.
+- **`Decisao`** — decisão tomada com motivação registrada (decisão estrutural, decisão tática consequente). Equivalente a ADR no domínio de software. Produzida na conversa cotidiana via `/kn-11`, e durante uma sabatina via `/kn-13-sabatina-plano`, que só a oferece quando três critérios coexistem: difícil de reverter, surpreendente sem contexto, resultado de compromisso real.
 - **`Aprendizado`** — lição extraída de incidente, projeto, conversa — generaliza além do episódio.
 - **`Evento`** — ocorrência datada com impacto registrável (lançamento, reunião pivotal, marco contratual).
 
@@ -164,3 +166,4 @@ Slug em kebab-case derivado do título. Slugs colidentes recebem sufixo discrimi
 - `/kn-01-recebe-usuario` — usa este conceito ao montar o bundle OKF inicial do primeiro escopo durante o onboarding.
 - `/kn-02-mantem-catalogo` (fluxo escopo) — usa este conceito ao materializar uma pasta-referências para escopo novo (criar `index.md`, `log.md` vazios).
 - `/kn-99-encerra-sessao` — pode invocar `/kn-11` quando o fechamento da sessão exigir catalogar algo que emergiu.
+- `/kn-13-sabatina-plano` — usa a doutrina de alcance deste conceito para perguntar ao usuário se o vocabulário e as decisões da sabatina ficam na pasta de trabalho ou vão para o escopo, e delega a `/kn-11` a materialização da decisão de alcance de escopo.

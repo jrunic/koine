@@ -223,6 +223,8 @@ Replica a resolução de contexto e a geração de artefatos do wrapper: escreve
 
 ## `kn-13-sabatina-plano`
 
+> Para como preparar a sessão, escolher a fonte de evidência e resolver o que costuma sair errado, ver o guia [Sabatinar um processo](../guias/sabatinar-um-processo.md).
+
 **Roda quando é preciso entender antes de decidir.** Serve tanto para software quanto para trabalho sem código nenhum — um processo que só existe na cabeça de quem executa, uma rotina que mora numa planilha.
 
 Entrevista socrática: percorre a árvore de decisões uma por vez, sempre com a recomendação do agente junto da pergunta, e confere o que o usuário afirma contra uma fonte de evidência declarada na abertura. É essa conferência que separa a sabatina de uma anotação.

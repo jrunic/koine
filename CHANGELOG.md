@@ -6,6 +6,51 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Adicionado — `/kn-13-sabatina-plano`, a skill de entrevista
+
+Skill nova no vault, a décima primeira. Conduz uma sabatina: entrevista o usuário sobre
+um plano, um processo ou uma ideia até a coisa ficar explícita, uma pergunta por vez e
+sempre com a recomendação do agente junto da pergunta.
+
+O que a diferencia de uma conversa é a conferência. Na abertura da sessão o usuário
+declara contra o que o agente vai checar o que ele afirmar — a planilha que usa hoje, o
+relatório do sistema, o procedimento escrito, o contrato, o código. Quando a descrição e
+o artefato divergem, o agente mostra a divergência. É por isso que a skill alcança
+trabalho sem código nenhum: um processo administrativo tem evidência tanto quanto um
+repositório tem.
+
+Enquanto a conversa acontece, o vocabulário resolvido é gravado no `GLOSSARIO.md` no
+mesmo turno, e a decisão que passa em três critérios — difícil de reverter, surpreendente
+sem contexto, resultado de compromisso real — vira registro com as alternativas recusadas
+e o motivo de cada recusa. Zero decisão registrada é resultado normal.
+
+A entrevista roda em qualquer pasta, inclusive numa sem `CONTEXTO.md`. O que o estado da
+pasta muda é apenas **onde** o resultado é gravado, e isso o usuário decide: alcance de
+pasta deixa glossário e decisão na pasta de trabalho; alcance de escopo manda o glossário
+para a pasta-referências e a decisão para uma referência `type: Decisao` via `/kn-11`.
+Default seguro é pasta.
+
+Glossário de escopo ganha uma seção `## Glossário` no arquivo do escopo apontando o
+caminho — assim toda sessão sabe que ele existe sem pagar o conteúdo inteiro em cada
+prompt.
+
+Passo a passo em [Sabatinar um processo](docs/guias/sabatinar-um-processo.md).
+
+Adaptada de `mattpocock/skills` `grill-with-docs`, licença MIT, com atribuição preservada.
+
+### Adicionado — guarda sobre o contrato de skill do OpenCode
+
+O OpenCode descarta em silêncio uma skill cujo `name` no frontmatter não casa o nome do
+diretório, ou cuja `description` esteja fora de 1..1024 caracteres. Sem erro, sem aviso:
+a skill simplesmente não aparece. O vault inteiro passa a ser guardado por teste contra
+os dois casos.
+
+### Corrigido — documentação dizia symlink onde o código copia
+
+O catálogo de habilidades e o mapa de arquitetura descreviam as skills como symlinkadas
+no harness, herança da implementação em Go. A versão Python **copia**, porque symlink no
+Windows exige privilégio de administrador que o público-alvo não tem.
+
 ## [0.5.3] — 2026-08-18
 
 Dois defeitos que só existem no Windows, achados na mesma bancada com AppLocker.

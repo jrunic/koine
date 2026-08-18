@@ -48,6 +48,18 @@ tags: [escopo, <slug-escopo>]
 
 Corpo narrativo descreve a dinâmica daquele escopo — quem são os stakeholders principais, qual o papel do usuário ali, qual a história e o foco operacional. **Esse corpo é carregado em toda sessão dentro do escopo** (via `@/` no CLAUDE.md gerado), entre o arquivo do agente e os índices de domínio. Dá ao agente o pano de fundo da relação antes de ele ver as referências catalogadas.
 
+### Seção `## Glossário` — opcional
+
+Quando o escopo ganha vocabulário próprio, o glossário mora na pasta-referências (`<pasta-referencias>/GLOSSARIO.md`) e o arquivo do escopo carrega uma seção curta apontando o caminho:
+
+```md
+## Glossário
+
+Vocabulário deste escopo em `<pasta-referencias>/GLOSSARIO.md`. Consulte quando um termo do trabalho parecer ambíguo.
+```
+
+Escrita pela `/kn-13-sabatina-plano` na primeira vez que um termo é resolvido com alcance de escopo. É ponteiro, não conteúdo: como o corpo do escopo é pago em todo prompt de toda pasta, o glossário inteiro ali dentro viraria armazém. A linha faz o agente saber que o glossário existe; ler é sob demanda.
+
 ## Pasta-referências
 
 Cada escopo aponta para uma pasta-referências via `pasta-referencias:` (tagged path: `home:<rel>` ou `abs:<path>`). Convenção default: `home:koine/<slug-escopo>/`.
@@ -108,3 +120,4 @@ Na Onda 1, fornecimento on-demand resolve: agente pede o dado pessoal quando pre
 
 - `/kn-01-recebe-usuario` — usa este conceito para conduzir a criação do primeiro escopo durante o onboarding.
 - `/kn-02-mantem-catalogo` (fluxo escopo) — usa este conceito para conduzir a criação e edição de escopos adicionais.
+- `/kn-13-sabatina-plano` — resolve a pasta-referências a partir daqui para ler e gravar o glossário do escopo, e escreve a seção `## Glossário` quando ela ainda não existe.

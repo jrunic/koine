@@ -55,7 +55,7 @@ koine-<versao>.zip (koine.pyz + vault/ lado a lado)
        └─ ~/.config/koine/dominios/    ← domínios canônicos plantados
   └─ wrappers.gerar(bindir, pyz, sys.executable)  ← koine + kn-* em ~/.local/bin/
   └─ canonica.configurar()             ← pasta canônica ~/koine + alias + CONTEXTO.md bootstrap
-  └─ skills (detecção no PATH + prompt) ← symlinks kn-* no harness
+  └─ skills (detecção no PATH + prompt) ← cópia dos kn-* no harness
 ```
 
 ## Contrato adapter → materialização
