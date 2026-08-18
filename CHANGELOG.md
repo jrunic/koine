@@ -6,6 +6,8 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-08-18
+
 ### Adicionado — `/kn-13-sabatina-plano`, a skill de entrevista
 
 Skill nova no vault, a décima primeira. Conduz uma sabatina: entrevista o usuário sobre
