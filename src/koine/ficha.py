@@ -33,6 +33,18 @@ def normalizar_arquivo(path: str) -> list[str]:
     novo, chaves = frontmatter.normalizar(texto)
     if not chaves:
         return []
+    # A permissão é checada aqui, e não descoberta pelo `_gravar` estourando: o
+    # backup vem antes da escrita, então a falha tardia deixava um `.bak` órfão
+    # — e, como o arquivo seguia torto, mais um a cada sessão. Visto na VM
+    # AppLocker com `attrib +R`, que é o que máquina corporativa produz.
+    if not os.access(path, os.W_OK):
+        _reportar(path, f"aviso: {path} está somente-leitura — o frontmatter "
+                        f"segue torto no disco. A sessão continua; o Koine lê o "
+                        f"arquivo reparando em memória.")
+        # sem isto o reparo em memória avisaria em seguida, mandando citar o
+        # valor entre aspas — conselho impossível num arquivo somente-leitura
+        frontmatter.silenciar_aviso(path)
+        return []
     try:
         _backup(path, texto)
         _gravar(path, novo)
@@ -57,8 +69,14 @@ def _reportar(path: str, mensagem: str) -> None:
 
 
 def _pode_escrever(path: str) -> bool:
-    """Arquivo regular, fora do vault instalado. O vault é readonly em runtime
-    (quem o escreve é o `koine instalar`) e symlink seria escrita atravessada."""
+    """Arquivo regular, gravável, fora do vault instalado. O vault é readonly em
+    runtime (quem o escreve é o `koine instalar`) e symlink seria escrita
+    atravessada.
+
+    A permissão é checada aqui, e não descoberta pelo `_gravar` estourando: o
+    backup vem antes da escrita, então a falha tardia deixava um `.bak` órfão —
+    e, como o arquivo seguia torto, mais um a cada sessão. Visto na VM
+    AppLocker com `attrib +R`, que é o que máquina corporativa produz."""
     if os.path.islink(path) or not os.path.isfile(path):
         return False
     try:

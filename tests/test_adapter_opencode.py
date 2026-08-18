@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 
 from koine import cache
 from koine.adapters import opencode
@@ -58,6 +59,33 @@ def test_opencode_bootstrap_sem_symlink_contexto_em_instructions(tmp_path, monke
     cfg = json.loads(next(iter(lanc.arquivos_externos.values())))
     assert cfg["instructions"] == [cm.usuario_path, cm.agente_path, cm.contexto_path]
     assert lanc.symlinks == {}
+
+
+def test_opencode_windows_declara_shell_cmd(tmp_path, monkeypatch):
+    # PowerShell bloqueado por política corporativa derruba o bash tool do
+    # opencode com uv_spawn; declarar o shell evita a tentativa.
+    _isolar_home(monkeypatch, tmp_path / "home")
+    monkeypatch.setattr(sys, "platform", "win32")
+    cfg = json.loads(next(iter(opencode.renderizar(_cm(tmp_path)).arquivos_externos.values())))
+    assert cfg["shell"] == "cmd"
+
+
+def test_opencode_fora_do_windows_omite_shell(tmp_path, monkeypatch):
+    # Fora do Windows o shell do sistema resolve; o Koine não decide por ele.
+    _isolar_home(monkeypatch, tmp_path / "home")
+    monkeypatch.setattr(sys, "platform", "darwin")
+    cfg = json.loads(next(iter(opencode.renderizar(_cm(tmp_path)).arquivos_externos.values())))
+    assert "shell" not in cfg
+
+
+def test_opencode_bootstrap_windows_tambem_declara_shell(tmp_path, monkeypatch):
+    # A primeira sessão numa pasta é bootstrap; é onde o usuário novo esbarra.
+    _isolar_home(monkeypatch, tmp_path / "home")
+    monkeypatch.setattr(sys, "platform", "win32")
+    cm = _cm(tmp_path, bootstrap=True, escopo_path="", indice_paths=[])
+    cfg = json.loads(next(iter(opencode.renderizar(cm).arquivos_externos.values())))
+    assert cfg["shell"] == "cmd"
+    assert cfg["instructions"] == [cm.usuario_path, cm.agente_path, cm.contexto_path]
 
 
 def test_opencode_avisa_agents_md_global(tmp_path, monkeypatch, capsys):

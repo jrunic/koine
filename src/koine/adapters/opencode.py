@@ -17,7 +17,8 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     Materializa ~/.cache/koine/opencode-configs/<slot>.json com array
     instructions (paths absolutos). Symlink <pasta>/AGENTS.md → CONTEXTO.md.
     Env OPENCODE_CONFIG + OPENCODE_DISABLE_CLAUDE_CODE=1. Bootstrap: contexto
-    direto em instructions; sem symlink. Avisa se AGENTS.md global existe."""
+    direto em instructions; sem symlink. Avisa se AGENTS.md global existe.
+    Em Windows declara shell=cmd (PowerShell restrito derruba o bash tool)."""
     cfg_path = cache.caminho_arquivo("opencode-configs", cache.slot_id(cm.pasta_abs), "json")
 
     # aviso: ~/.config/opencode/AGENTS.md é mesclado pelo OpenCode em toda sessão
@@ -40,9 +41,16 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
             instructions.append(cm.escopo_path)
         instructions.extend(cm.indice_paths)
 
+    cfg = {"$schema": "https://opencode.ai/config.json", "instructions": instructions}
+    if sys.platform == "win32":
+        # Política corporativa que bloqueia o powershell.exe derruba o bash tool
+        # do opencode com uv_spawn. Declarar o shell tira a decisão do default,
+        # que varia por versão. Literal "cmd" — é a string que o binário do
+        # opencode trata explicitamente ao montar os argumentos.
+        cfg["shell"] = "cmd"
+
     # paridade com json.MarshalIndent(cfg, "", "  ") do Go: indent 2, UTF-8 cru
-    data = json.dumps({"$schema": "https://opencode.ai/config.json",
-                       "instructions": instructions}, indent=2, ensure_ascii=False)
+    data = json.dumps(cfg, indent=2, ensure_ascii=False)
     lanc = Lancamento(
         arquivos_externos={cfg_path: data},
         env_vars={"OPENCODE_CONFIG": cfg_path, "OPENCODE_DISABLE_CLAUDE_CODE": "1"},

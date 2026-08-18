@@ -153,6 +153,13 @@ def normalizar(texto: str) -> tuple[str, list[str]]:
     return candidato, [chave for _, chave, _ in decisoes]
 
 
+def silenciar_aviso(path: str) -> None:
+    """Marca `path` como já avisado. Quem chama é o `ficha`, quando já reportou
+    algo mais preciso sobre o mesmo arquivo — dois subsistemas avisando sobre o
+    mesmo frontmatter é ruído, e o mais específico ganha."""
+    _avisados.add(os.path.abspath(path))
+
+
 def _avisar(path: str, reparos: list[str]) -> None:
     if os.path.abspath(path) in _avisados:
         return

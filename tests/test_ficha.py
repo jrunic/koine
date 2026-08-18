@@ -112,3 +112,36 @@ def test_falha_de_escrita_avisa_uma_vez_por_arquivo(koine_home, monkeypatch, cap
     monkeypatch.setattr("koine.ficha._gravar", explode)
     assert cli.main(["claude", "hermes", koine_home["trab"]]) == 0
     assert capsys.readouterr().err.count("não consegui corrigir") == 1
+
+
+def test_somente_leitura_nao_deixa_backup_orfao(tmp_path):
+    """Achado na VM AppLocker (18/08/2026): com o arquivo somente-leitura o
+    backup era gravado antes da escrita falhar, e como o arquivo nunca ficava
+    válido, cada sessão depositava mais um `.bak.N` na pasta do usuário."""
+    if os.geteuid() == 0:
+        return  # root escreve em 0444; o cenário não existe
+    p = _arquivo(tmp_path, TORTO)
+    os.chmod(p, 0o444)
+    try:
+        assert ficha.normalizar_arquivo(p) == []
+        assert [n for n in os.listdir(tmp_path) if ".bak" in n] == []
+    finally:
+        os.chmod(p, 0o644)
+
+
+def test_somente_leitura_avisa_uma_vez_e_nomeia_a_causa(tmp_path, capsys):
+    """Dois subsistemas avisam sobre o mesmo arquivo (a escrita que falhou e o
+    reparo em memória). Quem sobra tem que ser o que nomeia a causa real —
+    mandar citar entre aspas um arquivo somente-leitura é conselho impossível."""
+    if os.geteuid() == 0:
+        return
+    from koine import frontmatter
+    p = _arquivo(tmp_path, TORTO)
+    os.chmod(p, 0o444)
+    try:
+        frontmatter.ler_arquivo(p, normalizar_disco=True)
+        err = capsys.readouterr().err
+        assert err.count("aviso:") == 1
+        assert "somente-leitura" in err
+    finally:
+        os.chmod(p, 0o644)
