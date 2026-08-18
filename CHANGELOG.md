@@ -6,6 +6,21 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Corrigido — sessão OpenCode no Windows com PowerShell restrito
+
+Em máquina Windows onde a política corporativa bloqueia o `powershell.exe`, o primeiro
+comando de uma sessão `kn-opencode` morria com erro de `uv_spawn`: o OpenCode tentava
+levantar o shell padrão dele e o shell padrão não era executável ali. Os tools nativos
+(`read`, `write`, `edit`, `grep`) seguiam funcionando; o que parava era o `bash` tool e
+o terminal — ou seja, git, instalação de pacote, qualquer comando.
+
+- **O Koine declara o shell.** No Windows, o JSON que o adapter já gera por sessão passa
+  a trazer `"shell": "cmd"`. Vale também na primeira sessão de uma pasta (bootstrap).
+  Fora do Windows nada muda: o shell do sistema continua sendo o do sistema.
+- **Nenhum arquivo do usuário é tocado.** A chave entra no JSON do próprio Koine, que o
+  OpenCode mescla acima da configuração global e **abaixo** da configuração de projeto —
+  quem quiser outro shell num projeto específico continua podendo declarar.
+
 ## [0.5.2] — 2026-08-11
 
 ### Corrigido — frontmatter escrito à mão não derruba mais o Koine

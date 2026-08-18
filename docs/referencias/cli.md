@@ -88,7 +88,7 @@ Sintaxe canônica para abrir sessão de cliente IA com contexto Koine.
 | `kn-claude` | `claude` | `<pasta>/CLAUDE.md` com `@path` includes |
 | `kn-agy` | `agy` | `<pasta>/GEMINI.md` com `@path` includes |
 | `kn-copilot` | `copilot` | `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` apontando para bundle em `~/.cache/koine/copilot-bundles/<slot>/` + symlink `<pasta>/.github/copilot-instructions.md → <pasta>/CONTEXTO.md` |
-| `kn-opencode` | `opencode` | `OPENCODE_CONFIG` apontando para JSON em `~/.cache/koine/opencode-configs/<slot>.json` + symlink `<pasta>/AGENTS.md → <pasta>/CONTEXTO.md` + `OPENCODE_DISABLE_CLAUDE_CODE=1` |
+| `kn-opencode` | `opencode` | `OPENCODE_CONFIG` apontando para JSON em `~/.cache/koine/opencode-configs/<slot>.json` + symlink `<pasta>/AGENTS.md → <pasta>/CONTEXTO.md` + `OPENCODE_DISABLE_CLAUDE_CODE=1`. No Windows, o JSON declara `"shell": "cmd"` |
 
 ### Argumentos
 
