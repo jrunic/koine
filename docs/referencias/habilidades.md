@@ -10,7 +10,7 @@ tags: [referencia, habilidades, skills, kn]
 
 ## Visão geral
 
-Koine distribui **11 skills** no vault (`vault/habilidades/kn-NN-*/SKILL.md`), instaladas em `~/.local/share/koine/habilidades/` pelo `koine instalar` e symlinkadas no harness ativo (ex: `~/.claude/skills/`).
+Koine distribui **11 skills** no vault (`vault/habilidades/kn-NN-*/SKILL.md`), instaladas em `~/.local/share/koine/habilidades/` pelo `koine instalar` e **copiadas** dali para a pasta de skills de cada harness detectado (ex: `~/.claude/skills/`, `~/.config/opencode/skills/`).
 
 **Todo agente Koine pode e deve usar as skills `kn-*`.** Elas são do método, não de um agente — ficam instaladas no harness e disponíveis em qualquer sessão, com Hermes ou com um agente operacional derivado.
 
@@ -369,14 +369,16 @@ Após `koine instalar`:
 └── kn-99-encerra-sessao/SKILL.md
 ```
 
-E symlinks no harness ativo (ex: Claude Code):
+E uma **cópia** em cada harness detectado (ex: Claude Code):
 
 ```
 ~/.claude/skills/
-├── kn-01-recebe-usuario → ~/.local/share/koine/habilidades/kn-01-recebe-usuario
-├── kn-02-mantem-catalogo → ~/.local/share/koine/habilidades/kn-02-mantem-catalogo
+├── kn-01-recebe-usuario/SKILL.md
+├── kn-02-mantem-catalogo/SKILL.md
 └── (...)
 ```
+
+Cópia, não symlink: symlink no Windows exige privilégio de administrador, que o público-alvo não tem. A cópia é idempotente e não-destrutiva — diretório idêntico é pulado, divergente é reportado e preservado, e só `--force` sobrescreve.
 
 Cliente IA descobre skills automaticamente.
 
