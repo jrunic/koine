@@ -21,6 +21,21 @@ o terminal — ou seja, git, instalação de pacote, qualquer comando.
   OpenCode mescla acima da configuração global e **abaixo** da configuração de projeto —
   quem quiser outro shell num projeto específico continua podendo declarar.
 
+### Corrigido — `CONTEXTO.md` somente-leitura não acumula mais `.bak`
+
+Achado na mesma bancada Windows. Com o arquivo marcado `attrib +R`, o Koine gravava o
+backup **antes** de tentar a escrita: criar arquivo novo na pasta não é barrado pelo
+atributo, então o `.bak` sempre nascia e a escrita sempre falhava. Como o arquivo seguia
+torto, a sessão seguinte repetia tudo — `CONTEXTO.md.bak`, `.bak.1`, `.bak.2`, sem fim.
+É o cenário de máquina corporativa, onde o arquivo somente-leitura é a regra.
+
+- **A permissão é checada antes do backup**, não descoberta pela escrita estourando.
+  Nada é criado quando não há como gravar.
+- **Um aviso, e o que nomeia a causa.** Antes saíam dois — o da escrita que falhou e o do
+  reparo em memória, de subsistemas diferentes. O segundo mandava "citar o valor entre
+  aspas duplas", conselho impossível num arquivo que o usuário não pode editar. Agora sai
+  só o que diz que o arquivo está somente-leitura e que a sessão segue.
+
 ## [0.5.2] — 2026-08-11
 
 ### Corrigido — frontmatter escrito à mão não derruba mais o Koine
