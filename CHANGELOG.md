@@ -6,6 +6,11 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.3] — 2026-08-18
+
+Dois defeitos que só existem no Windows, achados na mesma bancada com AppLocker.
+O CI é POSIX-only e não alcançava nenhum dos dois.
+
 ### Corrigido — sessão OpenCode no Windows com PowerShell restrito
 
 Em máquina Windows onde a política corporativa bloqueia o `powershell.exe`, o primeiro
@@ -347,7 +352,9 @@ Initial public release.
 First public release. API, on-disk layout, vault contents and adapter
 behavior may evolve until 1.0.
 
-[Unreleased]: https://github.com/jrunic/koine/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/jrunic/koine/compare/v0.5.3...HEAD
+[0.5.3]: https://github.com/jrunic/koine/compare/v0.5.2...v0.5.3
+[0.5.2]: https://github.com/jrunic/koine/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/jrunic/koine/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/jrunic/koine/compare/v0.4.7...v0.5.0
 [0.4.0]: https://github.com/jrunic/koine/compare/v0.3.2...v0.4.0
