@@ -127,6 +127,7 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
 
 ## Restrições técnicas
 
+- **Repositório público não nomeia a árvore interna do autor** — nem em documento de trabalho, nem em comentário, nem no texto que documenta essa própria regra. Sem caminho absoluto, sem nome de cliente, sem estrutura de pastas interna. Varredura antes de todo push: `git log -p origin/<branch>..HEAD`. ADR `20260822-repo-declara-onde-o-trabalho-acontece` (decisão 5).
 - **Stdlib primeiro.** Nova biblioteca externa requer ADR; dependência de runtime só vendorizada puro-Python (padrão `_vendor/`).
 - **Zero código nativo no pyz** — restrição-âncora da distribuição (AV corporativo bloqueia `.pyd`/`.so`/`.dll`). Guardada por teste (`test_pyz_sem_codigo_nativo`).
 - **XDG direto com fallback** — usar `XDG_CONFIG_HOME`/`XDG_DATA_HOME`/`XDG_CACHE_HOME` com fallback `~/.config/koine/` etc. em todos os SOs (inclusive macOS e Windows). Detalhes: ADR `20260621-estrutura-config-koine.md`.
