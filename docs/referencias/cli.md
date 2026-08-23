@@ -64,14 +64,17 @@ Imprime em stdout o contexto resolvido — usuário, agente, escopo, índices, c
 
 Varre o frontmatter de todo `.md` sob `~/.config/koine/` e sob `pasta` (default: a atual) e reporta o que está torto. Não escreve nada.
 
-Dois estados de achado:
+Três estados de achado:
 
 - **⚠ reparável** — YAML inválido que o Koine lê reparando (valor com `:` sem aspas). A sessão funciona; o arquivo continua inválido para qualquer outra ferramenta.
 - **✗ inválido** — nem o reparo salva (TAB no lugar de espaço, indentação quebrada, bloco que não é `chave: valor`). Nomeia linha e coluna.
+- **✗ sem ficha** — `CONTEXTO.md` sem `escopo:` no frontmatter (inclusive quando o bloco `---` sumiu inteiro). É o estado que impede a pasta de abrir sessão. Só vale para `CONTEXTO.md`; `bootstrap: true` não é achado, e demais `.md` não precisam declarar escopo.
+
+O critério de "sem ficha" é o mesmo que o launch usa para decidir se auto-guia a pasta (`bootstrap.estado_do_fm`) — uma definição só, para a ferramenta que avisa antes não discordar da que barra na hora.
 
 Sai `0` quando não há nada a corrigir e `1` quando há — serve de gate em script.
 
-Com `--corrigir`, os arquivos **reparáveis** são normalizados no disco: o valor ganha aspas, o original vai para `<arquivo>.bak` e o resto do arquivo fica byte a byte igual. Os **inválidos** nunca são reescritos — o Koine só mexe no que sabe consertar, e continua saindo `1` enquanto sobrar algum.
+Com `--corrigir`, os arquivos **reparáveis** são normalizados no disco: o valor ganha aspas, o original vai para `<arquivo>.bak` e o resto do arquivo fica byte a byte igual. Os **inválidos** e os **sem ficha** nunca são reescritos: o Koine só mexe no que sabe consertar, e continua saindo `1` enquanto sobrar algum. Escolher o escopo de uma pasta é decisão do usuário e não se chuta — a saída ali é abrir sessão na pasta e deixar o Hermes repor a ficha preservando o conteúdo.
 
 Os arquivos de configuração que o launch carrega (`CONTEXTO.md` da pasta, escopo, domínio) já são normalizados sozinhos ao abrir a sessão. A pasta-referências fica de fora do automático de propósito: reescrever a sua base de conhecimento é coisa que o Koine só faz quando você pede.
 

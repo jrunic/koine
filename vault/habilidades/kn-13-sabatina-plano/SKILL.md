@@ -153,7 +153,7 @@ Decisões são raras, então aqui a pergunta é caso a caso:
 > "Isso passa nos três critérios e vale registrar. Serve só para este trabalho, ou vale para tudo neste escopo?"
 
 - **Alcance de escopo** → a decisão vira referência com `type: Decisao` na pasta-referências, pela mecânica de `/kn-11-mantem-referencia`: arquivo `<slug>.md` com Ficha Koine completa, `index.md` atualizado e entrada nova em `log.md`. Siga aquela skill para materializar — não escreva o arquivo por fora.
-- **Alcance de pasta** → a decisão fica na própria pasta de trabalho. Cabendo em uma ou duas frases, é uma linha em `CONTEXTO.md`; sendo densa, é um `<slug>.md` na raiz da pasta com a linha em `CONTEXTO.md` apontando.
+- **Alcance de pasta** → a decisão fica na própria pasta de trabalho. Cabendo em uma ou duas frases, é uma linha em `CONTEXTO.md`; sendo densa, é um `<slug>.md` na raiz da pasta com a linha em `CONTEXTO.md` apontando. Acrescente a linha sem reescrever o arquivo: o bloco `---` do topo é a Ficha Koine, e sem `escopo:` a pasta para de abrir sessão.
 
 ### O que o registro contém
 

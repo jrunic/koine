@@ -71,6 +71,15 @@ def classificar(pasta: str) -> str:
         # YAML que nem o reparo salva → malformado: erro amigável, nunca clobber.
         # Frontmatter ruim é dado ruim numa pasta, não motivo para o Koine cair.
         return MALFORMADO
+    return estado_do_fm(fm)
+
+
+def estado_do_fm(fm: dict) -> str:
+    """Estado de um CONTEXTO.md já parseado: BOOTSTRAP, VALIDO ou INCOMPLETO.
+
+    Fonte única do critério. O launch (`classificar`) e o `koine validar` leem
+    daqui — duas definições separadas divergem com o tempo, e aí a ferramenta
+    que deveria avisar antes passa a discordar da que barra na hora."""
     if fm.get("bootstrap"):
         return BOOTSTRAP
     if fm.get("escopo"):

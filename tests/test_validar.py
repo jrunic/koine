@@ -136,3 +136,97 @@ def test_corrigir_alcanca_a_pasta_de_referencias(koine_home, monkeypatch, capsys
     assert 'description: "gog instalado: v0.34.1"' in \
         open(ref, encoding="utf-8").read()
     assert "nota.md" in capsys.readouterr().out
+
+
+# ---- ficha faltando: o estado que derruba a sessão -------------------------
+# O `validar` nasceu cego para ele. Cinco pastas de um usuário real ficaram sem
+# `escopo:` e o comando respondia "nenhum problema encontrado" — justo o estado
+# que impede a sessão de abrir.
+
+SEM_BLOCO = "# Minhas pendências\n\nConteúdo do usuário, sem frontmatter nenhum.\n"
+SEM_ESCOPO = "---\ndescricao: gestao de pendencias\n---\n\n# Pendências\n"
+BOOTSTRAP = "---\nbootstrap: true\n---\n\n# Bootstrap\n"
+
+
+def test_contexto_sem_bloco_de_frontmatter_vira_achado(tmp_path):
+    _escrever(tmp_path, "CONTEXTO.md", SEM_BLOCO)
+    achados = validar.varrer([str(tmp_path)])
+    assert [a.estado for a in achados] == [validar.SEM_FICHA]
+
+
+def test_contexto_com_frontmatter_mas_sem_escopo_vira_achado(tmp_path):
+    _escrever(tmp_path, "CONTEXTO.md", SEM_ESCOPO)
+    assert [a.estado for a in validar.varrer([str(tmp_path)])] == [validar.SEM_FICHA]
+
+
+def test_contexto_de_bootstrap_nao_vira_achado(tmp_path):
+    """A pasta canônica durante o onboarding não tem escopo — e está certa
+    assim. Alarme aqui seria falso positivo em toda instalação nova."""
+    _escrever(tmp_path, "CONTEXTO.md", BOOTSTRAP)
+    assert validar.varrer([str(tmp_path)]) == []
+
+
+def test_arquivo_que_nao_e_contexto_nao_precisa_de_escopo(tmp_path):
+    """Referência da /kn-11 não declara escopo — o critério é só do CONTEXTO.md."""
+    _escrever(tmp_path, "refs/uma-referencia.md", "---\ntitle: Uma\n---\n\n# Uma\n")
+    assert validar.varrer([str(tmp_path)]) == []
+
+
+def test_relatorio_de_ficha_faltando_diz_o_que_fazer(tmp_path):
+    _escrever(tmp_path, "CONTEXTO.md", SEM_BLOCO)
+    texto = validar.relatorio(validar.varrer([str(tmp_path)]))
+    assert "escopo:" in texto
+    assert "hermes" in texto.lower()  # a saída é abrir sessão, não editar YAML
+
+
+# Sem `escopo:` E com valor mal citado ao mesmo tempo. É o caso que dá poder ao
+# teste do `--corrigir`: num arquivo só sem-ficha não há o que normalizar, então
+# ele ficaria pendente mesmo sem o guard — o teste passaria por acidente.
+SEM_ESCOPO_E_REPARAVEL = "---\ndescricao: Vendas B2B: metas\n---\n\n# Pendências\n"
+
+
+def test_corrigir_nao_inventa_escopo(tmp_path):
+    """`--corrigir` conserta valor mal citado. Escolher o escopo é do usuário —
+    fica pendente, nunca chutado, e o arquivo não é reescrito no caminho."""
+    p = _escrever(tmp_path, "CONTEXTO.md", SEM_ESCOPO_E_REPARAVEL)
+    corrigidos, pendentes = validar.corrigir(validar.varrer([str(tmp_path)]))
+    assert corrigidos == []
+    assert [a.estado for a in pendentes] == [validar.SEM_FICHA]
+    assert open(p, encoding="utf-8").read() == SEM_ESCOPO_E_REPARAVEL  # intocado
+    assert not os.path.exists(p + ".bak")
+
+
+def test_sem_ficha_tem_precedencia_sobre_reparavel(tmp_path):
+    """Os dois problemas no mesmo arquivo: reporta o que impede a sessão de
+    abrir. O valor mal citado aparece na varredura seguinte, depois que a ficha
+    voltar — arrumar aspas num arquivo que nem abre sessão é ordem errada."""
+    _escrever(tmp_path, "CONTEXTO.md", SEM_ESCOPO_E_REPARAVEL)
+    assert [a.estado for a in validar.varrer([str(tmp_path)])] == [validar.SEM_FICHA]
+
+
+def test_corrigir_nao_toca_arquivo_sem_frontmatter_nenhum(tmp_path):
+    p = _escrever(tmp_path, "CONTEXTO.md", SEM_BLOCO)
+    corrigidos, pendentes = validar.corrigir(validar.varrer([str(tmp_path)]))
+    assert corrigidos == []
+    assert [a.estado for a in pendentes] == [validar.SEM_FICHA]
+    assert open(p, encoding="utf-8").read() == SEM_BLOCO
+
+
+def test_validar_e_launch_concordam_sobre_a_mesma_pasta(tmp_path):
+    """Critério único: o que o launch chama de `incompleto` é o que o validar
+    acusa. Duas definições separadas divergem com o tempo — esta é a trava."""
+    from koine import bootstrap
+    for conteudo, incompleto in ((SEM_BLOCO, True), (SEM_ESCOPO, True),
+                                 (BOOTSTRAP, False), (BOM, False)):
+        _escrever(tmp_path, "CONTEXTO.md", conteudo)
+        estado_launch = bootstrap.classificar(str(tmp_path))
+        achados = validar.varrer([os.path.join(str(tmp_path), "CONTEXTO.md")])
+        assert (estado_launch == bootstrap.INCOMPLETO) == incompleto
+        assert bool([a for a in achados if a.estado == validar.SEM_FICHA]) == incompleto
+
+
+def test_cmd_validar_sai_1_com_ficha_faltando(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("HOME", str(tmp_path))
+    _escrever(tmp_path, "trab/CONTEXTO.md", SEM_BLOCO)
+    assert cli.main(["validar", os.path.join(str(tmp_path), "trab")]) == 1
+    assert "escopo:" in capsys.readouterr().out
