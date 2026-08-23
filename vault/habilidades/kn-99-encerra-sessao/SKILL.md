@@ -216,6 +216,8 @@ Sem despedida arrastada. O agente Koine encerra como abre — direto.
 
 > Ao invocar `/kn-99`: síntese — "Exploração sobre prioridades do trimestre; sem decisão tomada; tópicos levantados: A, B, C". Checklist: nada a catalogar (sem decisão); nada estrutural mudou. Diário curto em `<pasta>/diario/AAAAMMDD-exploracao-prioridades.md` registrando os 3 tópicos como ganchos para sessão futura. Voz do Usuário transcrita integralmente — preserva o material para retomar depois.
 
+---
+
 ## O que NÃO faz
 
 - **Não cataloga referência diretamente.** Catalogação é `/kn-11-mantem-referencia`. `/kn-99` orquestra (propõe `/kn-11` quando aplicável), mas não duplica a entrevista.
