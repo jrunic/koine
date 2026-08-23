@@ -88,13 +88,22 @@ Pasta de teste do Koine no macOS. Cliente IA padrão: Claude Code.
 - Validar instalação em Windows quando tiver a VM pronta
 ```
 
-## Comportamento se faltar `CONTEXTO.md`
+## Comportamento se faltar `CONTEXTO.md` — ou se ele estiver sem `escopo:`
 
-`kn-<cliente> hermes <pasta>` em pasta sem `CONTEXTO.md` entra em **modo bootstrap**:
+`kn-<cliente> <agente> <pasta>` em pasta sem `CONTEXTO.md` entra em **modo bootstrap**:
 
 1. Gera contexto reduzido: usuário + KOINE.md + Hermes
 2. Lança o cliente IA
-3. Hermes guia a criação do `CONTEXTO.md` via `/kn-02-mantem-catalogo` (fluxo contexto)
+3. Hermes guia a criação do `CONTEXTO.md` via `/kn-02-mantem-catalogo` (Fluxo 3a)
+
+Pasta cujo `CONTEXTO.md` **existe e é legível, mas não declara `escopo:`** também
+é auto-guiada — e aí o Koine **não escreve nada na pasta**: o arquivo é trabalho
+do usuário. A sessão recebe a instrução do vault mais o arquivo original, e
+Hermes conduz o **Fluxo 3b** (atualizar existente), acrescentando o escopo e
+preservando o conteúdo.
+
+Só YAML irreparável (ou arquivo ilegível) continua sendo erro — com arquivo,
+linha e coluna, e sem tocar no arquivo.
 
 Detalhes: ADR [`20260620-contexto-md-local-sem-cascata.md`](../decisoes/20260620-contexto-md-local-sem-cascata.md).
 

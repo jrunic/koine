@@ -109,7 +109,7 @@ Ao materializar (`CLAUDE.md`, `GEMINI.md`, symlinks):
 
 ### Modo bootstrap
 
-Dois caminhos disparam carregamento reduzido (sem escopo nem domínios):
+Três caminhos disparam carregamento reduzido (sem escopo nem domínios):
 
 **1. Bootstrap implícito** — pasta sem `CONTEXTO.md`:
 
@@ -129,6 +129,34 @@ Hermes guia o usuário a criar o contexto via `/kn-02-mantem-catalogo` (fluxo co
 5. Lança o cliente.
 
 Este caminho é usado pelo `koine instalar` para a pasta canônica `~/koine` — o `CONTEXTO.md` gerado instrui Hermes a iniciar `/kn-01-recebe-usuario` automaticamente. Ao final do onboarding, `/kn-01` reescreve o `CONTEXTO.md` substituindo `bootstrap: true` pelo escopo `koine` real, e o caminho de bootstrap explícito deixa de disparar.
+
+**3. Pasta com `CONTEXTO.md` sem `escopo:`** — o arquivo existe, é legível, mas
+o frontmatter não declara escopo (nem `bootstrap: true`):
+
+1. `classificar` devolve o estado `incompleto`.
+2. O Koine **não escreve nada na pasta** — o `CONTEXTO.md` é do usuário.
+3. Carrega contexto reduzido + a instrução `vault/bootstrap/pasta-incompleta.md`
+   **e** o `CONTEXTO.md` original, para o agente ler o conteúdo existente.
+4. Força agente Hermes.
+5. Lança o cliente. Hermes conduz `/kn-02-mantem-catalogo` **Fluxo 3b**
+   (atualizar existente), preservando o conteúdo e acrescentando o escopo.
+
+Até a v0.6.0 esse estado era erro fatal com instrução para o usuário editar YAML
+à mão — o que travou um usuário em produção.
+
+### Estados de uma pasta de sessão
+
+| Estado | O que é | O que o launch faz |
+|---|---|---|
+| `valido` | `escopo:` declarado | sessão normal |
+| `bootstrap` | `bootstrap: true` | bootstrap explícito (caminho 2) |
+| `ausente` / `vazio` | sem arquivo, ou vazio | materializa CONTEXTO de bootstrap (caminho 1) |
+| `incompleto` | legível, sem `escopo:` | auto-guia sem tocar no arquivo (caminho 3) |
+| `malformado` | YAML irreparável ou ilegível | erro com arquivo/linha/coluna; preserva |
+
+Usuário ainda **não** onboardado cai em redirect para `koine instalar` nos estados
+`ausente`, `vazio` e `incompleto` — o Koine nunca dispara `/kn-01` numa pasta
+arbitrária.
 
 Ver ADR `20260627-bootstrap-flag-em-contexto-md.md`.
 

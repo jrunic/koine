@@ -33,6 +33,9 @@ def _render(cm: ContextoMontado) -> str:
         add("Escopo", cm.escopo_path)
         for ip in cm.indice_paths:
             add("Referências — " + render.dominio_de(ip), ip)
+    # INLINE: a instrução tem de vir embutida, não referenciada — o codex não
+    # segue @path (ver ADR do mecanismo B).
+    add("Instrução do Koine para esta sessão", cm.instrucao_path)
     if cm.contexto_path:
         try:
             with open(cm.contexto_path, encoding="utf-8") as f:

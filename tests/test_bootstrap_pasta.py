@@ -30,9 +30,28 @@ def test_classificar_vazio(tmp_path):
     assert bootstrap.classificar(str(tmp_path)) == bootstrap.VAZIO
 
 
-def test_classificar_malformado(tmp_path):
-    # tem conteúdo, FM sem escopo nem bootstrap
+def test_classificar_incompleto_sem_frontmatter(tmp_path):
+    # tem conteúdo, nenhum frontmatter → parseia como {} → INCOMPLETO
     (tmp_path / "CONTEXTO.md").write_text("# Anotações soltas\n\ntexto qualquer\n")
+    assert bootstrap.classificar(str(tmp_path)) == bootstrap.INCOMPLETO
+
+
+def test_classificar_incompleto_frontmatter_sem_escopo(tmp_path):
+    # o caso da produção: YAML válido, sem `escopo:` e sem `bootstrap:`
+    (tmp_path / "CONTEXTO.md").write_text(
+        "---\ndescricao: gestao de pendencias\n---\n\n# Pendências\n")
+    assert bootstrap.classificar(str(tmp_path)) == bootstrap.INCOMPLETO
+
+
+def test_classificar_incompleto_escopo_vazio(tmp_path):
+    # `escopo:` presente mas sem valor é tão inútil quanto ausente
+    (tmp_path / "CONTEXTO.md").write_text("---\nescopo:\ndescricao: x\n---\n# t\n")
+    assert bootstrap.classificar(str(tmp_path)) == bootstrap.INCOMPLETO
+
+
+def test_classificar_malformado_so_para_yaml_irreparavel(tmp_path):
+    # tab dentro de lista: nem o reparo tolerante salva → MALFORMADO (não INCOMPLETO)
+    (tmp_path / "CONTEXTO.md").write_text("---\nchave:\n\t- item\n---\n")
     assert bootstrap.classificar(str(tmp_path)) == bootstrap.MALFORMADO
 
 
@@ -77,14 +96,65 @@ def test_launch_onboarded_vazio_materializa(koine_home, monkeypatch):
     assert "bootstrap: true" in open(os.path.join(nova, "CONTEXTO.md"), encoding="utf-8").read()
 
 
-# ---- launch: onboarded + malformado → erro amigável, preserva --------------
+# ---- launch: onboarded + incompleto → auto-guia SEM tocar no arquivo ---------
+
+def test_launch_onboarded_incompleto_guia_e_preserva(koine_home, monkeypatch):
+    """Bug de produção (v0.6.1): CONTEXTO.md com frontmatter válido e sem
+    `escopo:` encerrava com exit 1 mandando o usuário editar YAML. Agora guia."""
+    monkeypatch.setenv("HOME", koine_home["home"])
+    cap = _seam(monkeypatch)
+    nova = os.path.join(koine_home["home"], "trabalho-incompleto")
+    os.makedirs(nova)
+    original = "---\ndescricao: gestao de pendencias\n---\n\n# Pendências\n\nconteúdo do usuário\n"
+    open(os.path.join(nova, "CONTEXTO.md"), "w", encoding="utf-8").write(original)
+
+    rc = cli.main(["claude", "David", nova])  # agente inexistente: bootstrap força Hermes
+
+    assert rc == 0
+    # o arquivo do usuário fica intocado — byte a byte
+    assert open(os.path.join(nova, "CONTEXTO.md"), encoding="utf-8").read() == original
+    claude = open(os.path.join(nova, "CLAUDE.md"), encoding="utf-8").read()
+    assert "hermes.md" in claude                    # agente pedido é ignorado
+    assert "pasta-incompleta.md" in claude          # instrução do vault entra no contexto
+    assert os.path.join(nova, "CONTEXTO.md") in claude  # e o arquivo do usuário também
+    assert cap == {"cliente": "claude", "pasta": nova}
+
+
+def test_launch_incompleto_nao_materializa_nada_na_pasta(koine_home, monkeypatch):
+    """Só o CLAUDE.md do adapter — nenhum arquivo de bootstrap na pasta do usuário."""
+    monkeypatch.setenv("HOME", koine_home["home"])
+    _seam(monkeypatch)
+    nova = os.path.join(koine_home["home"], "trab-inc-limpo"); os.makedirs(nova)
+    open(os.path.join(nova, "CONTEXTO.md"), "w", encoding="utf-8").write("# só isso\n")
+
+    assert cli.main(["claude", "hermes", nova]) == 0
+    assert sorted(os.listdir(nova)) == ["CLAUDE.md", "CONTEXTO.md"]
+
+
+def test_launch_incompleto_nao_onboarded_redireciona(tmp_path, monkeypatch, capsys):
+    home = str(tmp_path / "home"); os.makedirs(home)
+    monkeypatch.setenv("HOME", home)
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    _seam(monkeypatch)
+    nova = os.path.join(home, "qualquer"); os.makedirs(nova)
+    original = "# trabalho\n"
+    open(os.path.join(nova, "CONTEXTO.md"), "w", encoding="utf-8").write(original)
+
+    rc = cli.main(["claude", "hermes", nova])
+
+    assert rc == 1
+    assert open(os.path.join(nova, "CONTEXTO.md"), encoding="utf-8").read() == original
+    assert "koine instalar" in capsys.readouterr().err
+
+
+# ---- launch: onboarded + YAML irreparável → erro amigável, preserva --------
 
 def test_launch_onboarded_malformado_erra_e_preserva(koine_home, monkeypatch, capsys):
     monkeypatch.setenv("HOME", koine_home["home"])
     _seam(monkeypatch)
     nova = os.path.join(koine_home["home"], "trabalho-malf")
     os.makedirs(nova)
-    original = "# Meu trabalho\n\nconteúdo importante do usuário\n"
+    original = "---\nchave:\n\t- item\n---\n\nconteúdo importante do usuário\n"
     open(os.path.join(nova, "CONTEXTO.md"), "w", encoding="utf-8").write(original)
 
     rc = cli.main(["claude", "hermes", nova])
@@ -92,7 +162,7 @@ def test_launch_onboarded_malformado_erra_e_preserva(koine_home, monkeypatch, ca
     assert rc == 1
     assert open(os.path.join(nova, "CONTEXTO.md"), encoding="utf-8").read() == original  # preservado
     assert not os.path.exists(os.path.join(nova, "CLAUDE.md"))  # não materializou
-    assert "incompleto" in capsys.readouterr().err
+    assert "linha" in capsys.readouterr().err  # erro nomeia onde o YAML quebrou
 
 
 # ---- launch: NÃO onboarded → redirect, sem materializar --------------------
@@ -191,3 +261,41 @@ def test_launch_codex_onboarded_ausente_materializa(koine_home, monkeypatch):
     assert "/kn-02-mantem-catalogo" in agents
     assert "hermes" in agents.lower()
     assert cap["cliente"] == "codex"
+
+
+# ---- gerar / mostrar em pasta incompleta: erro, sem materializar -----------
+
+def test_gerar_incompleto_erra_sem_escrever(koine_home, monkeypatch, capsys):
+    monkeypatch.setenv("HOME", koine_home["home"])
+    nova = os.path.join(koine_home["home"], "trab-gerar-inc"); os.makedirs(nova)
+    open(os.path.join(nova, "CONTEXTO.md"), "w", encoding="utf-8").write("# nada\n")
+
+    assert cli.main(["gerar", "hermes", nova]) == 1
+    assert not os.path.exists(os.path.join(nova, "CLAUDE.md"))
+    assert "CONTEXTO.md" in capsys.readouterr().err
+
+
+def test_mostrar_incompleto_erra(koine_home, monkeypatch, capsys):
+    monkeypatch.setenv("HOME", koine_home["home"])
+    nova = os.path.join(koine_home["home"], "trab-mostrar-inc"); os.makedirs(nova)
+    open(os.path.join(nova, "CONTEXTO.md"), "w", encoding="utf-8").write("# nada\n")
+
+    assert cli.main(["mostrar", "hermes", nova]) == 1
+    assert "CONTEXTO.md" in capsys.readouterr().err
+
+
+# ---- codex (INLINE): a instrução precisa estar EMBUTIDA, não referenciada ---
+
+def test_launch_codex_incompleto_embute_instrucao_e_conteudo(koine_home, monkeypatch):
+    monkeypatch.setenv("HOME", koine_home["home"])
+    _seam(monkeypatch)
+    nova = os.path.join(koine_home["home"], "trab-codex-inc"); os.makedirs(nova)
+    open(os.path.join(nova, "CONTEXTO.md"), "w", encoding="utf-8").write(
+        "---\ndescricao: pendencias\n---\n\n# Pendências\n\nmarcador-do-usuario\n")
+
+    assert cli.main(["codex", "David", nova]) == 0
+    agents = open(os.path.join(nova, "AGENTS.md"), encoding="utf-8").read()
+    assert "/kn-02-mantem-catalogo" in agents      # a instrução veio junto
+    assert "3b" in agents                          # e é o sub-fluxo de ATUALIZAR
+    assert "marcador-do-usuario" in agents         # o conteúdo do usuário também
+    assert "hermes" in agents.lower()

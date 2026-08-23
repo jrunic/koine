@@ -45,5 +45,8 @@ def _render_bootstrap(cm: ContextoMontado) -> str:
         linhas.append(f"@{cm.usuario_path}")
     linhas.append(f"@{cm.koine_path}")
     linhas.append(f"@{cm.agente_path}")
+    if cm.instrucao_path:
+        # instrução antes do contexto: o agente lê o que fazer, depois o material
+        linhas.append(f"@{cm.instrucao_path}")
     linhas.append(f"@{cm.contexto_path}")
     return "\n".join(linhas) + "\n\n"

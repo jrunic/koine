@@ -231,17 +231,16 @@ def pasta_sem_contexto_admin(pasta: str) -> str:
     )
 
 
-def contexto_malformado(pasta: str) -> str:
-    """CONTEXTO.md existe com conteúdo, mas o frontmatter não declara `escopo:`
-    nem `bootstrap:`. Não sobrescreve (pode ser trabalho do usuário) — pede
-    correção."""
+def contexto_ilegivel(pasta: str) -> str:
+    """CONTEXTO.md existe mas o Koine não conseguiu lê-lo (binário, permissão,
+    encoding). Frontmatter só incompleto NÃO cai aqui — esse caso é auto-guiado
+    pelo launch desde a v0.6.1."""
     return (
-        f"  O CONTEXTO.md desta pasta existe mas está incompleto:\n"
+        f"  Não consegui ler o CONTEXTO.md desta pasta:\n"
         f"    {os.path.join(pasta, 'CONTEXTO.md')}\n"
         "\n"
-        "  Falta declarar `escopo:` no frontmatter (YAML no topo do arquivo).\n"
-        "  Corrija o frontmatter, ou remova/esvazie o arquivo e abra a sessão com\n"
-        "  o Hermes (`kn-<cliente> hermes .`) para o Koine reconfigurá-la.\n"
+        "  O arquivo existe, mas não é texto legível (binário, permissão negada\n"
+        "  ou encoding inesperado). Confira o arquivo — o Koine não o alterou.\n"
     )
 
 

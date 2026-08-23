@@ -180,8 +180,8 @@ def _pyz_padrao() -> str:
 def _montar_cm(agente: str, pasta: str) -> contexto.ContextoMontado:
     ctx_path = os.path.join(pasta, "CONTEXTO.md")
     fm, _ = frontmatter.ler_arquivo(ctx_path, normalizar_disco=True)
-    # bootstrap não tem escopo nem índices; contexto.resolver trata o ramo.
-    if not fm.get("bootstrap"):
+    # bootstrap e pasta incompleta não têm escopo nem índices; resolver trata os ramos.
+    if not fm.get("bootstrap") and fm.get("escopo"):
         # índices antes do render (o adapter os referencia)
         escopo_fm, _ = frontmatter.ler_arquivo(
             contexto.resolver_escopo_path(paths.config_dir(), fm["escopo"]),
@@ -248,7 +248,8 @@ def _cmd_gerar(args: list[str]) -> int:
         print(str(e), file=sys.stderr)
         return 1
     if _bootstrap.classificar(pasta) in (
-            _bootstrap.AUSENTE, _bootstrap.VAZIO, _bootstrap.MALFORMADO):
+            _bootstrap.AUSENTE, _bootstrap.VAZIO, _bootstrap.INCOMPLETO,
+            _bootstrap.MALFORMADO):
         erro = _bootstrap.erro_frontmatter(pasta)
         print(mensagens.frontmatter_invalido(erro) if erro
               else mensagens.pasta_sem_contexto_admin(pasta), file=sys.stderr)
@@ -277,7 +278,8 @@ def _cmd_mostrar(args: list[str]) -> int:
     agente, alvo = args[0], args[1]
     # alvo NÃO resolve alias — comportamento congelado de `mostrar` (arg cru)
     if _bootstrap.classificar(alvo) in (
-            _bootstrap.AUSENTE, _bootstrap.VAZIO, _bootstrap.MALFORMADO):
+            _bootstrap.AUSENTE, _bootstrap.VAZIO, _bootstrap.INCOMPLETO,
+            _bootstrap.MALFORMADO):
         erro = _bootstrap.erro_frontmatter(alvo)
         print(mensagens.frontmatter_invalido(erro) if erro
               else mensagens.pasta_sem_contexto_admin(alvo), file=sys.stderr)
@@ -395,10 +397,17 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
         with open(ctx, "w", encoding="utf-8") as f:
             f.write(_bootstrap.CONTEXTO_CONFIGURA_PASTA)
         # resolver vê `bootstrap: true` e força Hermes — o agente pedido é ignorado.
+    elif estado == _bootstrap.INCOMPLETO:
+        # CONTEXTO.md do usuário sem `escopo:`. Não materializa nada: o arquivo é
+        # dele. `contexto.resolver` devolve CM de bootstrap com a instrução do
+        # vault + o arquivo original, e o Hermes completa via /kn-02 Fluxo 3b.
+        if not _bootstrap.usuario_onboarded(paths.config_dir()):
+            print(mensagens.pasta_sem_contexto_nao_onboarded(cliente), file=sys.stderr)
+            return 1
     elif estado == _bootstrap.MALFORMADO:
         erro = _bootstrap.erro_frontmatter(pasta)
         print(mensagens.frontmatter_invalido(erro) if erro
-              else mensagens.contexto_malformado(pasta), file=sys.stderr)
+              else mensagens.contexto_ilegivel(pasta), file=sys.stderr)
         return 1
     try:
         cm = _montar_cm(agente, pasta)

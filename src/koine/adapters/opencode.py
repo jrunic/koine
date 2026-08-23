@@ -31,6 +31,8 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     if cm.usuario_path:
         instructions.append(cm.usuario_path)
     instructions.append(cm.agente_path)
+    if cm.instrucao_path:
+        instructions.append(cm.instrucao_path)
     if cm.bootstrap:
         # Bootstrap explícito: CONTEXTO.md vai direto em instructions
         # (não há symlink AGENTS.md → CONTEXTO.md em bootstrap, ver bloco final).
