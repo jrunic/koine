@@ -97,8 +97,8 @@ Pasta de teste do Koine no macOS. Cliente IA padrão: Claude Code.
 3. Hermes guia a criação do `CONTEXTO.md` via `/kn-02-mantem-catalogo` (Fluxo 3a)
 
 Pasta cujo `CONTEXTO.md` **existe e é legível, mas não declara `escopo:`** também
-é auto-guiada — e aí o Koine **não escreve nada na pasta**: o arquivo é trabalho
-do usuário. A sessão recebe a instrução do vault mais o arquivo original, e
+é auto-guiada — e aí o Koine **não toca nesse arquivo**: ele é trabalho do usuário.
+A pasta recebe só o arquivo do harness, como em qualquer sessão. A sessão recebe a instrução do vault mais o arquivo original, e
 Hermes conduz o **Fluxo 3b** (atualizar existente), acrescentando o escopo e
 preservando o conteúdo.
 

@@ -398,9 +398,9 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
             f.write(_bootstrap.CONTEXTO_CONFIGURA_PASTA)
         # resolver vê `bootstrap: true` e força Hermes — o agente pedido é ignorado.
     elif estado == _bootstrap.INCOMPLETO:
-        # CONTEXTO.md do usuário sem `escopo:`. Não materializa nada: o arquivo é
-        # dele. `contexto.resolver` devolve CM de bootstrap com a instrução do
-        # vault + o arquivo original, e o Hermes completa via /kn-02 Fluxo 3b.
+        # CONTEXTO.md do usuário sem `escopo:`. Não se escreve sobre ele: é dele.
+        # `contexto.resolver` devolve CM de bootstrap com a instrução do vault + o
+        # arquivo original, e o Hermes completa via /kn-02 Fluxo 3b.
         if not _bootstrap.usuario_onboarded(paths.config_dir()):
             print(mensagens.pasta_sem_contexto_nao_onboarded(cliente), file=sys.stderr)
             return 1

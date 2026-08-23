@@ -134,7 +134,8 @@ Este caminho é usado pelo `koine instalar` para a pasta canônica `~/koine` —
 o frontmatter não declara escopo (nem `bootstrap: true`):
 
 1. `classificar` devolve o estado `incompleto`.
-2. O Koine **não escreve nada na pasta** — o `CONTEXTO.md` é do usuário.
+2. O Koine **não toca no `CONTEXTO.md`** — ele é do usuário. Escreve só o arquivo
+   do harness, como em qualquer sessão; os adapters de bundle não criam symlink.
 3. Carrega contexto reduzido + a instrução `vault/bootstrap/pasta-incompleta.md`
    **e** o `CONTEXTO.md` original, para o agente ler o conteúdo existente.
 4. Força agente Hermes.

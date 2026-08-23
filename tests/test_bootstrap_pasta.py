@@ -121,7 +121,9 @@ def test_launch_onboarded_incompleto_guia_e_preserva(koine_home, monkeypatch):
 
 
 def test_launch_incompleto_nao_materializa_nada_na_pasta(koine_home, monkeypatch):
-    """Só o CLAUDE.md do adapter — nenhum arquivo de bootstrap na pasta do usuário."""
+    """Só o arquivo do harness — nenhum artefato de bootstrap e nenhum symlink na
+    pasta do usuário. O CLAUDE.md é o de sempre; o que NÃO pode aparecer é um
+    CONTEXTO.md de bootstrap materializado ao lado do arquivo dele."""
     monkeypatch.setenv("HOME", koine_home["home"])
     _seam(monkeypatch)
     nova = os.path.join(koine_home["home"], "trab-inc-limpo"); os.makedirs(nova)

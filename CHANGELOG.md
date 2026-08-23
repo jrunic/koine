@@ -18,7 +18,8 @@ produção, e atualizar de versão não resolvia — a entrada do ramo é o cont
 arquivo, que versão nenhuma toca.
 
 Agora esse estado (`incompleto`) é auto-guiado, com uma regra dura: **o Koine não
-escreve nada na pasta**. A sessão sobe em modo bootstrap com Hermes, recebendo a
+toca no `CONTEXTO.md`** — escreve só o arquivo do harness (`CLAUDE.md`, `AGENTS.md`),
+como em qualquer sessão, e nenhum symlink. A sessão sobe em modo bootstrap com Hermes, recebendo a
 instrução `vault/bootstrap/pasta-incompleta.md` mais o `CONTEXTO.md` original — e o
 Hermes conduz `/kn-02-mantem-catalogo` Fluxo 3b, que acrescenta o escopo preservando o
 conteúdo existente.
