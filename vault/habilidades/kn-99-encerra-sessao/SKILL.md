@@ -57,6 +57,14 @@ Aguarde correções. Não economize aqui — síntese mal feita prejudica todas 
 
 **Antes de escrever o diário**, percorra o checklist abaixo. Para cada pergunta `sim`, execute a ação **antes** de continuar — não deixe para depois.
 
+> **Ao editar o `CONTEXTO.md`, edite por acréscimo — nunca reescreva o arquivo
+> inteiro.** O bloco `---` do topo é a Ficha Koine: é `escopo:` que faz a pasta
+> abrir sessão. Reescrever o arquivo "com a seção nova" costuma levar a ficha
+> junto, e o estrago só aparece na próxima sessão, com uma mensagem que não
+> menciona o que se perdeu. Insira a linha ou a seção, deixe o resto como está,
+> e **depois de gravar confira**: o arquivo ainda começa com `---` e ainda tem
+> `escopo:`. Na dúvida, rode `koine validar <pasta>`.
+
 - **Conhecimento catalogável surgiu?** (pessoa nova relevante, organização stakeholder, decisão com motivação registrável, aprendizado, evento) → **pergunte o alcance ao usuário**: *"Esta referência se aplica a outras pastas de trabalho deste escopo?"*. Você (agente) não tem como saber — só o usuário sabe.
   - **Sim — outras pastas usam** → `/kn-11-mantem-referencia` (alcance de escopo; vai para pasta-referências).
   - **Não — só esta pasta**, e cabe em 1-2 frases → **edita `CONTEXTO.md` direto**: linha em seção "Referências locais" (cria a seção se ainda não existe) com nome do conceito + 1 linha de descrição.
@@ -158,7 +166,25 @@ AAAAMMDD — sessao — <pasta-de-trabalho> — <síntese curta>
 
 Caso contrário, **pular esta rodada** — `/kn-11` e `/kn-02` já cuidam do `log.md` quando invocadas. Não duplique entradas.
 
-### Rodada 5 — Fechamento
+### Rodada 5 — Verificação de efeito
+
+A sessão pode ter escrito no `CONTEXTO.md` da pasta (checklist da Rodada 2).
+**Antes de encerrar, confirme que a pasta continua abrindo sessão:**
+
+```bash
+koine validar <pasta-de-trabalho>
+```
+
+Esperado: `Frontmatter: nenhum problema encontrado.` Se aparecer `sem `escopo:`
+no frontmatter`, a ficha se perdeu numa das edições desta sessão — reponha o
+bloco `---` do topo **agora**, com o usuário ainda em sessão e o conteúdo ainda
+fresco. Um `CONTEXTO.md` sem ficha só dá sinal na próxima vez que alguém abrir a
+pasta, e aí ninguém lembra o que estava escrito lá.
+
+Se o comando não existir na máquina (instalação antiga), confira à mão: o
+arquivo começa com `---` e tem a linha `escopo:`.
+
+### Rodada 6 — Fechamento
 
 Apresente resumo final:
 
@@ -189,8 +215,6 @@ Sem despedida arrastada. O agente Koine encerra como abre — direto.
 **Sessão exploratória (sem produção).** Usuário abriu Claude para "pensar em voz alta" sobre próximo trimestre. Não chegou em decisão.
 
 > Ao invocar `/kn-99`: síntese — "Exploração sobre prioridades do trimestre; sem decisão tomada; tópicos levantados: A, B, C". Checklist: nada a catalogar (sem decisão); nada estrutural mudou. Diário curto em `<pasta>/diario/AAAAMMDD-exploracao-prioridades.md` registrando os 3 tópicos como ganchos para sessão futura. Voz do Usuário transcrita integralmente — preserva o material para retomar depois.
-
----
 
 ## O que NÃO faz
 

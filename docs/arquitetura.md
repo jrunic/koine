@@ -72,6 +72,14 @@ class Lancamento:
     extra_args: list
 ```
 
+Todo adapter que renderiza `cm.contexto_path` renderiza também
+`cm.instrucao_path` quando ele estiver preenchido — é por esse campo que o Koine
+entrega ao agente uma instrução de sessão (hoje: pasta sem `escopo:`). Nos
+adapters de `@path` (claude, antigravity) entra como mais uma linha; nos de
+conteúdo embutido (codex) e de bundle (copilot, opencode), como mais uma seção
+ou arquivo. Adapter que esquecer o campo deixa o usuário sem saída na pasta
+incompleta, sem erro nenhum.
+
 ## Estrutura de configuração em runtime
 
 ```

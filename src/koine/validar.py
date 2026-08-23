@@ -13,10 +13,11 @@ referências do usuário passa por aqui, onde ele pediu e vê a lista.
 import os
 from dataclasses import dataclass, field
 
-from koine import frontmatter, paths, schema
+from koine import bootstrap, frontmatter, paths, schema
 
 REPARAVEL = "reparavel"  # YAML inválido que o Koine leu reparando o valor
 INVALIDO = "invalido"    # nem o reparo salva: TAB, indentação, bloco não-mapa
+SEM_FICHA = "sem-ficha"  # CONTEXTO.md sem `escopo:` — a sessão não abre nessa pasta
 
 
 @dataclass
@@ -77,9 +78,14 @@ def _analisar(arq: str) -> Achado | None:
     except (OSError, UnicodeDecodeError):
         return None  # ilegível não é problema de frontmatter
     try:
-        _, reparos, _ = frontmatter.analisar(texto)
+        fm, reparos, _ = frontmatter.analisar(texto)
     except frontmatter.FrontmatterInvalido as e:
         return Achado(arq, INVALIDO, motivo=e.motivo, linha=e.linha, coluna=e.coluna)
+    # A ficha faltando vem antes do valor mal citado: uma impede a sessão de
+    # abrir, a outra só deixa o arquivo torto para outras ferramentas.
+    if (os.path.basename(arq) == "CONTEXTO.md"
+            and bootstrap.estado_do_fm(fm) == bootstrap.INCOMPLETO):
+        return Achado(arq, SEM_FICHA)
     return Achado(arq, REPARAVEL, chaves=reparos) if reparos else None
 
 
@@ -90,7 +96,13 @@ def relatorio(achados: list[Achado]) -> str:
         return "Frontmatter: nenhum problema encontrado.\n"
     linhas = [f"Frontmatter: {len(achados)} arquivo(s) para corrigir.\n"]
     for a in achados:
-        if a.estado == REPARAVEL:
+        if a.estado == SEM_FICHA:
+            linhas.append(f"  ✗ {a.arquivo}")
+            linhas.append("      sem `escopo:` no frontmatter — a Ficha Koine está")
+            linhas.append("      faltando. A sessão não abre nesta pasta enquanto isso.")
+            linhas.append("      Abra uma sessão aqui (`kn-<cliente> hermes <pasta>`) que o")
+            linhas.append("      Hermes repõe a ficha preservando o que já está escrito.")
+        elif a.estado == REPARAVEL:
             campos = ", ".join(f"`{c}`" for c in a.chaves)
             linhas.append(f"  ⚠ {a.arquivo}")
             linhas.append(f"      {campos} tem `:` sem aspas — o Koine lê, mas cite o valor:")

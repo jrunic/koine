@@ -6,6 +6,57 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.1] — 2026-08-23
+
+### Corrigido — pasta com `CONTEXTO.md` sem `escopo:` deixa de ser beco sem saída
+
+Abrir uma sessão numa pasta cujo `CONTEXTO.md` existe, é legível, mas não declara
+`escopo:` encerrava com exit 1 e a instrução "corrija o frontmatter, ou remova/esvazie
+o arquivo". Para quem não é técnico isso não é uma saída: é pedir edição de YAML, ou o
+apagamento de um arquivo que pode ter trabalho dentro. O estado travou um usuário em
+produção, e atualizar de versão não resolvia — a entrada do ramo é o conteúdo do
+arquivo, que versão nenhuma toca.
+
+Agora esse estado (`incompleto`) é auto-guiado, com uma regra dura: **o Koine não
+toca no `CONTEXTO.md`** — escreve só o arquivo do harness (`CLAUDE.md`, `AGENTS.md`),
+como em qualquer sessão, e nenhum symlink. A sessão sobe em modo bootstrap com Hermes, recebendo a
+instrução `vault/bootstrap/pasta-incompleta.md` mais o `CONTEXTO.md` original — e o
+Hermes conduz `/kn-02-mantem-catalogo` Fluxo 3b, que acrescenta o escopo preservando o
+conteúdo existente.
+
+O que **não** mudou: YAML irreparável continua erro amigável com arquivo, linha e
+coluna; `gerar` e `mostrar` continuam recusando pasta incompleta sem materializar nada;
+usuário não-onboardado continua sendo redirecionado a `koine instalar`.
+
+Detalhe interno: `ContextoMontado` ganha o campo `instrucao_path`, renderizado pelos
+cinco adapters. `mensagens.contexto_malformado` deu lugar a `contexto_ilegivel`, que
+descreve o caso que sobrou (arquivo binário, permissão, encoding).
+
+### Corrigido — a Ficha Koine se perdia no fechamento de sessão, e o `validar` não via
+
+Investigando o caso acima na máquina do usuário, o buraco maior apareceu: não faltava
+a linha `escopo:` — faltava o bloco `---` inteiro, e **cinco pastas** estavam assim.
+Os carimbos de tempo apontaram o fechamento de sessão: o `CONTEXTO.md` reescrito um
+minuto depois do diário.
+
+**Produtor.** A `/kn-99-encerra-sessao` mandava "edita `CONTEXTO.md` direto" em três
+pontos e nunca mandava preservar a ficha — um agente que reescreve o arquivo "com a
+seção nova" leva o frontmatter junto. Agora a regra é explícita (editar por
+acréscimo, nunca reescrever o arquivo inteiro) na `/kn-99`, na `/kn-11` e na `/kn-13`,
+que são as que editam por acréscimo. A `/kn-99` ganhou também uma **Rodada 5 —
+Verificação de efeito**: rodar `koine validar` antes de encerrar, enquanto o usuário
+ainda está em sessão e o conteúdo ainda está fresco.
+
+**Detector.** `koine validar` respondia "nenhum problema encontrado" para exatamente
+o arquivo que impede a sessão de abrir — só enxergava YAML irreparável e valor mal
+citado. Ganhou o terceiro achado, **sem ficha**: `CONTEXTO.md` sem `escopo:`, inclusive
+quando o bloco sumiu inteiro. `bootstrap: true` não é achado, e demais `.md` não
+precisam declarar escopo. `--corrigir` não mexe nesses arquivos — escolher o escopo é
+decisão do usuário, e a saída é abrir sessão na pasta.
+
+O critério passou a viver num lugar só (`bootstrap.estado_do_fm`), lido pelo launch e
+pelo `validar`: a ferramenta que avisa antes não pode divergir da que barra na hora.
+
 ## [0.6.0] — 2026-08-18
 
 ### Adicionado — `/kn-13-sabatina-plano`, a skill de entrevista

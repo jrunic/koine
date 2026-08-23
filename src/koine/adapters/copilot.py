@@ -24,6 +24,10 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
         env_vars={"COPILOT_CUSTOM_INSTRUCTIONS_DIRS": bundle},
     )
 
+    if cm.instrucao_path:
+        lanc.arquivos_externos[os.path.join(instr, "instrucao.instructions.md")] = \
+            render.wrapar_instructions(_ler(cm.instrucao_path))
+
     if cm.bootstrap:
         if cm.contexto_path:
             lanc.arquivos_externos[os.path.join(instr, "bootstrap.instructions.md")] = \

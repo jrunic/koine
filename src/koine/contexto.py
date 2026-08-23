@@ -1,6 +1,7 @@
 import os
 from dataclasses import dataclass, field
 
+from koine import bootstrap as _bootstrap
 from koine import frontmatter, paths, schema
 
 
@@ -46,6 +47,10 @@ class ContextoMontado:
     escopo_path: str = ""
     indice_paths: list[str] = field(default_factory=list)
     contexto_path: str = ""
+    # Instrução do Koine para ESTA sessão, quando o estado da pasta exige que o
+    # agente conduza algo antes do trabalho (hoje: pasta sem `escopo:`). Vazio na
+    # sessão normal. Todo adapter que renderiza contexto_path renderiza esta também.
+    instrucao_path: str = ""
     bootstrap: bool = False
     # pasta de trabalho absoluta — preenchida por cli._montar_cm; adapters com
     # bundle externo (copilot, opencode) derivam slot e alvo de symlink dela.
@@ -101,6 +106,19 @@ def resolver(agente: str, pasta: str) -> ContextoMontado:
             koine_path=os.path.join(data, "KOINE.md"),
             agente_path=os.path.join(data, "agentes", "hermes.md"),
             contexto_path=ctx_path,
+        )
+
+    if not fm.get("escopo"):
+        # CONTEXTO.md do usuário sem escopo: entra em modo bootstrap SEM tocar no
+        # arquivo. O agente recebe a instrução do vault e o arquivo original —
+        # quem completa o frontmatter é o Hermes, via /kn-02 Fluxo 3b.
+        return ContextoMontado(
+            bootstrap=True,
+            usuario_path=_achar_usuario_opcional(cfg),
+            koine_path=os.path.join(data, "KOINE.md"),
+            agente_path=os.path.join(data, "agentes", "hermes.md"),
+            contexto_path=ctx_path,
+            instrucao_path=_bootstrap.instrucao_pasta_incompleta(data),
         )
 
     escopo_slug = fm["escopo"]

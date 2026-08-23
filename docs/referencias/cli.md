@@ -64,14 +64,17 @@ Imprime em stdout o contexto resolvido — usuário, agente, escopo, índices, c
 
 Varre o frontmatter de todo `.md` sob `~/.config/koine/` e sob `pasta` (default: a atual) e reporta o que está torto. Não escreve nada.
 
-Dois estados de achado:
+Três estados de achado:
 
 - **⚠ reparável** — YAML inválido que o Koine lê reparando (valor com `:` sem aspas). A sessão funciona; o arquivo continua inválido para qualquer outra ferramenta.
 - **✗ inválido** — nem o reparo salva (TAB no lugar de espaço, indentação quebrada, bloco que não é `chave: valor`). Nomeia linha e coluna.
+- **✗ sem ficha** — `CONTEXTO.md` sem `escopo:` no frontmatter (inclusive quando o bloco `---` sumiu inteiro). É o estado que impede a pasta de abrir sessão. Só vale para `CONTEXTO.md`; `bootstrap: true` não é achado, e demais `.md` não precisam declarar escopo.
+
+O critério de "sem ficha" é o mesmo que o launch usa para decidir se auto-guia a pasta (`bootstrap.estado_do_fm`) — uma definição só, para a ferramenta que avisa antes não discordar da que barra na hora.
 
 Sai `0` quando não há nada a corrigir e `1` quando há — serve de gate em script.
 
-Com `--corrigir`, os arquivos **reparáveis** são normalizados no disco: o valor ganha aspas, o original vai para `<arquivo>.bak` e o resto do arquivo fica byte a byte igual. Os **inválidos** nunca são reescritos — o Koine só mexe no que sabe consertar, e continua saindo `1` enquanto sobrar algum.
+Com `--corrigir`, os arquivos **reparáveis** são normalizados no disco: o valor ganha aspas, o original vai para `<arquivo>.bak` e o resto do arquivo fica byte a byte igual. Os **inválidos** e os **sem ficha** nunca são reescritos: o Koine só mexe no que sabe consertar, e continua saindo `1` enquanto sobrar algum. Escolher o escopo de uma pasta é decisão do usuário e não se chuta — a saída ali é abrir sessão na pasta e deixar o Hermes repor a ficha preservando o conteúdo.
 
 Os arquivos de configuração que o launch carrega (`CONTEXTO.md` da pasta, escopo, domínio) já são normalizados sozinhos ao abrir a sessão. A pasta-referências fica de fora do automático de propósito: reescrever a sua base de conhecimento é coisa que o Koine só faz quando você pede.
 
@@ -109,7 +112,7 @@ Ao materializar (`CLAUDE.md`, `GEMINI.md`, symlinks):
 
 ### Modo bootstrap
 
-Dois caminhos disparam carregamento reduzido (sem escopo nem domínios):
+Três caminhos disparam carregamento reduzido (sem escopo nem domínios):
 
 **1. Bootstrap implícito** — pasta sem `CONTEXTO.md`:
 
@@ -129,6 +132,35 @@ Hermes guia o usuário a criar o contexto via `/kn-02-mantem-catalogo` (fluxo co
 5. Lança o cliente.
 
 Este caminho é usado pelo `koine instalar` para a pasta canônica `~/koine` — o `CONTEXTO.md` gerado instrui Hermes a iniciar `/kn-01-recebe-usuario` automaticamente. Ao final do onboarding, `/kn-01` reescreve o `CONTEXTO.md` substituindo `bootstrap: true` pelo escopo `koine` real, e o caminho de bootstrap explícito deixa de disparar.
+
+**3. Pasta com `CONTEXTO.md` sem `escopo:`** — o arquivo existe, é legível, mas
+o frontmatter não declara escopo (nem `bootstrap: true`):
+
+1. `classificar` devolve o estado `incompleto`.
+2. O Koine **não toca no `CONTEXTO.md`** — ele é do usuário. Escreve só o arquivo
+   do harness, como em qualquer sessão; os adapters de bundle não criam symlink.
+3. Carrega contexto reduzido + a instrução `vault/bootstrap/pasta-incompleta.md`
+   **e** o `CONTEXTO.md` original, para o agente ler o conteúdo existente.
+4. Força agente Hermes.
+5. Lança o cliente. Hermes conduz `/kn-02-mantem-catalogo` **Fluxo 3b**
+   (atualizar existente), preservando o conteúdo e acrescentando o escopo.
+
+Até a v0.6.0 esse estado era erro fatal com instrução para o usuário editar YAML
+à mão — o que travou um usuário em produção.
+
+### Estados de uma pasta de sessão
+
+| Estado | O que é | O que o launch faz |
+|---|---|---|
+| `valido` | `escopo:` declarado | sessão normal |
+| `bootstrap` | `bootstrap: true` | bootstrap explícito (caminho 2) |
+| `ausente` / `vazio` | sem arquivo, ou vazio | materializa CONTEXTO de bootstrap (caminho 1) |
+| `incompleto` | legível, sem `escopo:` | auto-guia sem tocar no arquivo (caminho 3) |
+| `malformado` | YAML irreparável ou ilegível | erro com arquivo/linha/coluna; preserva |
+
+Usuário ainda **não** onboardado cai em redirect para `koine instalar` nos estados
+`ausente`, `vazio` e `incompleto` — o Koine nunca dispara `/kn-01` numa pasta
+arbitrária.
 
 Ver ADR `20260627-bootstrap-flag-em-contexto-md.md`.
 

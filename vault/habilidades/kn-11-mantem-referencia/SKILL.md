@@ -59,7 +59,7 @@ Antes de continuar, **pergunte o alcance**:
 
 Se o usuário pedir que `/kn-11` cumpra mesmo assim:
 
-- Material cabe em 1-2 frases → **edita `<pasta>/CONTEXTO.md` direto** (linha em seção "Referências locais") em vez de criar arquivo. Sem pasta-referências, sem `index.md`/`log.md`/`kn-indice` (não cabem alcance de pasta).
+- Material cabe em 1-2 frases → **edita `<pasta>/CONTEXTO.md` direto** (linha em seção "Referências locais") em vez de criar arquivo. Edite **por acréscimo**: o bloco `---` do topo é a Ficha Koine e é `escopo:` que faz a pasta abrir sessão — reescrever o arquivo inteiro leva a ficha junto, e o estrago só aparece na sessão seguinte. Sem pasta-referências, sem `index.md`/`log.md`/`kn-indice` (não cabem alcance de pasta).
 - Material denso → cria `<slug>.md` na raiz da pasta de trabalho + linha em CONTEXTO.md apontando + descrição.
 
 Fim da skill nessas duas vias — pula as Rodadas A2–A5 (não são pasta-referências).

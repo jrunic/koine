@@ -18,7 +18,8 @@ from koine import frontmatter
 # Estados do CONTEXTO.md numa pasta de trabalho.
 AUSENTE = "ausente"        # arquivo não existe → auto-guiar
 VAZIO = "vazio"            # existe mas vazio/sem frontmatter → auto-guiar
-MALFORMADO = "malformado"  # tem conteúdo, FM sem `escopo` e sem `bootstrap` → erro+preserva
+INCOMPLETO = "incompleto"  # FM parseia, sem `escopo` e sem `bootstrap` → auto-guiar preservando
+MALFORMADO = "malformado"  # YAML irreparável ou arquivo ilegível → erro+preserva
 BOOTSTRAP = "bootstrap"    # `bootstrap: true` → fluxo bootstrap (inalterado)
 VALIDO = "valido"          # `escopo:` presente → sessão normal (inalterado)
 
@@ -70,16 +71,28 @@ def classificar(pasta: str) -> str:
         # YAML que nem o reparo salva → malformado: erro amigável, nunca clobber.
         # Frontmatter ruim é dado ruim numa pasta, não motivo para o Koine cair.
         return MALFORMADO
+    return estado_do_fm(fm)
+
+
+def estado_do_fm(fm: dict) -> str:
+    """Estado de um CONTEXTO.md já parseado: BOOTSTRAP, VALIDO ou INCOMPLETO.
+
+    Fonte única do critério. O launch (`classificar`) e o `koine validar` leem
+    daqui — duas definições separadas divergem com o tempo, e aí a ferramenta
+    que deveria avisar antes passa a discordar da que barra na hora."""
     if fm.get("bootstrap"):
         return BOOTSTRAP
     if fm.get("escopo"):
         return VALIDO
-    return MALFORMADO
+    # Arquivo do usuário, legível, só sem escopo. Foi erro fatal até a v0.6.0 e
+    # travou um usuário em produção: a saída oferecida era editar YAML à mão.
+    # Vira auto-guiar — sem tocar no arquivo, que é trabalho do usuário.
+    return INCOMPLETO
 
 
 def erro_frontmatter(pasta: str) -> frontmatter.FrontmatterInvalido | None:
     """Por que o CONTEXTO.md desta pasta é MALFORMADO: YAML irreparável (devolve
-    o erro, com linha e coluna) ou frontmatter só incompleto (devolve None).
+    o erro, com linha e coluna) ou arquivo ilegível/binário (devolve None).
     Só o caminho de erro paga essa releitura."""
     try:
         frontmatter.ler_arquivo(os.path.join(pasta, "CONTEXTO.md"))
@@ -98,3 +111,13 @@ def usuario_onboarded(cfg: str) -> bool:
         return any(f.endswith(".md") for f in os.listdir(cfg))
     except FileNotFoundError:
         return False
+
+
+# Instrução lida pelo agente quando a pasta cai em INCOMPLETO. Mora no vault
+# (asset versionado, revisável) em vez de ser gerada em runtime: o Koine não
+# escreve nada na pasta do usuário nesse ramo.
+INSTRUCAO_PASTA_INCOMPLETA = ("bootstrap", "pasta-incompleta.md")
+
+
+def instrucao_pasta_incompleta(vault: str) -> str:
+    return os.path.join(vault, *INSTRUCAO_PASTA_INCOMPLETA)
