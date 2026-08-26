@@ -63,7 +63,7 @@ curl -L -o install.bat https://github.com/jrunic/koine/releases/latest/download/
 install.bat
 ```
 
-O `install.bat` invoca o `install.ps1` com `-ExecutionPolicy Bypass` inline, contornando restrições de execução em estações com política restritiva — sem precisar de admin.
+O `install.bat` é 100% `cmd.exe` — não chama PowerShell em nenhum ponto, então funciona onde a política corporativa bloqueia o `powershell.exe`. Sem admin. Requer `curl.exe` (padrão desde o Windows 10 1803) e Python ≥ 3.12 no PATH.
 
 ### Windows (PowerShell — alternativa)
 
@@ -247,7 +247,7 @@ Detalhes na [referência de habilidades](../referencias/habilidades.md).
 
 ### `koine: command not found` após instalar
 
-`~/.local/bin/` não está no seu PATH. O instalador imprime a linha exata para adicionar — siga e reabra o terminal. Em Windows, rode o comando `SetEnvironmentVariable` indicado.
+`~/.local/bin/` não está no seu PATH. O instalador imprime o que fazer — siga e reabra o terminal. No Windows, o `install.bat` indica abrir o editor de variáveis de ambiente do usuário (`rundll32 sysdm.cpl,EditEnvironmentVariables`) e acrescentar a pasta ao `Path`; não precisa de admin nem de PowerShell.
 
 ### Windows: e o SmartScreen?
 

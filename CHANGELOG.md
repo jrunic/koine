@@ -6,6 +6,34 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Corrigido — `install.bat` deixa de depender do PowerShell
+
+Numa estação Windows corporativa com o `powershell.exe` bloqueado por política, o
+`install.bat` respondia `Acesso negado.` e parava — ele era só um wrapper de
+`powershell -ExecutionPolicy Bypass -Command "iwr ... | iex"`, ou seja, dependia
+exatamente do que a política bloqueia. Justo a máquina que precisa do `.bat` é a que
+não conseguia usá-lo.
+
+O `install.bat` agora é **100% `cmd.exe`** e faz o trabalho inteiro por conta própria,
+espelhando o `install.sh`: acha o primeiro Python ≥ 3.12 (`py -3`, `python`,
+`python3`), resolve a última release com `curl.exe`, baixa o `koine-<versão>.zip`,
+extrai com `python -m zipfile` e delega ao `koine instalar`. O `install.ps1` continua
+publicado para quem tem PowerShell liberado.
+
+Junto:
+
+- **Mensagem de erro por falha, em vez de saída críptica.** Sem `curl`, sem Python,
+  versão não resolvida, download, criação de pasta, extração, pacote sem `koine.pyz` e
+  falha do `koine instalar` têm cada um a sua mensagem — dizendo o que fazer e se algo
+  foi tocado no disco. Guarda de teste impede rótulo mudo.
+- **Arquivo em ASCII puro.** O `cmd.exe` lê `.bat` na codepage OEM (850/437); os
+  acentos e travessões em UTF-8 dos comentários apareciam como mojibake na tela.
+  Guarda de teste impede a recorrência.
+- **Orientação de PATH sem PowerShell.** O aviso de `~/.local/bin` fora do PATH — no
+  `.bat` e na mensagem `cliente não encontrado` — passa a indicar
+  `rundll32 sysdm.cpl,EditEnvironmentVariables`, que abre o editor de variáveis do
+  usuário sem admin. A linha PowerShell continua listada como alternativa.
+
 ## [0.6.1] — 2026-08-23
 
 ### Corrigido — pasta com `CONTEXTO.md` sem `escopo:` deixa de ser beco sem saída

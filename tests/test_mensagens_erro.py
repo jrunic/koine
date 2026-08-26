@@ -7,6 +7,8 @@ def test_cliente_nao_encontrado_windows_guia_path(monkeypatch):
     assert "não encontrado no PATH" in msg
     assert "where codex" in msg  # diagnóstico Windows
     assert "SetEnvironmentVariable" in msg  # correção de PATH sem admin
+    # e o caminho cmd, para estação onde o powershell.exe está bloqueado
+    assert "sysdm.cpl,EditEnvironmentVariables" in msg
 
 
 def test_cliente_nao_encontrado_unix_guia_path(monkeypatch):

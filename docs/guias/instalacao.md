@@ -52,7 +52,9 @@ Ou PowerShell direto:
 iwr -useb https://github.com/jrunic/koine/releases/latest/download/install.ps1 | iex
 ```
 
-O `install.bat` invoca o PowerShell com `-ExecutionPolicy Bypass` inline — funciona em estações com política restritiva, sem admin. O installer usa o launcher `py -3` (ou `python`) do PATH; nada além de código-fonte Python é gravado no disco.
+O `install.bat` é 100% `cmd.exe` — não chama PowerShell em nenhum ponto, então funciona onde a política corporativa bloqueia o `powershell.exe`, sem admin. Ele usa o `curl.exe` (padrão desde o Windows 10 1803) para baixar e o próprio Python (`py -3`, `python` ou `python3` do PATH, o primeiro que for ≥ 3.12) para extrair e instalar; nada além de código-fonte Python é gravado no disco. Cada falha possível — sem `curl`, sem Python, versão não resolvida, download, extração, instalação — tem mensagem própria dizendo o que fazer e se algo foi tocado no disco.
+
+O `install.ps1` continua publicado para quem tem PowerShell liberado e prefere o one-liner.
 
 ## Upgrade da v0.3.x (binário Go)
 
@@ -85,7 +87,7 @@ Se a sua versão atual **não tem** o `koine atualizar` (anterior à 0.4.3), atu
 
 ## Passo a passo manual — o que os installers fazem
 
-**Este passo a passo é exatamente o que `install.sh` (macOS/Linux) e `install.ps1` (Windows) automatizam** — o `install.bat` é só um atalho que baixa e executa o `install.ps1` com `-ExecutionPolicy Bypass`, para estações onde scripts PowerShell são bloqueados por política. Use esta seção para instalar à mão (ex.: auditoria em ambiente corporativo, máquina sem acesso direto ao GitHub) ou para entender o que roda na sua máquina. Nenhum passo exige administrador.
+**Este passo a passo é exatamente o que `install.sh` (macOS/Linux), `install.bat` (Windows/cmd) e `install.ps1` (Windows/PowerShell) automatizam** — os três fazem os mesmos seis passos, cada um com as ferramentas do seu shell. Use esta seção para instalar à mão (ex.: auditoria em ambiente corporativo, máquina sem acesso direto ao GitHub) ou para entender o que roda na sua máquina. Nenhum passo exige administrador.
 
 ### 1. Localizar um Python ≥ 3.12
 
@@ -145,7 +147,9 @@ export PATH="$HOME/.local/bin:$PATH"    # adicione ao ~/.zshrc ou ~/.bashrc
 [Environment]::SetEnvironmentVariable("PATH", "$env:USERPROFILE\.local\bin;" + [Environment]::GetEnvironmentVariable("PATH", "User"), "User")
 ```
 
-Os wrappers só funcionam por nome (`kn-claude ...`) se `~/.local/bin` estiver no PATH. No Unix é uma linha no profile do shell; no Windows o comando acima persiste no ambiente do usuário, sem admin. Reabra o terminal depois.
+Sem PowerShell, pelo cmd: `rundll32 sysdm.cpl,EditEnvironmentVariables` abre o editor de variáveis do usuário — selecione `Path`, `Editar`, `Novo`, e acrescente `%USERPROFILE%\.local\bin`.
+
+Os wrappers só funcionam por nome (`kn-claude ...`) se `~/.local/bin` estiver no PATH. No Unix é uma linha no profile do shell; no Windows a alteração persiste no ambiente do usuário, sem admin. Reabra o terminal depois.
 
 ## Variantes
 
@@ -170,4 +174,5 @@ A segunda linha gera o contexto da pasta canônica e abre o seu cliente. Dentro 
 | `koine: command not found` após instalar | `~/.local/bin` fora do PATH | Adicione a linha que o installer mostrou e reabra o terminal |
 | Download falha (rede/firewall) | `github.com` bloqueado | Use `KOINE_BASE_URL` para um espelho interno, ou baixe `koine-<versão>.zip` manualmente e rode `python koine.pyz instalar` |
 | Aviso `salvo como ....bak` durante uma sessão | Havia um arquivo seu no caminho de um artefato gerado | Nada perdido: seu arquivo está no `.bak` ao lado |
-| Windows: script PowerShell bloqueado | Política de execução restritiva | Use o `install.bat` (bypass inline, sem admin) |
+| Windows: PowerShell bloqueado ou `Acesso negado` ao rodar o installer | Política corporativa bloqueia o `powershell.exe` | Use o `install.bat` a partir da v0.6.2 — é cmd puro e não chama PowerShell |
+| Windows: `curl.exe nao foi encontrado` | Windows anterior ao 10 1803, ou `curl` removido | Atualize o Windows ou siga o passo a passo manual acima |

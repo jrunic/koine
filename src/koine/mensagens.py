@@ -150,8 +150,11 @@ def cliente_nao_encontrado(cliente: str) -> str:
             "        • nada listado  → não instalado, ou a pasta não está no PATH\n",
             f"        • lista caminho → o '{cliente}' está no PATH (reabra o terminal e tente de novo)\n",
             "\n",
-            "    Adicionar ao PATH do usuário (sem admin; PowerShell), trocando <PASTA>:\n",
-            '      [Environment]::SetEnvironmentVariable("PATH", "<PASTA>;" + '
+            "    Adicionar ao PATH do usuário (sem admin), trocando <PASTA>:\n",
+            "      cmd:  rundll32 sysdm.cpl,EditEnvironmentVariables\n",
+            "            em Variáveis de usuário, edite Path e acrescente <PASTA>\n",
+            "      PowerShell (se liberado):\n",
+            '        [Environment]::SetEnvironmentVariable("PATH", "<PASTA>;" + '
             '[Environment]::GetEnvironmentVariable("PATH","User"), "User")\n',
             "    Depois reabra o terminal.\n",
         ]

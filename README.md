@@ -44,7 +44,7 @@ curl -L -o install.bat https://github.com/jrunic/koine/releases/latest/download/
 install.bat
 ```
 
-`install.bat` invoca `install.ps1` com `-ExecutionPolicy Bypass` inline — contorna restrições de PowerShell em estações com política restritiva, sem precisar de admin.
+`install.bat` é 100% `cmd.exe` — não chama PowerShell em nenhum ponto. Roda em estação onde o `powershell.exe` está bloqueado por política, sem admin. Requer `curl.exe` (padrão desde o Windows 10 1803) e Python ≥ 3.12 no PATH.
 
 ### Windows (PowerShell — alternativa)
 
