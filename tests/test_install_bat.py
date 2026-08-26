@@ -57,3 +57,12 @@ def test_install_bat_tem_mensagem_e_saida_para_cada_falha():
         "sem_curl", "sem_python", "sem_versao",
         "falha_download", "falha_extracao", "falha_instalar",
     }, f"faltam rótulos de falha: {encontrados}"
+
+
+def test_install_bat_tem_quebra_de_linha_crlf():
+    """O cmd.exe tem casos de borda com .bat em LF puro (rótulo/goto). O
+    `.gitattributes` marca `*.bat -text` para nenhum `autocrlf` reescrever."""
+    dados = _bytes()
+    assert b"\r\n" in dados
+    assert dados.replace(b"\r\n", b"").count(b"\n") == 0, \
+        "install.bat tem linha em LF puro"

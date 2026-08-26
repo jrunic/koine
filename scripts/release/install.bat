@@ -32,6 +32,8 @@ if not defined PY goto sem_python
 
 REM ------------------------------------------------------ 3. Resolve a versao
 set "TAG=%KOINE_VERSAO%"
+REM Aceita KOINE_VERSAO com ou sem o "v" (v0.6.2 e 0.6.2 valem).
+if defined TAG if /i not "%TAG:~0,1%"=="v" set "TAG=v%TAG%"
 if defined TAG goto tem_tag
 
 set "URLFINAL="

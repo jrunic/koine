@@ -1,0 +1,3 @@
+# O cmd.exe tem casos de borda com .bat em LF (rotulo/goto). O arquivo e
+# publicado como asset da release exatamente como esta no git.
+*.bat -text
