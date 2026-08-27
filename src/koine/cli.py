@@ -322,7 +322,13 @@ def _cmd_gerar(args: list[str]) -> int:
 
 
 def _cmd_mostrar(args: list[str]) -> int:
-    agente, alvo = args[0], args[1]
+    # Agente opcional, como no launch: `mostrar` sem posicional descobre o que a
+    # pasta atual vai abrir. A pasta segue sendo o segundo posicional (arg cru,
+    # sem alias) — gramática igual à do launch, de propósito: duas gramáticas de
+    # pasta lado a lado é o tipo de divergência que este comando existe para
+    # não ter.
+    agente = args[0] if args else ""
+    alvo = args[1] if len(args) >= 2 else os.getcwd()
     # alvo NÃO resolve alias — comportamento congelado de `mostrar` (arg cru)
     if _bootstrap.classificar(alvo) in (
             _bootstrap.AUSENTE, _bootstrap.VAZIO, _bootstrap.INCOMPLETO,
@@ -343,6 +349,13 @@ def _cmd_mostrar(args: list[str]) -> int:
         print(mensagens.escopo_nao_encontrado(e.escopo, e.disponiveis), file=sys.stderr)
         return 1
     lanc = adapters.get("claude").renderizar(cm)
+    # A linha do agente vem antes do conteúdo: é a resposta de "qual agente esta
+    # pasta abre?", e sai do MESMO cm que o launch monta — é o que impede a
+    # ferramenta que avisa de divergir da que abre.
+    print(f"Agente: {os.path.basename(cm.agente_path)[:-3]}")
+    if cm.agente_ausente:
+        print(f"  (a pasta declara '{cm.agente_ausente}', que não existe — "
+              f"a sessão abriria com o Hermes)")
     print(lanc.arquivos_working_dir["CLAUDE.md"], end="")
     return 0
 

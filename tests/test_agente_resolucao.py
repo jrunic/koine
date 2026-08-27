@@ -230,3 +230,23 @@ def test_posicional_nao_grava_na_pasta(koine_home, monkeypatch):
     assert cm.agente_path.endswith("atlas.md"), "pré-condição: o posicional venceu"
     assert open(ctx, "rb").read() == antes
     assert os.stat(ctx).st_mtime_ns == antes_mtime
+
+
+def test_mostrar_e_launch_concordam_no_agente(koine_home, monkeypatch, capsys):
+    """A ferramenta que avisa antes não pode divergir da que abre na hora —
+    mesma disciplina que a v0.6.1 fixou para o estado da pasta. Um teste que
+    roda os dois no mesmo cenário; dois testes independentes não pegariam a
+    divergência."""
+    monkeypatch.setenv("HOME", koine_home["home"])
+    pasta = _pasta_valido(koine_home, "hermes")
+    # 0 posicionais: pela gramática aprovada, 1 posicional seria AGENTE. Passar
+    # a pasta aqui daria ao `mostrar` uma gramática divergente do launch.
+    monkeypatch.chdir(pasta)
+
+    assert cli.main(["mostrar"]) == 0
+    saida = capsys.readouterr().out
+    anunciado = [l for l in saida.splitlines() if l.lower().startswith("agente")]
+    resolvido = os.path.basename(contexto.resolver("", pasta).agente_path)[:-3]
+
+    assert anunciado, "o mostrar não informou o agente resolvido"
+    assert resolvido in anunciado[0]
