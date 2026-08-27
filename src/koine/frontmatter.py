@@ -279,3 +279,48 @@ def _invalido(erro: yaml.YAMLError) -> FrontmatterInvalido:
         return FrontmatterInvalido(motivo)
     # o bloco começa na 2ª linha do arquivo (a 1ª é o `---`); mark é 0-based
     return FrontmatterInvalido(motivo, linha=marca.line + 2, coluna=marca.column + 1)
+
+
+def definir_campo(texto: str, chave: str, valor: str) -> tuple[str, bool]:
+    """Texto com `chave: valor` no frontmatter, e se houve mudança.
+
+    Edita UMA linha e recompõe pelos índices de `_fatiar` — mesma disciplina do
+    `normalizar`: diff mínimo é requisito. Recompor o bloco a partir do dict
+    apagaria comentário e ordem do usuário.
+
+    Sem bloco de frontmatter, não escreve: arquivo assim é pasta INCOMPLETA, e
+    criar a ficha aqui seria o Koine inventando estado que ele decidiu não
+    inventar (v0.6.1).
+    """
+    fatia = _fatiar(texto)
+    if fatia is None:
+        return texto, False
+
+    linhas = fatia.bloco.splitlines(keepends=True)
+    prefixo = f"{chave}:"
+    for i, linha in enumerate(linhas):
+        if not linha.startswith(prefixo):
+            continue
+        if linha.rstrip("\r\n").strip() == f"{chave}: {valor}":
+            return texto, False                       # no-op: mesmo valor
+        fim = linha[len(linha.rstrip("\r\n")):]
+        linhas[i] = f"{chave}: {valor}{fim}"
+        break
+    else:
+        # `_fatiar` recorta o bloco SEM os delimitadores, cortando em `\n---`:
+        # a última linha vem sem terminador, e por isso o terminador da linha
+        # nova vai ANTES dela — depois, o campo colaria na linha anterior.
+        #
+        # Num arquivo CRLF há uma segunda ponta: o `\n` do corte pertence ao
+        # `\r\n` da última linha, então o bloco termina com um `\r` pendurado.
+        # Acrescentar depois dele produz `\r\r\n`. A linha nova entra ANTES do
+        # `\r`, que volta ao fim. Achado pelo teste de CRLF, não no papel.
+        crlf = "\r\n" in fatia.bloco or fatia.bloco.endswith("\r")
+        term = "\r\n" if crlf else "\n"
+        cauda = ""
+        if fatia.bloco.endswith("\r"):
+            linhas[-1] = linhas[-1][:-1]
+            cauda = "\r"
+        linhas.append(f"{term}{chave}: {valor}{cauda}")
+
+    return texto[:fatia.inicio] + "".join(linhas) + texto[fatia.fim:], True
