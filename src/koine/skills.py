@@ -2,7 +2,7 @@ import os
 import shutil
 from pathlib import Path
 
-from koine import paths
+from koine import backup, paths
 
 HARNESS_SKILLS = {
     "claude": ".claude/skills",
@@ -34,14 +34,17 @@ def _arvore(base: str) -> dict:
 
 
 def instalar_habilidades_detalhado(
-        harness: str, force: bool = False) -> tuple[list[str], list[str], list[str]]:
+        harness: str, versao: str) -> tuple[list[str], list[str], list[tuple[str, str]]]:
     """Copia os dirs kn-* de VaultDir()/habilidades para a pasta de skills do
     harness (~/<rel>). COPIA (não symlink: Windows exige admin).
-    Idempotente e NÃO-destrutivo: dir idêntico é pulado; divergente é
-    REPORTADO e preservado, salvo `force=True`.
-    Retorna (criadas, existentes, divergentes) — espelha
-    instalarHabilidadesParaHarness do Go (criados/jaExistiam), com o eixo
-    extra de divergentes que o mecanismo de cópia introduz."""
+
+    Idempotente: dir idêntico é pulado; **divergente é ATUALIZADO**, com o
+    anterior guardado na árvore de backups do cache. Devolve
+    (criadas, existentes, atualizadas), onde `atualizadas` é [(nome, backup)].
+
+    `versao` é a que está entrando — no `atualizar`, o pyz em execução ainda é o
+    antigo, então ler `__version__` aqui gravaria o backup na pasta errada.
+    """
     rel = HARNESS_SKILLS.get(harness)
     if rel is None:
         raise ValueError(f"harness {harness!r} não suportado ({', '.join(sorted(HARNESS_SKILLS))})")
@@ -51,7 +54,7 @@ def instalar_habilidades_detalhado(
     if not os.path.isdir(origem):
         raise FileNotFoundError(f"{origem} — rode `koine instalar` primeiro")
 
-    criadas, existentes, divergentes = [], [], []
+    criadas, existentes, atualizadas = [], [], []
     for nome in sorted(os.listdir(origem)):
         src = os.path.join(origem, nome)
         if not os.path.isdir(src) or not nome.startswith("kn-"):
@@ -61,20 +64,31 @@ def instalar_habilidades_detalhado(
             if _arvore(src) == _arvore(dst):
                 existentes.append(nome)        # idêntico → pula
                 continue
-            if not force:
-                divergentes.append(nome)       # divergente → reporta, NÃO destrói
-                continue
-            shutil.rmtree(dst)                 # só com force
-            shutil.copytree(src, dst)
-            criadas.append(nome)
+            bak = backup.guardar(dst, versao, f"harness/{harness}", nome)
+            _trocar_dir(src, dst)
+            atualizadas.append((nome, bak))
             continue
         shutil.copytree(src, dst)
         criadas.append(nome)
-    return criadas, existentes, divergentes
+    return criadas, existentes, atualizadas
 
 
-def instalar_habilidades(harness: str, force: bool = False) -> list[str]:
-    """Delegação para instalar_habilidades_detalhado preservando a assinatura
-    original: retorna só a lista de skills DIVERGENTES não sobrescritas."""
-    _, _, divergentes = instalar_habilidades_detalhado(harness, force=force)
-    return divergentes
+def _trocar_dir(src: str, dst: str) -> None:
+    """Monta a árvore nova ao lado e troca no fim.
+
+    O nome temporário começa com ponto de propósito: não casa o filtro `kn-*`,
+    então nem o instalador nem o cliente o enxergam como skill enquanto existe.
+    """
+    pai = os.path.dirname(dst)
+    tmp = os.path.join(pai, "." + os.path.basename(dst) + ".koine-novo")
+    if os.path.lexists(tmp):
+        shutil.rmtree(tmp)
+    shutil.copytree(src, tmp)
+    shutil.rmtree(dst)
+    os.replace(tmp, dst)
+
+
+def instalar_habilidades(harness: str, versao: str) -> list[tuple[str, str]]:
+    """Delegação que devolve só as skills atualizadas, com o backup de cada uma."""
+    _, _, atualizadas = instalar_habilidades_detalhado(harness, versao)
+    return atualizadas
