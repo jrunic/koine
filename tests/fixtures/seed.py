@@ -87,8 +87,9 @@ def montar(base: str) -> dict:
     shutil.copy(os.path.join(REPO, "vault", "agentes", "hermes.md"),
                 os.path.join(data, "agentes", "hermes.md"))
     os.makedirs(os.path.join(data, "bootstrap"), exist_ok=True)
-    shutil.copy(os.path.join(REPO, "vault", "bootstrap", "pasta-incompleta.md"),
-                os.path.join(data, "bootstrap", "pasta-incompleta.md"))
+    for instr in ("pasta-incompleta.md", "agente-inexistente.md"):
+        shutil.copy(os.path.join(REPO, "vault", "bootstrap", instr),
+                    os.path.join(data, "bootstrap", instr))
     _w(os.path.join(refs, "ref-a.md"), REF_A)
     _w(os.path.join(refs, "ref-b.md"), REF_B)
     _w(os.path.join(trab, "CONTEXTO.md"), CONTEXTO)
