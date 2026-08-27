@@ -29,6 +29,7 @@ Junto:
 - **Arquivo em ASCII puro.** O `cmd.exe` lê `.bat` na codepage OEM (850/437); os
   acentos e travessões em UTF-8 dos comentários apareciam como mojibake na tela.
   Guarda de teste impede a recorrência.
+- **`KOINE_VERSAO` aceita a versão com ou sem o `v`.** `0.6.2` e `v0.6.2` valem.
 - **Orientação de PATH sem PowerShell.** O aviso de `~/.local/bin` fora do PATH — no
   `.bat` e na mensagem `cliente não encontrado` — passa a indicar
   `rundll32 sysdm.cpl,EditEnvironmentVariables`, que abre o editor de variáveis do

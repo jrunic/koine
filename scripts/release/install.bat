@@ -32,10 +32,15 @@ if not defined PY goto sem_python
 
 REM ------------------------------------------------------ 3. Resolve a versao
 set "TAG=%KOINE_VERSAO%"
-REM Aceita KOINE_VERSAO com ou sem o "v" (v0.6.2 e 0.6.2 valem).
-if defined TAG if /i not "%TAG:~0,1%"=="v" set "TAG=v%TAG%"
-if defined TAG goto tem_tag
+if not defined TAG goto resolve_tag
+REM Aceita KOINE_VERSAO com ou sem o "v" (v0.6.2 e 0.6.2 valem). Esta
+REM linha fica fora do "if defined" de proposito: o cmd expande a linha
+REM INTEIRA antes de avaliar a condicao, e "%TAG:~0,1%" com TAG vazia e
+REM erro de sintaxe fatal - medido na bancada Windows em 26/08/2026.
+if /i not "%TAG:~0,1%"=="v" set "TAG=v%TAG%"
+goto tem_tag
 
+:resolve_tag
 set "URLFINAL="
 for /f "usebackq delims=" %%i in (`curl -fsSLSI -o NUL -w "%%{url_effective}" "https://github.com/%REPO%/releases/latest"`) do set "URLFINAL=%%i"
 if not defined URLFINAL goto sem_versao

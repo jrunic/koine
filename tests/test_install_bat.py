@@ -66,3 +66,18 @@ def test_install_bat_tem_quebra_de_linha_crlf():
     assert b"\r\n" in dados
     assert dados.replace(b"\r\n", b"").count(b"\n") == 0, \
         "install.bat tem linha em LF puro"
+
+
+def test_install_bat_nao_expande_substring_de_variavel_talvez_vazia():
+    """`%VAR:~i,n%` com VAR indefinida é erro de sintaxe FATAL no cmd, e um
+    `if defined VAR` na MESMA linha não protege: o cmd expande a linha inteira
+    antes de avaliar a condição. Foi assim que o caminho sem `KOINE_VERSAO`
+    morreu com "A sintaxe do comando está incorreta" na bancada Windows
+    (26/08/2026). A guarda: expansão de substring nunca compartilha linha com o
+    `if defined` que deveria protegê-la."""
+    texto = _bytes().decode("ascii", errors="replace")
+    ofensoras = [linha for linha in texto.splitlines()
+                 if re.search(r"%\w+:~", linha) and re.search(r"if\s+defined\s", linha, re.I)]
+    assert ofensoras == [], (
+        "expansão de substring guardada por `if defined` na mesma linha "
+        f"(o cmd expande antes de avaliar): {ofensoras}")
