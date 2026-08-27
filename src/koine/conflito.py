@@ -1,17 +1,12 @@
 import os
-import sys
 
-from koine import backup as _backup_mod
+from koine import escrita
 
-
-MARCADOR_KOINE = "<!-- gerado por kn-agente -->"
-# retrocompatibilidade: CLAUDE.md/GEMINI.md gerados pré-Fase-3 do Go não têm o
-# marcador HTML, mas carregam a assinatura do template (conflito.go:139-140)
-_ASSINATURA_RETROCOMPAT = "Regerar: `kn-agente"
-
-
-class ConflitoErro(Exception):
-    """Estado ambíguo pré-existente no path a materializar; resolução manual."""
+# A política mora em `escrita.py` — este módulo é a porta do `conflito.go` e
+# delega. Os nomes seguem exportados: são consumidos por `cli.py` e pelos testes.
+MARCADOR_KOINE = escrita.MARCADOR_KOINE
+_ASSINATURA_RETROCOMPAT = escrita.ASSINATURA_RETROCOMPAT
+ConflitoErro = escrita.ConflitoErro
 
 
 def resolver_symlink_conflito(link: str, alvo_esperado: str) -> None:
@@ -30,7 +25,9 @@ def resolver_symlink_conflito(link: str, alvo_esperado: str) -> None:
             f"{alvo_esperado!r} — resolva manualmente")
     if os.path.isdir(link):
         raise ConflitoErro(f"conflito em {link}: é um diretório — resolva manualmente")
-    _backup_com_aviso(link)
+    # arquivo regular no caminho do symlink: sai mesmo sendo nosso — o lugar
+    # tem que ficar livre para o os.symlink
+    escrita.preservar(link, apenas_do_usuario=False)
 
 
 def resolver_arquivo_conflito(p: str) -> None:
@@ -41,45 +38,6 @@ def resolver_arquivo_conflito(p: str) -> None:
     diretório → ConflitoErro; arquivo com marcador Koine (ou assinatura
     retrocompat) → OK (regeneração idempotente); arquivo sem marcador →
     backup .bak livre + aviso stderr e prossegue. Nunca remove sem backup."""
-    if not os.path.lexists(p):
-        return
-    if os.path.islink(p):
-        raise ConflitoErro(
-            f"conflito em {p}: é um symlink — esperava arquivo regular; resolva manualmente")
-    if os.path.isdir(p):
-        raise ConflitoErro(f"conflito em {p}: é um diretório — resolva manualmente")
-    if _tem_marcador_koine(p):
-        return  # regeneração idempotente
-    _backup_com_aviso(p)  # arquivo do usuário → preserva em .bak e prossegue
+    escrita.preservar(p)
 
 
-def _tem_marcador_koine(p: str) -> bool:
-    """Porta de temMarkerKoine (conflito.go:129-141). Erro de leitura ou de
-    decodificação → False: arquivo tratado como do usuário — cai no backup,
-    nunca sobrescreve (mesma semântica do `err != nil → false` do Go).
-
-    Duas divergências micro DECLARADAS vs Go, ambas benignas:
-    (a) arquivo com bytes inválidos UTF-8 contendo a assinatura retrocompat →
-        Python retorna False e faz backup (mais seguro); o Go (bytes.Contains,
-        sem decode) sobrescreveria;
-    (b) 1ª linha com CRLF → Python casa o marcador na 1ª linha (universal
-        newlines removem o \\r); o Go só o encontraria pelo ramo Contains."""
-    try:
-        with open(p, encoding="utf-8") as f:
-            s = f.read()
-    except (OSError, UnicodeDecodeError):
-        return False
-    if s.split("\n", 1)[0] == MARCADOR_KOINE:
-        return True
-    return _ASSINATURA_RETROCOMPAT in s
-
-
-def _backup_com_aviso(p: str) -> None:
-    bak = _backup_livre(p)
-    os.rename(p, bak)
-    print(f"aviso: {os.path.basename(p)} existente (não gerado pelo Koine) salvo como "
-          f"{os.path.basename(bak)} — gerando contexto da sessão", file=sys.stderr)
-
-
-def _backup_livre(p: str) -> str:
-    return _backup_mod.caminho_livre(p + ".bak")
