@@ -98,3 +98,36 @@ def _backup(path: str, texto: str) -> None:
 def _gravar(path: str, texto: str) -> None:
     with open(path, "w", encoding="utf-8", newline="") as f:
         f.write(texto)
+
+
+def definir_campo_arquivo(path: str, chave: str, valor: str) -> bool:
+    """Grava `chave: valor` no frontmatter de `path`. True se escreveu.
+
+    Reusa as proteções do normalizar em vez de abrir um segundo caminho de
+    escrita ao lado: `_pode_escrever` (arquivo regular, fora do vault, não
+    symlink), permissão checada ANTES do backup (senão sobra `.bak` órfão —
+    medido na VM AppLocker com `attrib +R`), e `newline=""` ponta a ponta para
+    não trocar CRLF por LF no arquivo do usuário.
+    """
+    if not _pode_escrever(path):
+        return False
+    try:
+        with open(path, encoding="utf-8", newline="") as f:
+            texto = f.read()
+    except (OSError, UnicodeDecodeError):
+        return False
+
+    novo, mudou = frontmatter.definir_campo(texto, chave, valor)
+    if not mudou:
+        return False
+    if not os.access(path, os.W_OK):
+        _reportar(path, f"aviso: {path} está somente-leitura — não consegui "
+                        f"gravar `{chave}: {valor}`.")
+        return False
+    try:
+        _backup(path, texto)
+        _gravar(path, novo)
+    except OSError as e:
+        _reportar(path, f"aviso: não consegui gravar `{chave}` em {path} ({e}).")
+        return False
+    return True

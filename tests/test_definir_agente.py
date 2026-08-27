@@ -53,3 +53,55 @@ def test_preserva_crlf_e_comentario():
     assert frontmatter.ler(novo)[0]["agente"] == "leia"
     assert "\n" not in novo.replace("\r\n", ""), "nenhum LF solto criado"
     assert "\r\r" not in novo, "CR duplicado: o bloco termina com \\r pendurado"
+
+
+import os
+import time
+
+from koine import ficha
+
+
+def _pasta(tmp_path, conteudo=BASE):
+    p = tmp_path / "CONTEXTO.md"
+    p.write_text(conteudo, encoding="utf-8", newline="")
+    return str(p)
+
+
+def test_grava_no_arquivo_e_faz_backup(tmp_path):
+    path = _pasta(tmp_path)
+    assert ficha.definir_campo_arquivo(path, "agente", "leia") is True
+    assert frontmatter.ler(open(path).read())[0]["agente"] == "leia"
+    assert os.path.exists(path + ".bak"), "o conteúdo anterior tem que sobrar"
+    assert "agente:" not in open(path + ".bak").read()
+
+
+def test_mesmo_valor_nao_toca_o_arquivo(tmp_path):
+    """Pasta de usuário pode estar em git ou sincronizada: reescrever a cada
+    launch sujaria a árvore. mtime E conteúdo, não só conteúdo."""
+    path = _pasta(tmp_path)
+    ficha.definir_campo_arquivo(path, "agente", "leia")
+    antes_bytes = open(path, "rb").read()
+    antes_mtime = os.stat(path).st_mtime_ns
+    time.sleep(0.01)
+
+    assert ficha.definir_campo_arquivo(path, "agente", "leia") is False
+
+    assert open(path, "rb").read() == antes_bytes
+    assert os.stat(path).st_mtime_ns == antes_mtime
+    assert not os.path.exists(path + ".bak.1"), "no-op não gera backup novo"
+
+
+def test_recusa_arquivo_sem_ficha(tmp_path):
+    path = _pasta(tmp_path, "# sem frontmatter\n")
+    assert ficha.definir_campo_arquivo(path, "agente", "leia") is False
+    assert open(path).read() == "# sem frontmatter\n"
+
+
+def test_recusa_symlink(tmp_path):
+    """Escrita através de symlink alcança o alvo — mesma proteção do normalizar."""
+    real = tmp_path / "real.md"
+    real.write_text(BASE, encoding="utf-8")
+    link = tmp_path / "CONTEXTO.md"
+    os.symlink(str(real), str(link))
+    assert ficha.definir_campo_arquivo(str(link), "agente", "leia") is False
+    assert "agente:" not in real.read_text()
