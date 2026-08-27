@@ -6,6 +6,27 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Adicionado — a ficha do `CONTEXTO.md` volta sozinha quando some
+
+O bloco de configuração no topo do `CONTEXTO.md` — o que diz o escopo da pasta —
+já sumiu na mão de usuário real, em cinco pastas de uma vez, comido pelo próprio
+agente ao reescrever o arquivo no fim da sessão. Quem passa por isso fica com uma
+pasta que não abre e um arquivo que não sabe consertar.
+
+Agora, toda sessão que abre bem tira uma foto dessa ficha. Se ela sumir, a
+sessão seguinte **repõe sozinha** antes de abrir: a ficha volta, o corpo do
+arquivo fica como estava, o arquivo anterior é guardado num `.bak` ao lado, e
+um aviso diz o que foi reposto e de quando é.
+
+Sem foto — pasta nova, cache limpo, máquina nova — nada muda: continua o
+caminho de antes, com o Hermes conduzindo a configuração.
+
+`koine mostrar` numa pasta assim avisa que a ficha será reposta, em vez de
+recusar como se a sessão não fosse abrir.
+
+**O que o Koine continua não fazendo:** inventar ficha. Ele nunca supõe escopo
+nem escolhe domínio — só devolve o que aquele mesmo arquivo tinha antes.
+
 ### Adicionado — a pasta lembra com qual agente ela trabalha
 
 Até aqui o agente vinha sempre pela linha de comando: `kn-claude leia projeto`.

@@ -330,6 +330,13 @@ def _cmd_mostrar(args: list[str]) -> int:
     # não ter.
     agente = args[0] if args else ""
     alvo = args[1] if len(args) >= 2 else os.getcwd()
+    # Pasta incompleta COM foto: o launch vai curar. Verificação não escreve,
+    # então aqui só se anuncia — recusar daria a entender que a sessão não abre.
+    if _bootstrap.classificar(alvo) == _bootstrap.INCOMPLETO:
+        foto = _instantaneo.recuperar(alvo)
+        if foto:
+            print(mensagens.ficha_sera_reposta(alvo, foto.quando))
+            return 0
     # alvo NÃO resolve alias — comportamento congelado de `mostrar` (arg cru)
     if _bootstrap.classificar(alvo) in (
             _bootstrap.AUSENTE, _bootstrap.VAZIO, _bootstrap.INCOMPLETO,

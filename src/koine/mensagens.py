@@ -340,3 +340,12 @@ def ficha_reposta(pasta: str, quando: str) -> str:
         f"sessão{de_quando}.\n"
         f"       O arquivo como estava ficou em CONTEXTO.md.bak, ao lado.\n"
     )
+
+
+def ficha_sera_reposta(pasta: str, quando: str) -> str:
+    """`mostrar` numa pasta cuja ficha sumiu, mas que tem foto. Verificação não
+    escreve — então ele anuncia o que o launch vai fazer, em vez de recusar como
+    se a sessão não fosse abrir."""
+    de_quando = f" (de {quando})" if quando else ""
+    return (f"A ficha deste CONTEXTO.md sumiu, mas há uma foto{de_quando}.\n"
+            f"Abrir a sessão nesta pasta repõe a ficha automaticamente.\n")

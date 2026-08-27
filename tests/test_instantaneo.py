@@ -252,3 +252,24 @@ def test_incompleto_sem_foto_segue_como_antes(koine_home, monkeypatch):
 
     assert cli.main(["claude"]) == 0
     assert ctx.read_text() == "# Pasta\n\nSem ficha e sem foto.\n"
+
+
+def test_mostrar_anuncia_a_foto_sem_repor(koine_home, monkeypatch, capsys):
+    """Verificação não escreve. Mas a ferramenta que avisa antes não pode dar a
+    entender que a sessão não vai abrir, quando o launch vai curar."""
+    monkeypatch.setenv("HOME", koine_home["home"])
+    pasta = _pasta_valida(koine_home)
+    monkeypatch.chdir(pasta)
+    monkeypatch.setattr("koine.launch.lancar", lambda *a, **k: 0)
+    cli.main(["claude"])                       # fotografa
+
+    ctx = pathlib.Path(pasta, "CONTEXTO.md")
+    ctx.write_text("# Pasta\n\nsem ficha\n", encoding="utf-8")
+    antes = ctx.read_bytes()
+    capsys.readouterr()
+
+    cli.main(["mostrar"])
+
+    saida = capsys.readouterr()
+    assert "ficha" in (saida.out + saida.err).lower()
+    assert ctx.read_bytes() == antes, "mostrar NÃO pode escrever"
