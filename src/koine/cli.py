@@ -14,6 +14,7 @@ from koine import (
     conflito,
     contexto,
     escrita,
+    estoque,
     ficha,
     frontmatter,
     indice,
@@ -538,6 +539,12 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
     # fotografar antes guardaria um bloco torto — o defeito atravessaria a foto.
     if estado == _bootstrap.VALIDO:
         _instantaneo.guardar(pasta, _bootstrap.bloco_do_contexto(pasta))
+    # Estoque do mecanismo antigo: sai ANTES de materializar. É o único ponto do
+    # Koine que remove arquivo da pasta, e por isso só alcança o que carrega o
+    # nosso marcador (ou é um dos dois symlinks que nós criávamos).
+    for removido in estoque.limpar(pasta):
+        print(f"aviso: {os.path.basename(removido)} do mecanismo anterior removido "
+              f"— o contexto agora é entregue fora da pasta", file=sys.stderr)
     lanc = adapters.get(cliente).renderizar(cm)
     try:
         _materializar(lanc, pasta)
