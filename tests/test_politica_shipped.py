@@ -72,3 +72,44 @@ def test_segunda_rodada_e_no_op_e_o_comando_rodou(tmp_path, monkeypatch):
     assert atualizadas == []
     assert criadas == []
     assert existentes == ["kn-99-encerra-sessao"]   # prova de que rodou
+
+
+# ---- e2e: a mensagem ao usuário, que é da CLI e não da lib -------------------
+
+import subprocess
+import sys
+
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def test_saida_do_instalar_cita_o_caminho_do_backup(tmp_path):
+    """Critério 1 da spec: o caminho do backup é CITADO na saída. Mensagem ao
+    usuário é justamente o que ninguém reexecuta à mão depois — sem esta
+    asserção, o critério ficaria verificado só pela prova viva."""
+    out = str(tmp_path / "dist")
+    subprocess.run([sys.executable, os.path.join(REPO, "scripts", "build-pyz.py"),
+                    "--out", out], check=True, capture_output=True, text=True)
+    pyz = os.path.join(out, "koine.pyz")
+    home = str(tmp_path / "home")
+    os.makedirs(home)
+    env = {"HOME": home, "USERPROFILE": home, "PATH": "/usr/bin:/bin"}
+
+    r = subprocess.run([sys.executable, pyz, "instalar"], env=env,
+                       capture_output=True, text=True, timeout=90,
+                       stdin=subprocess.DEVNULL)
+    assert r.returncode == 0, r.stderr[-800:]
+
+    # adultera um artefato shipped: é o estado de quem tem a versão anterior
+    koine_md = os.path.join(home, ".local", "share", "koine", "KOINE.md")
+    with open(koine_md, "w") as f:
+        f.write("conteudo da versao anterior\n")
+
+    r2 = subprocess.run([sys.executable, pyz, "instalar"], env=env,
+                        capture_output=True, text=True, timeout=90,
+                        stdin=subprocess.DEVNULL)
+
+    assert r2.returncode == 0, r2.stderr[-800:]
+    assert "sua versão anterior em" in r2.stdout
+    assert os.path.join(".cache", "koine", "backups") in r2.stdout
+    # e o artefato ficou novo de verdade — não só a mensagem apareceu
+    assert open(koine_md).read() != "conteudo da versao anterior\n"

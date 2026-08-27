@@ -76,10 +76,12 @@ def _cmd_instalar(args: list[str]) -> int:
     ns = p.parse_args(args)
 
     vault_src = ns.vault or _localizar_vault()
-    div = _instalar.extrair(vault_src, __version__, force=ns.force)
-    if div and not ns.force:
-        print("Arquivos divergentes (use --force):")
-        for d in div:
+    trocas, preservados = _instalar.extrair(vault_src, __version__, force=ns.force)
+    for dest, bak in trocas:
+        print(f"~ {os.path.basename(dest)} atualizado — sua versão anterior em {bak}")
+    if preservados and not ns.force:
+        print("Arquivos seus preservados (use --force para sobrescrever):")
+        for d in preservados:
             print("  !", d)
     bindir = ns.bin or _bin_padrao()
     pyz = ns.pyz or _pyz_padrao()
@@ -90,7 +92,7 @@ def _cmd_instalar(args: list[str]) -> int:
     interativo = sys.stdin.isatty()
     canonica.configurar(vault_src, interativo=interativo)
     try:
-        _instalar_com_deteccao(ns.para, interativo, ns.force)
+        _instalar_com_deteccao(ns.para, interativo)
     except (OSError, ValueError) as e:
         # degradação graciosa, instalar.go:68-70 — skills falhando não aborta
         print(f"aviso: skills: {e}", file=sys.stderr)
@@ -100,13 +102,13 @@ def _cmd_instalar(args: list[str]) -> int:
     return 0
 
 
-def _instalar_com_deteccao(para: str | None, interativo: bool, force: bool = False) -> None:
+def _instalar_com_deteccao(para: str | None, interativo: bool) -> None:
     """Porta de instalarComDeteccao (instalar.go:91-124): detecta harnesses no
     PATH e instala skills com confirmação. `para` dado → instala sem prompt;
     não-interativo → apenas informa."""
     print("\nInstalando skills de harness:")
     if para:
-        _instalar_skills_e_imprimir(para, force)
+        _instalar_skills_e_imprimir(para, __version__)
         return
     detectados = skills.detectar_harnesses()
     if not detectados:
@@ -121,42 +123,45 @@ def _instalar_com_deteccao(para: str | None, interativo: bool, force: bool = Fal
         resp = sys.stdin.readline().strip().lower()
         if resp in ("", "s"):
             try:
-                _instalar_skills_e_imprimir(h, force)
+                _instalar_skills_e_imprimir(h, __version__)
             except (OSError, ValueError) as e:
                 print(f"  aviso: {e}", file=sys.stderr)  # instalar.go:116-118
         else:
             print(f"  → Pulado. Para instalar depois: koine instalar-habilidades --para={h}")
 
 
-def _instalar_skills_e_imprimir(h: str, force: bool = False) -> None:
-    # espelha instalarEImprimir (instalar_habilidades.go:150-167)
-    criadas, existentes, div = skills.instalar_habilidades_detalhado(h, force=force)
+def _instalar_skills_e_imprimir(h: str, versao: str) -> None:
+    # espelha instalarEImprimir (instalar_habilidades.go:150-167), com a
+    # política nova: divergente é atualizado e o backup é anunciado.
+    criadas, existentes, atualizadas = skills.instalar_habilidades_detalhado(h, versao)
     home = str(pathlib.Path.home())
     print(f"  Skills para {h} ({os.path.join(home, *skills.HARNESS_SKILLS[h].split('/'))}):")
     for n in criadas:
         print(f"    + {n}")
     for n in existentes:
         print(f"    = {n}")
-    if not criadas and not existentes:
+    for n, bak in atualizadas:
+        print(f"    ~ {n} atualizada — sua versão anterior em {bak}")
+    if not criadas and not existentes and not atualizadas:
         print("    (nenhuma skill kn-* encontrada em vault)")
-    if div:
-        print("  Skills divergentes preservadas (use --force para sobrescrever):")
-        for d in div:
-            print("   !", d)
 
 
 def _cmd_instalar_habilidades(args: list[str]) -> int:
     p = argparse.ArgumentParser(prog="koine instalar-habilidades")
     p.add_argument("--para", required=True)
-    p.add_argument("--force", action="store_true")
+    p.add_argument("--force", action="store_true",
+                   help="não é mais necessário: skill divergente já é atualizada")
     ns = p.parse_args(args)
-    div = skills.instalar_habilidades(ns.para, force=ns.force)
-    if div and not ns.force:
-        print("Skills divergentes preservadas (use --force para sobrescrever):")
-        for d in div:
-            print("  !", d)
-    else:
-        print(f"Skills instaladas para {ns.para}.")
+    if ns.force:
+        # aceita em vez de recusar: era o único jeito de atualizar skill, e
+        # quem a tem no dedo receberia `unrecognized arguments` justamente no
+        # comando que roda para se atualizar. Avisa — não é no-op silencioso.
+        print("aviso: --force não é mais necessário — skill divergente já é "
+              "atualizada, com a sua versão guardada no cache.", file=sys.stderr)
+    atualizadas = skills.instalar_habilidades(ns.para, __version__)
+    for n, bak in atualizadas:
+        print(f"~ {n} atualizada — sua versão anterior em {bak}")
+    print(f"Skills instaladas para {ns.para}.")
     return 0
 
 
