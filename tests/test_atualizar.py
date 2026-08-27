@@ -85,13 +85,19 @@ def test_substituir_pyz_retenta_em_permissionerror(tmp_path, monkeypatch):
     assert dst.read_bytes() == b"novo" and n["c"] == 3
 
 
-def test_refresh_skills_instala_nos_detectados(monkeypatch):
+def test_refresh_skills_instala_nos_detectados_com_a_versao_entrante(monkeypatch):
+    """A versão que chega ao instalador de skills é a que está ENTRANDO, não a
+    do processo em execução: no `atualizar` o pyz ainda é o antigo quando as
+    skills são refrescadas, então ler `__version__` lá dentro gravaria o backup
+    debaixo da pasta da versão velha."""
     chamados = []
     monkeypatch.setattr(atualizar.skills, "detectar_harnesses", lambda: ["claude", "codex"])
     monkeypatch.setattr(atualizar.skills, "instalar_habilidades_detalhado",
-                        lambda h, force=False: (chamados.append((h, force)), (["kn-99"], [], []))[1])
-    atualizar._refresh_skills(force=True)
-    assert chamados == [("claude", True), ("codex", True)]
+                        lambda h, versao: (chamados.append((h, versao)), (["kn-99"], [], []))[1])
+    atualizar._refresh_skills("9.9.9")
+    assert chamados == [("claude", "9.9.9"), ("codex", "9.9.9")]
+    from koine._version import __version__ as instalada
+    assert "9.9.9" != instalada, "a fixture precisa diferir da versão do processo"
 
 
 from koine._version import __version__
