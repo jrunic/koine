@@ -1,6 +1,8 @@
 import os
 import sys
 
+from koine import backup as _backup_mod
+
 
 MARCADOR_KOINE = "<!-- gerado por kn-agente -->"
 # retrocompatibilidade: CLAUDE.md/GEMINI.md gerados pré-Fase-3 do Go não têm o
@@ -80,9 +82,4 @@ def _backup_com_aviso(p: str) -> None:
 
 
 def _backup_livre(p: str) -> str:
-    if not os.path.lexists(p + ".bak"):
-        return p + ".bak"
-    i = 1
-    while os.path.lexists(f"{p}.bak.{i}"):
-        i += 1
-    return f"{p}.bak.{i}"
+    return _backup_mod.caminho_livre(p + ".bak")

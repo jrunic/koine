@@ -12,6 +12,8 @@ import sys
 
 from koine import frontmatter, paths
 
+from koine import backup as _backup_mod
+
 # Paths já reportados neste processo — o launch lê o mesmo CONTEXTO.md em três
 # pontos e o escopo em dois. Quando a correção dá certo a repetição some sozinha
 # (a segunda leitura acha o arquivo válido), mas quando a escrita falha — arquivo
@@ -87,11 +89,8 @@ def _pode_escrever(path: str) -> bool:
 
 
 def _backup(path: str, texto: str) -> None:
-    """`.bak` livre, mesma política do conflito.py: nunca sobrescreve backup."""
-    destino, n = path + ".bak", 0
-    while os.path.exists(destino):
-        n += 1
-        destino = f"{path}.bak.{n}"
+    """`.bak` livre ao lado do arquivo. A política do nome mora em koine.backup."""
+    destino = _backup_mod.caminho_livre(path + ".bak")
     with open(destino, "w", encoding="utf-8", newline="") as f:
         f.write(texto)
 
