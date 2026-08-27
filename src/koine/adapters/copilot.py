@@ -12,17 +12,26 @@ ARQUIVO = os.path.join(".github", "copilot-instructions.md")
 def renderizar(cm: ContextoMontado) -> Lancamento:
     """Porta de harness.Copilot.Renderizar (copilot.go).
 
-    Materializa o bundle em ~/.cache/koine/copilot-bundles/<slot>/:
-    AGENTS.md (Usuário? + Agente) e .github/instructions/*.instructions.md.
-    Cria symlink <pasta>/.github/copilot-instructions.md → CONTEXTO.md e seta
-    COPILOT_CUSTOM_INSTRUCTIONS_DIRS. Bootstrap: só AGENTS.md + env
-    (+ bootstrap.instructions.md se houver CONTEXTO.md); sem symlink."""
+    Materializa o bundle em ~/.cache/koine/copilot-bundles/<slot>/, com TODAS
+    as camadas em .github/instructions/*.instructions.md. Cria symlink
+    <pasta>/.github/copilot-instructions.md → CONTEXTO.md e seta
+    COPILOT_CUSTOM_INSTRUCTIONS_DIRS. Bootstrap: usuário + agente + env
+    (+ bootstrap.instructions.md se houver CONTEXTO.md); sem symlink.
+
+    O bundle NÃO tem AGENTS.md: medido em 27/08 com discriminante na mesma
+    execução, o canal COPILOT_CUSTOM_INSTRUCTIONS_DIRS entrega os
+    `*.instructions.md` e ignora o AGENTS.md. Usuário e agente moravam nele —
+    isto é, não chegavam à sessão. Arquivo que o cliente não lê só engana quem
+    for depurar."""
     bundle = cache.caminho_bundle("copilot-bundles", cache.slot_id(cm.pasta_abs))
     instr = os.path.join(bundle, ".github", "instructions")
-    lanc = Lancamento(
-        arquivos_externos={os.path.join(bundle, "AGENTS.md"): _montar_agents_md(cm)},
-        env_vars={"COPILOT_CUSTOM_INSTRUCTIONS_DIRS": bundle},
-    )
+    lanc = Lancamento(env_vars={"COPILOT_CUSTOM_INSTRUCTIONS_DIRS": bundle})
+
+    if cm.usuario_path:
+        lanc.arquivos_externos[os.path.join(instr, "usuario.instructions.md")] = \
+            render.wrapar_instructions(_ler(cm.usuario_path))
+    lanc.arquivos_externos[os.path.join(instr, "agente.instructions.md")] = \
+        render.wrapar_instructions(_ler(cm.agente_path))
 
     if cm.instrucao_path:
         lanc.arquivos_externos[os.path.join(instr, "instrucao.instructions.md")] = \
@@ -44,15 +53,6 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
 
     lanc.symlinks = {os.path.join(cm.pasta_abs, ARQUIVO): cm.contexto_path}
     return lanc
-
-
-def _montar_agents_md(cm: ContextoMontado) -> str:
-    # só Usuário (se houver) + Agente — NÃO leva Koine/escopo/índices (copilot.go)
-    partes = []
-    if cm.usuario_path:
-        partes.append(render.Parte("Usuário", _ler(cm.usuario_path)))
-    partes.append(render.Parte("Agente", _ler(cm.agente_path)))
-    return render.mescar_documentos("Sessão Koine — Copilot", partes)
 
 
 def _ler(path: str) -> str:
