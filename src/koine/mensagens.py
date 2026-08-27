@@ -328,3 +328,15 @@ def agente_declarado_inexistente(nome: str) -> str:
         "\n"
         "    Para ver os que existem:  koine mostrar\n"
     )
+
+
+def ficha_reposta(pasta: str, quando: str) -> str:
+    """A ficha do CONTEXTO.md tinha sumido e foi reposta da foto da última sessão
+    válida. O aviso existe para o sintoma continuar visível: se a reposição fosse
+    silenciosa, ninguém perceberia que algo está comendo o frontmatter."""
+    de_quando = f" (de {quando})" if quando else ""
+    return (
+        f"aviso: a ficha de {pasta}/CONTEXTO.md tinha sumido — repus a da última "
+        f"sessão{de_quando}.\n"
+        f"       O arquivo como estava ficou em CONTEXTO.md.bak, ao lado.\n"
+    )

@@ -192,3 +192,63 @@ def test_fotografar_nao_toca_o_contexto(koine_home, monkeypatch):
 
     assert open(ctx, "rb").read() == antes
     assert os.stat(ctx).st_mtime_ns == antes_mtime
+
+
+def test_incompleto_com_foto_tem_a_ficha_de_volta(koine_home, monkeypatch, capsys):
+    """A asserção NÃO pode ser "a sessão abriu": pasta INCOMPLETO também abre,
+    com Hermes. O que discrimina é o arquivo no disco."""
+    monkeypatch.setenv("HOME", koine_home["home"])
+    pasta = _pasta_valida(koine_home)
+    monkeypatch.chdir(pasta)
+    monkeypatch.setattr("koine.launch.lancar", lambda *a, **k: 0)
+    cli.main(["claude"])                       # 1ª sessão: fotografa
+
+    ctx = pathlib.Path(pasta, "CONTEXTO.md")
+    ctx.write_text("# Pasta\n\nO agente comeu a ficha.\n", encoding="utf-8")
+
+    assert cli.main(["claude"]) == 0           # 2ª sessão: repõe
+
+    texto = ctx.read_text()
+    assert frontmatter.ler(texto)[0]["escopo"] == "fixture", "a ficha voltou"
+    assert "O agente comeu a ficha." in texto, "o corpo ficou"
+    assert os.path.exists(str(ctx) + ".bak")
+    assert "ficha" in capsys.readouterr().err.lower()
+
+
+def test_reposicao_cura_a_sessao_tambem_nao_so_o_disco(koine_home, monkeypatch):
+    """Curar o arquivo e abrir a sessão como incompleta seria meio conserto: o
+    usuário receberia o Hermes com instrução de consertar uma pasta que já está
+    consertada. A asserção é sobre o cm que chega ao adapter."""
+    monkeypatch.setenv("HOME", koine_home["home"])
+    pasta = _pasta_valida(koine_home)
+    monkeypatch.chdir(pasta)
+    monkeypatch.setattr("koine.launch.lancar", lambda *a, **k: 0)
+    cli.main(["claude"])                       # fotografa
+
+    pathlib.Path(pasta, "CONTEXTO.md").write_text("# Pasta\n\nsem ficha\n",
+                                                  encoding="utf-8")
+    from koine import contexto as _ctx
+    capturado = {}
+    original = _ctx.resolver
+    monkeypatch.setattr(_ctx, "resolver",
+                        lambda a, p: capturado.setdefault("cm", original(a, p)))
+
+    cli.main(["claude"])
+
+    cm = capturado["cm"]
+    assert not cm.bootstrap, "a sessão ainda subiu em modo bootstrap"
+    assert cm.escopo_path, "a sessão não recebeu o escopo da ficha reposta"
+
+
+def test_incompleto_sem_foto_segue_como_antes(koine_home, monkeypatch):
+    """Regressão: sem foto, o caminho de hoje — Hermes com a instrução, e nada
+    inventado no arquivo."""
+    monkeypatch.setenv("HOME", koine_home["home"])
+    pasta = str(pathlib.Path(koine_home["trab"]))
+    ctx = pathlib.Path(pasta, "CONTEXTO.md")
+    ctx.write_text("# Pasta\n\nSem ficha e sem foto.\n", encoding="utf-8")
+    monkeypatch.chdir(pasta)
+    monkeypatch.setattr("koine.launch.lancar", lambda *a, **k: 0)
+
+    assert cli.main(["claude"]) == 0
+    assert ctx.read_text() == "# Pasta\n\nSem ficha e sem foto.\n"

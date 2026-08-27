@@ -459,9 +459,20 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
             f.write(_bootstrap.CONTEXTO_CONFIGURA_PASTA)
         # resolver vê `bootstrap: true` e força Hermes — o agente pedido é ignorado.
     elif estado == _bootstrap.INCOMPLETO:
-        # CONTEXTO.md do usuário sem `escopo:`. Não se escreve sobre ele: é dele.
-        # `contexto.resolver` devolve CM de bootstrap com a instrução do vault + o
-        # arquivo original, e o Hermes completa via /kn-02 Fluxo 3b.
+        # A ficha pode ter sumido no fechamento da sessão anterior. Se há foto
+        # desta pasta, ela volta ANTES de qualquer coisa — e o estado é
+        # RE-MEDIDO: sem isso, a sessão seguiria tratada como incompleta mesmo
+        # com a ficha de volta, e o usuário receberia o Hermes com instrução de
+        # consertar uma pasta que já está consertada.
+        foto = _instantaneo.recuperar(pasta)
+        if foto and ficha.repor_bloco(os.path.join(pasta, "CONTEXTO.md"), foto.bloco):
+            print(mensagens.ficha_reposta(pasta, foto.quando), file=sys.stderr)
+            estado = _bootstrap.classificar(pasta)
+    if estado == _bootstrap.INCOMPLETO:
+        # CONTEXTO.md do usuário sem `escopo:`, e sem foto que o cure. Não se
+        # escreve sobre ele: é dele. `contexto.resolver` devolve CM de bootstrap
+        # com a instrução do vault + o arquivo original, e o Hermes completa via
+        # /kn-02 Fluxo 3b.
         if not _bootstrap.usuario_onboarded(paths.config_dir()):
             print(mensagens.pasta_sem_contexto_nao_onboarded(cliente), file=sys.stderr)
             return 1
