@@ -201,3 +201,32 @@ def test_agente_declarado_inexistente_sem_tty_aborta(koine_home, monkeypatch, ca
 
     assert rc != 0
     assert "fantasma" in capsys.readouterr().err
+
+
+def test_posicional_nao_grava_na_pasta(koine_home, monkeypatch):
+    """A asserção natural — "a próxima sessão abre o agente certo" — passa MESMO
+    com a gravação ativa, porque no caso óbvio o posicional e o declarado
+    coincidem. Por isso: posicional DIFERENTE do declarado, e comparação byte a
+    byte mais mtime.
+
+    A fixture nasce com o frontmatter já normalizado de propósito: o launch lê
+    com normalização ligada, e frontmatter torto faria a normalização escrever —
+    escrita legítima que este teste acusaria como violação.
+    """
+    monkeypatch.setenv("HOME", koine_home["home"])
+    # `atlas` PRECISA existir: com nome inexistente e fonte POSICIONAL o
+    # resolver levanta AgenteNaoEncontrado, e o teste morreria antes da
+    # asserção — erraria pelo motivo errado.
+    agentes = pathlib.Path(koine_home["cfg"], "agentes")
+    agentes.mkdir(parents=True, exist_ok=True)
+    (agentes / "atlas.md").write_text("---\ntype: agente\n---\n# Atlas\n")
+    pasta = _pasta_valido(koine_home, "hermes")      # declarado: hermes
+    ctx = os.path.join(pasta, "CONTEXTO.md")
+    antes = open(ctx, "rb").read()
+    antes_mtime = os.stat(ctx).st_mtime_ns
+
+    cm = contexto.resolver("atlas", pasta)           # posicional: OUTRO nome
+
+    assert cm.agente_path.endswith("atlas.md"), "pré-condição: o posicional venceu"
+    assert open(ctx, "rb").read() == antes
+    assert os.stat(ctx).st_mtime_ns == antes_mtime
