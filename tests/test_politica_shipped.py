@@ -113,3 +113,98 @@ def test_saida_do_instalar_cita_o_caminho_do_backup(tmp_path):
     assert os.path.join(".cache", "koine", "backups") in r2.stdout
     # e o artefato ficou novo de verdade — não só a mensagem apareceu
     assert open(koine_md).read() != "conteudo da versao anterior\n"
+
+
+# ---- equivalência por célula: a raiz do problema -----------------------------
+
+import shutil
+
+from koine import atualizar as _atualizar
+from koine import instalar as _instalar
+
+
+def _estado_do_harness(home):
+    """O que o usuário enxerga: nome da skill → conteúdo do SKILL.md.
+
+    Dict, não lista de nomes: a equivalência precisa comparar CONTEÚDO. Com só
+    os nomes, três harnesses com a skill em versões diferentes empatariam — a
+    forma "valor igual entre ramo e fallback" aplicada ao instrumento.
+    """
+    base = os.path.join(home, ".claude", "skills")
+    if not os.path.isdir(base):
+        return {}
+    return {n: open(os.path.join(base, n, "SKILL.md")).read()
+            for n in sorted(os.listdir(base))
+            if os.path.isfile(os.path.join(base, n, "SKILL.md"))}
+
+
+def _cenario(base: pathlib.Path, monkeypatch, nome: str):
+    """HOME isolado com: vault instalado na v1 e skill v1 no harness; a origem
+    já avançada para v2. É o estado exato do defeito medido em produção — quem
+    já usava o Koine tinha a skill anterior instalada."""
+    home = base / nome
+    home.mkdir()
+    origem = base / f"origem-{nome}"
+    d = origem / "habilidades" / "kn-99-encerra-sessao"
+    d.mkdir(parents=True)
+    (d / "SKILL.md").write_text("skill v1")
+    (origem / "KOINE.md").write_text("koine v1")
+
+    monkeypatch.setenv("HOME", str(home))
+    for k in ("XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME"):
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setattr(skills.Path, "home", staticmethod(lambda h=home: pathlib.Path(h)))
+
+    _instalar.extrair(str(origem), "0.0.1")
+    skills.instalar_habilidades_detalhado("claude", "0.0.1")
+    (d / "SKILL.md").write_text("skill v2")
+    (origem / "KOINE.md").write_text("koine v2")
+    return home, origem
+
+
+def test_os_tres_comandos_deixam_o_harness_no_mesmo_estado(tmp_path, monkeypatch):
+    """As políticas divergiram porque cada comando foi testado sozinho. Este
+    teste roda o MESMO cenário nos três e compara o estado resultante.
+
+    Equivalência é POR CÉLULA: aqui, a do harness, onde os três atuam. O
+    `instalar-habilidades` não toca o vault, então exigir estado idêntico em
+    todas as células seria impossível — e quem escrevesse esse teste acabaria
+    reduzindo a asserção até ela passar.
+    """
+    estados = {}
+
+    # 1. instalar
+    home, origem = _cenario(tmp_path, monkeypatch, "instalar")
+    _instalar.extrair(str(origem), "0.0.2")
+    skills.instalar_habilidades_detalhado("claude", "0.0.2")
+    estados["instalar"] = _estado_do_harness(str(home))
+
+    # 2. atualizar — a fase de aplicação, que é onde a política é exercida
+    home, origem = _cenario(tmp_path, monkeypatch, "atualizar")
+    # detectar_harnesses() varre o PATH REAL do processo: nesta máquina o
+    # `claude` existe e o refresh roda; no runner do CI não existe, o harness
+    # ficaria na v1 e a equivalência quebraria LÁ, com o teste certo e o
+    # ambiente diferente. O seam elimina a dependência do PATH.
+    monkeypatch.setattr(_atualizar.skills, "detectar_harnesses", lambda: ["claude"])
+    staging = tmp_path / "staging"
+    shutil.copytree(str(origem), str(staging / "vault"))
+    (staging / "koine.pyz").write_text("pyz novo")
+    alvo = home / "koine.pyz"
+    alvo.write_text("pyz velho")
+    bindir = home / "bin"
+    bindir.mkdir()
+    _atualizar.aplicar(str(staging), str(alvo), str(bindir), "0.0.2", force=False)
+    estados["atualizar"] = _estado_do_harness(str(home))
+
+    # 3. instalar-habilidades — o vault chega novo por outra via; só o harness
+    home, origem = _cenario(tmp_path, monkeypatch, "instalar-habilidades")
+    _instalar.extrair(str(origem), "0.0.2")
+    skills.instalar_habilidades("claude", "0.0.2")
+    estados["instalar-habilidades"] = _estado_do_harness(str(home))
+
+    # pré-condição, NÃO redundância: sem ela, três comandos que não fizessem
+    # nada passariam com estados vazios e iguais
+    assert estados["instalar"] == {"kn-99-encerra-sessao": "skill v2"}, \
+        "pré-condição: o cenário tem que de fato atualizar"
+    assert estados["instalar"] == estados["atualizar"]
+    assert estados["instalar"] == estados["instalar-habilidades"]
