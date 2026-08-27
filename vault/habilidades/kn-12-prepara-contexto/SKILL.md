@@ -80,10 +80,12 @@ entradas: <N>
 
 ### Arquivo `CLAUDE.md` da pasta de trabalho
 
-Materialize `<pasta-de-trabalho>/CLAUDE.md` no formato exato abaixo — primeira linha é o marcador, seguido do corpo:
+Materialize `<pasta-de-trabalho>/CLAUDE.md` no formato exato abaixo — as **duas
+primeiras linhas são marcas**, seguidas do corpo:
 
 ```
 <!-- gerado por kn-agente -->
+<!-- gerado a pedido -->
 # CLAUDE.md
 *Gerado por kn-agente em <timestamp UTC RFC3339>. Não editar — regerar com `/kn-12-prepara-contexto`.*
 
@@ -98,7 +100,8 @@ Materialize `<pasta-de-trabalho>/CLAUDE.md` no formato exato abaixo — primeira
 
 - Uma linha `@<...>/kn-indice-<dom>.md` por domínio declarado, na ordem dos domínios.
 - Todos os `@path` são **absolutos** (começam com o `HOME` real).
-- O marcador `<!-- gerado por kn-agente -->` é obrigatório e idêntico — é o que a detecção de conflito procura.
+- O marcador `<!-- gerado por kn-agente -->` é obrigatório e idêntico — é o que a detecção de conflito procura. **Nunca troque essa linha**: instalações antigas dependem dela para reconhecer os próprios arquivos.
+- A segunda linha, `<!-- gerado a pedido -->`, é o que impede a limpeza automática de apagar este arquivo. Sem ela, uma sessão aberta pelo `kn-<cliente>` nesta mesma pasta remove o `CLAUDE.md` — e aqui ele é a **única** via de entrega do contexto.
 
 ## Determinismo (obrigatório)
 

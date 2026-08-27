@@ -18,6 +18,11 @@ MARCADOR_KOINE = "<!-- gerado por kn-agente -->"
 # Retrocompatibilidade: CLAUDE.md/GEMINI.md gerados pré-Fase-3 do Go não têm o
 # marcador HTML, mas carregam a assinatura do template (conflito.go:139-140).
 ASSINATURA_RETROCOMPAT = "Regerar: `kn-agente"
+# Segunda linha, nunca a primeira: o marcador acima é CONGELADO por declaração
+# do CONTEXTO.md do repo — é o contrato de detecção com instalações antigas,
+# inclusive as do binário Go. Propriedade ("isto é nosso") e intenção ("foi
+# pedido, não limpe") são perguntas diferentes e ganham respostas separadas.
+MARCA_A_PEDIDO = "<!-- gerado a pedido -->"
 
 
 class ConflitoErro(Exception):
@@ -39,6 +44,24 @@ def e_nosso(p: str) -> bool:
     if s.split("\n", 1)[0] == MARCADOR_KOINE:
         return True
     return ASSINATURA_RETROCOMPAT in s
+
+
+def tem_marca_a_pedido(p: str) -> bool:
+    """O arquivo foi materializado a pedido (`koine gerar`, modo skills)?"""
+    try:
+        with open(p, encoding="utf-8") as f:
+            linhas = f.read().split("\n", 2)
+    except (OSError, UnicodeDecodeError):
+        return False
+    return len(linhas) > 1 and linhas[1].strip() == MARCA_A_PEDIDO
+
+
+def marcar_a_pedido(conteudo: str) -> str:
+    """Acrescenta a marca de intenção como SEGUNDA linha. Idempotente."""
+    linhas = conteudo.split("\n")
+    if len(linhas) > 1 and linhas[1].strip() == MARCA_A_PEDIDO:
+        return conteudo
+    return "\n".join(linhas[:1] + [MARCA_A_PEDIDO] + linhas[1:])
 
 
 def preservar(p: str, apenas_do_usuario: bool = True) -> None:
