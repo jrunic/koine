@@ -141,3 +141,54 @@ def test_repor_recusa_symlink(tmp_path):
     os.symlink(str(real), str(link))
     assert ficha.repor_bloco(str(link), FICHA) is False
     assert "escopo" not in real.read_text()
+
+
+import pathlib
+
+from koine import cli
+
+VALIDO = """---
+escopo: fixture
+dominios: [tecnologia]
+---
+
+# Pasta
+
+Uma linha de corpo com tamanho suficiente para servir de referência.
+"""
+
+
+def _pasta_valida(koine_home):
+    d = pathlib.Path(koine_home["trab"])
+    (d / "CONTEXTO.md").write_text(VALIDO, encoding="utf-8", newline="")
+    return str(d)
+
+
+def test_launch_valido_fotografa_a_ficha(koine_home, monkeypatch):
+    monkeypatch.setenv("HOME", koine_home["home"])
+    pasta = _pasta_valida(koine_home)
+    monkeypatch.chdir(pasta)
+    monkeypatch.setattr("koine.launch.lancar", lambda *a, **k: 0)
+
+    assert cli.main(["claude"]) == 0
+
+    foto = instantaneo.recuperar(pasta)
+    assert foto is not None
+    assert "escopo: fixture" in foto.bloco
+
+
+def test_fotografar_nao_toca_o_contexto(koine_home, monkeypatch):
+    """Fixture já normalizada de propósito: o launch lê com normalização
+    ligada, e frontmatter torto faria a normalização escrever — escrita
+    legítima que este teste acusaria como violação."""
+    monkeypatch.setenv("HOME", koine_home["home"])
+    pasta = _pasta_valida(koine_home)
+    ctx = os.path.join(pasta, "CONTEXTO.md")
+    antes, antes_mtime = open(ctx, "rb").read(), os.stat(ctx).st_mtime_ns
+    monkeypatch.chdir(pasta)
+    monkeypatch.setattr("koine.launch.lancar", lambda *a, **k: 0)
+
+    cli.main(["claude"])
+
+    assert open(ctx, "rb").read() == antes
+    assert os.stat(ctx).st_mtime_ns == antes_mtime

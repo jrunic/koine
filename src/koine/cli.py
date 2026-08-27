@@ -16,6 +16,7 @@ from koine import (
     ficha,
     frontmatter,
     indice,
+    instantaneo as _instantaneo,
     instalar as _instalar,
     launch,
     mensagens,
@@ -489,6 +490,10 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
         print(mensagens.agente_declarado_inexistente(cm.agente_ausente),
               file=sys.stderr)
         return 1
+    # Foto da ficha DEPOIS de montar o contexto: é lá que a normalização roda, e
+    # fotografar antes guardaria um bloco torto — o defeito atravessaria a foto.
+    if estado == _bootstrap.VALIDO:
+        _instantaneo.guardar(pasta, _bootstrap.bloco_do_contexto(pasta))
     lanc = adapters.get(cliente).renderizar(cm)
     try:
         _materializar(lanc, pasta)
