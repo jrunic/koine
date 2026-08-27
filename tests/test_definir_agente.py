@@ -105,3 +105,48 @@ def test_recusa_symlink(tmp_path):
     os.symlink(str(real), str(link))
     assert ficha.definir_campo_arquivo(str(link), "agente", "leia") is False
     assert "agente:" not in real.read_text()
+
+
+from koine import cli
+
+
+def test_comando_grava_na_pasta(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    (tmp_path / "home").mkdir()
+    d = tmp_path / "trab"
+    d.mkdir()
+    (d / "CONTEXTO.md").write_text(BASE, encoding="utf-8", newline="")
+
+    rc = cli.main(["definir-agente", "leia", str(d)])
+
+    assert rc == 0
+    assert frontmatter.ler((d / "CONTEXTO.md").read_text())[0]["agente"] == "leia"
+
+
+def test_comando_com_default_grava_no_arquivo_do_usuario(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    cfg = home / ".config" / "koine"
+    cfg.mkdir(parents=True)
+    (cfg / "orlando.md").write_text("---\ntype: usuario\nnome: Orlando\n---\n",
+                                    encoding="utf-8", newline="")
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+
+    rc = cli.main(["definir-agente", "leia", "--default"])
+
+    assert rc == 0
+    assert frontmatter.ler((cfg / "orlando.md").read_text())[0]["agente-default"] == "leia"
+
+
+def test_comando_recusa_pasta_sem_ficha_com_mensagem(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    (tmp_path / "home").mkdir()
+    d = tmp_path / "trab"
+    d.mkdir()
+    (d / "CONTEXTO.md").write_text("# sem ficha\n", encoding="utf-8")
+
+    rc = cli.main(["definir-agente", "leia", str(d)])
+
+    assert rc != 0
+    saida = capsys.readouterr()
+    assert "ficha" in (saida.out + saida.err).lower()

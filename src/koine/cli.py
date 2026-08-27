@@ -7,11 +7,13 @@ import sys
 
 from koine import (
     adapters,
+    agente as _agente,
     atualizar as _atualizar,
     bootstrap as _bootstrap,
     canonica,
     conflito,
     contexto,
+    ficha,
     frontmatter,
     indice,
     instalar as _instalar,
@@ -28,7 +30,7 @@ from koine import (
 from koine._version import __version__
 
 SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades", "gerar", "mostrar",
-               "validar", "atualizar"}
+               "validar", "atualizar", "definir-agente"}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -59,6 +61,8 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_validar(argv[1:])
         if primeiro == "atualizar":
             return _cmd_atualizar(argv[1:])
+        if primeiro == "definir-agente":
+            return _cmd_definir_agente(argv[1:])
     if primeiro in adapters.REGISTRY:
         return _rodar_cliente(primeiro, argv[1:])
 
@@ -144,6 +148,40 @@ def _instalar_skills_e_imprimir(h: str, versao: str) -> None:
         print(f"    ~ {n} atualizada — sua versão anterior em {bak}")
     if not criadas and not existentes and not atualizadas:
         print("    (nenhuma skill kn-* encontrada em vault)")
+
+
+def _cmd_definir_agente(args: list[str]) -> int:
+    p = argparse.ArgumentParser(prog="koine definir-agente")
+    p.add_argument("nome")
+    p.add_argument("pasta", nargs="?", default="")
+    p.add_argument("--default", action="store_true",
+                   help="grava como agente default do usuário, em vez da pasta")
+    ns = p.parse_args(args)
+
+    if ns.default:
+        alvo = contexto._achar_usuario_opcional(paths.config_dir())
+        campo = _agente.CAMPO_DEFAULT
+        if not alvo:
+            print("Erro: não encontrei o seu arquivo de usuário em "
+                  f"{paths.config_dir()} — rode `koine instalar` e "
+                  "`/kn-01-recebe-usuario` primeiro.", file=sys.stderr)
+            return 1
+    else:
+        try:
+            alvo = os.path.join(pasta_mod.resolver(ns.pasta), "CONTEXTO.md")
+        except pasta_mod.ResolucaoErro as e:   # o launch já captura; herdar
+            print(str(e), file=sys.stderr)
+            return 1
+        campo = _agente.CAMPO_PASTA
+
+    if ficha.definir_campo_arquivo(alvo, campo, ns.nome):
+        print(f"{campo}: {ns.nome} → {alvo}")
+        return 0
+    # o mecanismo não escreve em três casos, e cada um tem conselho próprio
+    print(f"Nada a gravar em {alvo}. Ou o valor já era esse, ou o arquivo não "
+          "tem ficha (o bloco `---` no topo), ou está somente-leitura.",
+          file=sys.stderr)
+    return 1
 
 
 def _cmd_instalar_habilidades(args: list[str]) -> int:
