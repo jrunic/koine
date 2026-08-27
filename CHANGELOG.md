@@ -6,6 +6,42 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Adicionado — a pasta lembra com qual agente ela trabalha
+
+Até aqui o agente vinha sempre pela linha de comando: `kn-claude leia projeto`.
+Quem tem mais de um agente digitava o nome toda vez, e abrir sessão de um lugar
+onde não dá para digitar — um celular, um provider remoto fixo — não tinha como
+escolher o agente certo.
+
+Agora a pasta declara o seu, no frontmatter do `CONTEXTO.md`:
+
+```
+agente: leia
+```
+
+E o launch resolve por precedência: **o que você digitou** (que vale só para
+aquela sessão e **não fica gravado**) → **o que a pasta declara** → **o seu agente
+default** → **Hermes**. Quem tem um agente só não precisa saber que isso existe.
+
+Para gravar, um comando — nunca editando o YAML à mão:
+
+```
+koine definir-agente leia          # nesta pasta
+koine definir-agente leia --default # como seu default
+```
+
+`koine mostrar`, sem argumento nenhum, responde qual agente a pasta vai abrir,
+antes de abrir.
+
+**Quando o nome não existe, o que acontece depende de onde ele veio.** Digitado
+por você: erro na hora, com a lista dos que existem — há um humano no teclado, e
+redigitar custa zero. Gravado num arquivo: a sessão sobe com o Hermes, que
+recebe a instrução de conduzir a correção. Sem terminal interativo, a sessão
+**não sobe** — abrir em silêncio com o agente errado é pior do que não abrir.
+
+Fora de pasta configurada nada muda: pasta nova, vazia ou sem escopo continua
+abrindo com o Hermes, que é quem sabe conduzir o conserto.
+
 ### Corrigido — correção de skill não chegava a quem já tinha o Koine instalado
 
 A `kn-99-encerra-sessao` foi corrigida na v0.6.1, e em 27/08 a bancada Windows mostrou

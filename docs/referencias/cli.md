@@ -27,6 +27,19 @@ Flags:
 
 Idempotente em todas as fases. Em modo não-interativo (stdin sem TTY, detectado via `sys.stdin.isatty()`), aceita defaults sem prompts.
 
+### `koine definir-agente <nome> [pasta] [--default]`
+
+Grava qual agente a pasta usa, no campo `agente:` do frontmatter do
+`CONTEXTO.md`. Com `--default`, grava `agente-default:` no seu arquivo de
+usuário, valendo para toda pasta que não declare um.
+
+A escrita preserva o resto do frontmatter e guarda o conteúdo anterior num
+`.bak` ao lado antes de gravar. Gravar o mesmo valor que já está lá não toca no
+arquivo. Pasta cujo `CONTEXTO.md` não tem ficha (o bloco `---` no topo) é
+recusada com orientação — o comando não cria ficha por conta própria.
+
+- `--default` — grava no arquivo do usuário em vez da pasta.
+
 ### `koine atualizar [--force]`
 
 Self-update para a última release. Fases:
@@ -82,7 +95,7 @@ Os arquivos de configuração que o launch carrega (`CONTEXTO.md` da pasta, esco
 
 Imprime versão e sai.
 
-## Wrappers de cliente IA — `kn-<cliente> <agente> [pasta]`
+## Wrappers de cliente IA — `kn-<cliente> [agente] [pasta]`
 
 Sintaxe canônica para abrir sessão de cliente IA com contexto Koine.
 
@@ -95,7 +108,19 @@ Sintaxe canônica para abrir sessão de cliente IA com contexto Koine.
 
 ### Argumentos
 
-- `<agente>` — nome do agente Koine (`hermes` ou agente operacional do usuário em `~/.config/koine/agentes/<nome>.md`).
+- `[agente]` — **opcional**. Nome do agente Koine (`hermes` ou agente operacional do usuário em `~/.config/koine/agentes/<nome>.md`). Quando informado, vale **só para aquela sessão**: não fica gravado na pasta.
+
+  A leitura dos posicionais é por regra fixa, não por adivinhação:
+
+  | posicionais | leitura | pasta |
+  |---|---|---|
+  | 0 | resolve pela precedência abaixo | `pwd` |
+  | 1 | é **agente** | `pwd` |
+  | 2 | agente + pasta | a informada |
+
+  Sem agente informado, a precedência é: campo `agente:` do `CONTEXTO.md` da pasta → `agente-default:` do arquivo do usuário → `hermes`. Vale **só em pasta com `escopo:`**; pasta nova, vazia ou incompleta abre com o Hermes e o agente pedido é ignorado, porque é ele quem conduz o conserto.
+
+  Agente que não existe: informado na linha de comando → erro com a lista dos disponíveis; declarado num arquivo → Hermes com a instrução de corrigir, e **erro** quando não há terminal interativo.
 - `[pasta]` — opcional. Resolução em cascata:
   1. `""` ou ausente → usa `pwd`.
   2. Alias em `~/.config/koine/aliases.json` → resolve para path canônico.

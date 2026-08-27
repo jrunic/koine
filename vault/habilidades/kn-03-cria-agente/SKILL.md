@@ -208,6 +208,25 @@ tags: [agente, <nome>]
 
 ---
 
+## Se este é o primeiro agente do usuário, marque-o como default
+
+Depois de gravar o arquivo do agente, verifique se existe algum outro em
+`~/.config/koine/agentes/`. Se este é o **único**, ele vira o default do usuário:
+
+```
+koine definir-agente <nome> --default
+```
+
+Do segundo agente em diante, **não toque no default** — quem já tem um escolheu,
+e roubá-lo silenciosamente mudaria o agente de todas as pastas que não declaram
+um.
+
+**Nunca edite o arquivo do usuário à mão para isso.** O comando preserva o resto
+do frontmatter e guarda o conteúdo anterior antes de gravar; edição em prosa é o
+que já fez usuários perderem a ficha inteira de um `CONTEXTO.md`.
+
+---
+
 ## Confirmação final
 
 Após gravar, retorne:
@@ -216,6 +235,12 @@ Após gravar, retorne:
 >
 > ```
 > kn-<cliente> <nome> [pasta]
+> ```
+>
+> Para que uma pasta abra sempre com ele, sem digitar o nome, rode lá dentro:
+>
+> ```
+> koine definir-agente <nome>
 > ```
 >
 > No **modo binário**, o wrapper resolve a pasta, gera o arquivo de contexto do cliente IA (CLAUDE.md, AGENTS.md, etc.) e abre o cliente com `<nome>` carregado. No **modo skills**, rode `/kn-12-prepara-contexto` na pasta de trabalho para gerar o `CLAUDE.md` e então abra o `claude` ali."
