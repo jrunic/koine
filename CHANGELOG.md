@@ -6,6 +6,35 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Corrigido — correção de skill não chegava a quem já tinha o Koine instalado
+
+A `kn-99-encerra-sessao` foi corrigida na v0.6.1, e em 27/08 a bancada Windows mostrou
+que a correção **não chegava**: rodando o instalador por cima de uma instalação
+anterior, a resposta era `Arquivos divergentes (use --force)` e a skill velha ficava
+onde estava. Quem instalava do zero recebia; quem já usava o Koine, não.
+
+A causa não era um bug pontual — eram **cinco células com três políticas**, escritas em
+momentos diferentes e cada uma testada sozinha: `instalar` preservava divergente nos
+dois lados; `atualizar` sobrescrevia o vault sem backup e **também** preservava a skill
+no harness; `instalar-habilidades` preservava. Agora os três têm a mesma:
+
+**divergiu → guarda o que estava lá, atualiza, e diz onde ficou.**
+
+O backup vai para `~/.cache/koine/backups/<versão>/`, com o caminho impresso na saída —
+**não ao lado do original**. Backup ao lado, dentro do vault, casa o filtro `kn-*` do
+instalador de skills e é copiado para o harness **como se fosse uma skill**; no
+OpenCode a entrada inválida sumiria em silêncio. Está guardado por teste que mede a
+lista de skills que o usuário enxerga, não a ausência de um sufixo.
+
+O que **não** mudou: `dominios/` continua sendo seu — preservado e reportado, salvo
+`--force`. O `--force` do `instalar-habilidades` perdeu o objeto; continua aceito, e
+avisa que virou desnecessário, em vez de recusar o comando de quem o tem no dedo.
+
+Detalhe interno: `koine.backup` passa a ser o dono único da política de backup, que
+existia duplicada em `conflito.py` e `ficha.py`. A versão que nomeia a pasta é a
+**entrante**, trafegando por parâmetro — no `atualizar`, o pyz em execução ainda é o
+antigo, e ler a versão no meio da cadeia gravaria o backup na pasta errada.
+
 ## [0.6.3] — 2026-08-27
 
 ### Corrigido — saída redirecionada no Windows derrubava o `koine instalar`

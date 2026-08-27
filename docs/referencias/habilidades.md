@@ -380,7 +380,7 @@ E uma **cópia** em cada harness detectado (ex: Claude Code):
 └── (...)
 ```
 
-Cópia, não symlink: symlink no Windows exige privilégio de administrador, que o público-alvo não tem. A cópia é idempotente e não-destrutiva — diretório idêntico é pulado, divergente é reportado e preservado, e só `--force` sobrescreve.
+Cópia, não symlink: symlink no Windows exige privilégio de administrador, que o público-alvo não tem. A cópia é idempotente: diretório idêntico é pulado; divergente é **atualizado**, com o que estava instalado guardado em `~/.cache/koine/backups/<versão>/harness/<harness>/` e o caminho impresso. É o que faz correção de skill chegar a quem já usa o Koine — antes ela parava na máquina de quem instalava do zero.
 
 Cliente IA descobre skills automaticamente.
 

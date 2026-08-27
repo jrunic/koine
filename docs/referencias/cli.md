@@ -22,7 +22,7 @@ Comando único de configuração inicial. Executa as fases:
 
 Flags:
 
-- `--force` — sobrescreve arquivos divergentes do vault sem prompt.
+- `--force` — alcança os seus `dominios/` em `~/.config/koine/`. O vault shipped divergente já é atualizado sem flag, com o anterior guardado em `~/.cache/koine/backups/<versão>/`.
 - `--para=<harness>` — instala skills do harness especificado sem prompt (suportados: `claude`, `agy`, `copilot`, `opencode`, `codex`).
 
 Idempotente em todas as fases. Em modo não-interativo (stdin sem TTY, detectado via `sys.stdin.isatty()`), aceita defaults sem prompts.

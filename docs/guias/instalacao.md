@@ -131,7 +131,7 @@ python3.13 ~/.local/share/koine/dist/koine.pyz instalar
 
 Este é o passo que instala de fato — tudo que vem antes é transporte. O `koine instalar`:
 
-- planta o **vault** em `~/.local/share/koine/` e os domínios em `~/.config/koine/dominios/` (arquivos idênticos são pulados; divergentes são preservados e reportados — nada seu é sobrescrito);
+- planta o **vault** em `~/.local/share/koine/` e os domínios em `~/.config/koine/dominios/` (idênticos são pulados; artefato do Koine divergente é **atualizado**, com a versão que estava lá guardada em `~/.cache/koine/backups/<versão>/` e o caminho impresso; os seus `dominios/` são preservados e reportados);
 - gera os **wrappers** `koine` e `kn-claude`/`kn-agy`/`kn-codex`/`kn-copilot`/`kn-opencode` em `~/.local/bin/`, com o caminho absoluto do interpretador aprovado no passo 1 gravado dentro (imune a `python3` errado no PATH de amanhã);
 - configura a **pasta canônica** `~/koine` com um `CONTEXTO.md` inicial e registra o alias `koine` (num terminal interativo, pergunta onde você quer a pasta);
 - detecta **clientes IA** no PATH e oferece instalar as skills `kn-*` de cada um (`[S/n]`; sem terminal interativo, apenas lista e mostra o comando para depois);
