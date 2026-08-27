@@ -2,13 +2,14 @@ import json
 import os
 import sys
 
-from koine import cache
+from koine import cache, render
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
 
 # Arquivo de contexto do OpenCode no working dir — entra via symlink, não
 # via arquivos_working_dir (porta de CaminhoArquivoContexto do opencode.go).
 ARQUIVO = "AGENTS.md"
+MARCADOR = "<!-- gerado por kn-agente -->"
 
 
 def renderizar(cm: ContextoMontado) -> Lancamento:
@@ -60,6 +61,16 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     if not cm.bootstrap:
         lanc.symlinks = {os.path.join(cm.pasta_abs, ARQUIVO): cm.contexto_path}
     return lanc
+
+
+def renderizar_para_pasta(cm: ContextoMontado) -> tuple[str, str]:
+    """Materialização a pedido (`koine gerar`, modo skills).
+
+    INLINE: sem wrapper não há OPENCODE_CONFIG, e o `instructions` do config é
+    justamente o que aponta para os arquivos. Sobra o AGENTS.md da pasta.
+    """
+    return ARQUIVO, MARCADOR + "\n" + render.documento_inline(
+        "Sessão Koine — OpenCode", cm) + "\n"
 
 
 def _global_agents_md() -> str:

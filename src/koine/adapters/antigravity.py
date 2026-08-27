@@ -11,6 +11,12 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     return Lancamento(arquivos_working_dir={ARQUIVO: _render(cm)})
 
 
+def renderizar_para_pasta(cm: ContextoMontado) -> tuple[str, str]:
+    """Materialização a pedido (`koine gerar`, modo skills): o arquivo que vai
+    para a pasta do usuário e o seu conteúdo."""
+    return ARQUIVO, _render(cm)
+
+
 def _render(cm: ContextoMontado) -> str:
     if cm.bootstrap:
         return _render_bootstrap(cm)

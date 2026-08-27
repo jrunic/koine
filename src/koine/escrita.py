@@ -79,7 +79,10 @@ def gravar(p: str, conteudo: str) -> None:
     visível na pasta de trabalho — o temporário nasce oculto e some no `finally`.
     """
     preservar(p)
+    # makedirs DEPOIS do guard: pasta criada por comando que aborta é resíduo,
+    # e o `.github/` do Copilot nasceria vazio a cada tentativa recusada.
     d = os.path.dirname(p) or "."
+    os.makedirs(d, exist_ok=True)
     tmp = os.path.join(d, f".{os.path.basename(p)}.koine-tmp")
     tmp = _backup_mod.caminho_livre(tmp)
     try:

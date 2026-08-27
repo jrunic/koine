@@ -18,6 +18,11 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
                       extra_args=list(EXTRA_ARGS))
 
 
+def renderizar_para_pasta(cm: ContextoMontado) -> tuple[str, str]:
+    """Materialização a pedido (`koine gerar`, modo skills)."""
+    return ARQUIVO, _render(cm)
+
+
 def _render(cm: ContextoMontado) -> str:
     partes = []
 

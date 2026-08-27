@@ -132,3 +132,100 @@ def test_arquivo_nosso_no_caminho_do_symlink_cede_o_lugar(tmp_path):
     conflito.resolver_symlink_conflito(str(p), str(alvo))
 
     assert not p.exists(), "o caminho continua ocupado — os.symlink vai estourar"
+
+
+# ---- as duas superfícies que gravam na pasta -------------------------------
+
+def _pasta_valida(koine_home):
+    return koine_home["trab"]
+
+
+def test_gerar_preserva_claude_md_do_usuario(koine_home, monkeypatch, capsys):
+    """Defeito medido em 27/08: o `gerar` escrevia direto, sem guarda. Um
+    CLAUDE.md pessoal foi substituído SEM .bak, e o comando ainda imprimiu
+    'Escrito ... bytes'."""
+    import pathlib
+
+    from koine import cli
+    monkeypatch.setenv("HOME", koine_home["home"])
+    pasta = _pasta_valida(koine_home)
+    pathlib.Path(pasta, "CLAUDE.md").write_text("# minhas instruções pessoais\n")
+
+    assert cli.main(["gerar", "hermes", pasta]) == 0
+
+    assert (pathlib.Path(pasta, "CLAUDE.md.bak").read_text()
+            == "# minhas instruções pessoais\n"), "o arquivo do usuário sumiu"
+
+
+def test_gerar_aceita_o_cliente(koine_home, monkeypatch):
+    """Hoje o `gerar` SEMPRE gera CLAUDE.md, mesmo para quem usa outro cliente —
+    o arquivo nasce órfão na pasta de quem não usa Claude."""
+    import pathlib
+
+    from koine import cli
+    monkeypatch.setenv("HOME", koine_home["home"])
+    pasta = _pasta_valida(koine_home)
+
+    assert cli.main(["gerar", "hermes", pasta, "--para", "codex"]) == 0
+
+    assert pathlib.Path(pasta, "AGENTS.md").exists()
+    assert not pathlib.Path(pasta, "CLAUDE.md").exists()
+
+
+def test_gerar_recusa_cliente_desconhecido(koine_home, monkeypatch, capsys):
+    from koine import cli
+    monkeypatch.setenv("HOME", koine_home["home"])
+    assert cli.main(["gerar", "hermes", _pasta_valida(koine_home),
+                     "--para", "inexistente"]) == 1
+    assert "inexistente" in capsys.readouterr().err
+
+
+def test_launch_e_gerar_tem_a_mesma_politica_de_conflito(koine_home, monkeypatch):
+    """A equivalência é da POLÍTICA, não do destino: launch e gerar divergem no
+    destino por desenho (bundle × pasta). O que têm que concordar é no que
+    acontece quando existe arquivo do usuário no caminho — foi a independência
+    entre elas que produziu o defeito 3."""
+    import pathlib
+
+    from koine import cli
+    monkeypatch.setenv("HOME", koine_home["home"])
+    monkeypatch.setattr("koine.launch.lancar", lambda *a, **k: 0)
+    meu = "# meu arquivo, nao do koine\n"
+
+    for superficie in ("gerar", "launch"):
+        pasta = os.path.join(koine_home["home"], f"trab-{superficie}")
+        os.makedirs(pasta, exist_ok=True)
+        import shutil
+        shutil.copy(os.path.join(koine_home["trab"], "CONTEXTO.md"), pasta)
+        alvo = pathlib.Path(pasta, "CLAUDE.md")
+        alvo.write_text(meu)
+
+        if superficie == "gerar":
+            cli.main(["gerar", "hermes", pasta])
+        else:
+            monkeypatch.chdir(pasta)
+            cli.main(["claude", "hermes", pasta])
+
+        preservado = [p for p in os.listdir(pasta) if p.startswith("CLAUDE.md.bak")]
+        conteudos = [pathlib.Path(pasta, p).read_text() for p in preservado]
+        assert meu in conteudos + [alvo.read_text()], \
+            f"{superficie}: o conteúdo do usuário não é recuperável"
+
+
+def test_gravar_que_aborta_nao_cria_a_pasta_do_arquivo(tmp_path):
+    """O `.github/` do Copilot não pode nascer quando a gravação vai abortar:
+    diretório vazio criado por um comando que falhou é resíduo, e o usuário não
+    tem como saber que foi o Koine."""
+    real = tmp_path / "real.md"
+    real.write_text("do usuario\n")
+    link = tmp_path / "copilot-instructions.md"
+    os.symlink(str(real), str(link))
+    alvo = tmp_path / "sub" / "copilot-instructions.md"
+    os.symlink(str(real), str(tmp_path / "outro.md"))
+
+    escrita.gravar(str(alvo), "novo\n")
+    assert alvo.read_text() == "novo\n", "gravar tem que criar a pasta que falta"
+
+    with pytest.raises(escrita.ConflitoErro):
+        escrita.gravar(str(link), "novo\n")
+    assert not (tmp_path / "nunca").exists()

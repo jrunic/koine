@@ -349,3 +349,8 @@ def ficha_sera_reposta(pasta: str, quando: str) -> str:
     de_quando = f" (de {quando})" if quando else ""
     return (f"A ficha deste CONTEXTO.md sumiu, mas há uma foto{de_quando}.\n"
             f"Abrir a sessão nesta pasta repõe a ficha automaticamente.\n")
+
+
+def cliente_desconhecido(cliente: str, disponiveis: list[str]) -> str:
+    return (f"cliente desconhecido: {cliente}\n"
+            f"clientes disponíveis: {', '.join(disponiveis)}")

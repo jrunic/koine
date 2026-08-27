@@ -7,6 +7,7 @@ from koine.lancamento import Lancamento
 # Arquivo de contexto do Copilot no working dir — entra via symlink, não
 # via arquivos_working_dir (porta de CaminhoArquivoContexto do copilot.go).
 ARQUIVO = os.path.join(".github", "copilot-instructions.md")
+MARCADOR = "<!-- gerado por kn-agente -->"
 
 
 def renderizar(cm: ContextoMontado) -> Lancamento:
@@ -53,6 +54,17 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
 
     lanc.symlinks = {os.path.join(cm.pasta_abs, ARQUIVO): cm.contexto_path}
     return lanc
+
+
+def renderizar_para_pasta(cm: ContextoMontado) -> tuple[str, str]:
+    """Materialização a pedido (`koine gerar`, modo skills).
+
+    Aqui o conteúdo vai INLINE: sem wrapper não há
+    COPILOT_CUSTOM_INSTRUCTIONS_DIRS para apontar o bundle, e o
+    `.github/copilot-instructions.md` é a única via que sobra.
+    """
+    return ARQUIVO, MARCADOR + "\n" + render.documento_inline(
+        "Sessão Koine — Copilot", cm) + "\n"
 
 
 def _ler(path: str) -> str:

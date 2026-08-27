@@ -13,6 +13,7 @@ from koine import (
     canonica,
     conflito,
     contexto,
+    escrita,
     ficha,
     frontmatter,
     indice,
@@ -289,7 +290,24 @@ def _cmd_validar(args: list[str]) -> int:
 
 
 def _cmd_gerar(args: list[str]) -> int:
-    agente = args[0]
+    # `--para` é consumido AQUI, não por _separar_args: aquela gramática é a do
+    # launch, onde o token sem hífen depois de uma flag é posicional do koine —
+    # o valor de `--para` seria lido como pasta.
+    cliente = "claude"
+    if "--para" in args:
+        i = args.index("--para")
+        if i + 1 >= len(args):
+            print("uso: koine gerar <agente> [pasta] [--para <cliente>]", file=sys.stderr)
+            return 1
+        cliente = args[i + 1]
+        args = args[:i] + args[i + 2:]
+    posicionais = [a for a in args if not a.startswith("-")]
+    if cliente not in adapters.REGISTRY:
+        print(mensagens.cliente_desconhecido(cliente, sorted(adapters.REGISTRY)),
+              file=sys.stderr)
+        return 1
+    agente = posicionais[0] if posicionais else ""
+    args = posicionais
     try:
         pasta = pasta_mod.resolver(args[1] if len(args) >= 2 else "")
     except pasta_mod.ResolucaoErro as e:
@@ -313,11 +331,16 @@ def _cmd_gerar(args: list[str]) -> int:
     except contexto.EscopoNaoEncontrado as e:
         print(mensagens.escopo_nao_encontrado(e.escopo, e.disponiveis), file=sys.stderr)
         return 1
-    lanc = adapters.get("claude").renderizar(cm)
-    conteudo = lanc.arquivos_working_dir["CLAUDE.md"]
-    destino = os.path.join(pasta, "CLAUDE.md")
-    with open(destino, "w", encoding="utf-8") as f:
-        f.write(conteudo)
+    arquivo, conteudo = adapters.get(cliente).renderizar_para_pasta(cm)
+    destino = os.path.join(pasta, arquivo)
+    try:
+        # MESMA política do launch: arquivo do usuário no caminho vira .bak, e
+        # symlink/diretório abortam. O `gerar` escrevia direto — em 27/08/2026
+        # substituiu um CLAUDE.md pessoal sem backup e ainda imprimiu os bytes.
+        escrita.gravar(destino, conteudo)
+    except escrita.ConflitoErro as e:
+        print(str(e), file=sys.stderr)
+        return 1
     print(f"Escrito {destino} ({len(conteudo.encode('utf-8'))} bytes)")
     return 0
 
@@ -356,7 +379,7 @@ def _cmd_mostrar(args: list[str]) -> int:
     except contexto.EscopoNaoEncontrado as e:
         print(mensagens.escopo_nao_encontrado(e.escopo, e.disponiveis), file=sys.stderr)
         return 1
-    lanc = adapters.get("claude").renderizar(cm)
+    _, conteudo = adapters.get("claude").renderizar_para_pasta(cm)
     # A linha do agente vem antes do conteúdo: é a resposta de "qual agente esta
     # pasta abre?", e sai do MESMO cm que o launch monta — é o que impede a
     # ferramenta que avisa de divergir da que abre.
@@ -364,7 +387,7 @@ def _cmd_mostrar(args: list[str]) -> int:
     if cm.agente_ausente:
         print(f"  (a pasta declara '{cm.agente_ausente}', que não existe — "
               f"a sessão abriria com o Hermes)")
-    print(lanc.arquivos_working_dir["CLAUDE.md"], end="")
+    print(conteudo, end="")
     return 0
 
 
