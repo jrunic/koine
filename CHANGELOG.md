@@ -6,6 +6,24 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.3] — 2026-08-27
+
+### Corrigido — saída redirecionada no Windows derrubava o `koine instalar`
+
+Com o stdout em console, o Python no Windows escreve por `WriteConsoleW` e todo
+caractere passa. **Redirecionado** — para arquivo, num pipe, ou sob tarefa
+agendada — o encoding vira o do locale (`cp1252` em pt-BR), e o primeiro `✓` das
+mensagens levantava `UnicodeEncodeError`: o comando morria com traceback em vez
+de instalar. Achado na bancada Windows rodando o `install.bat` por tarefa
+agendada, logo depois da v0.6.2; atinge qualquer versão anterior.
+
+Agora o CLI ajusta os fluxos de saída antes do primeiro `print`, pela correção
+mínima: mantém o encoding do ambiente — quem for ler o arquivo depois lê no
+encoding que espera — e troca só a política de erro para `replace`. Símbolo sem
+correspondência vira `?`, acento continua acento, e nada aborta. Fluxo já em
+UTF-8 fica intocado, com `errors=strict`, para que erro de encoding em ambiente
+capaz continue visível.
+
 ## [0.6.2] — 2026-08-27
 
 ### Corrigido — `install.bat` deixa de depender do PowerShell

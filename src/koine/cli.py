@@ -19,6 +19,7 @@ from koine import (
     mensagens,
     pasta as pasta_mod,
     paths,
+    saida as _saida,
     schema,
     skills,
     validar as _validar,
@@ -31,6 +32,9 @@ SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades", "gerar", "mostrar",
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Antes de qualquer print: num stdout não-console do Windows o encoding é
+    # cp1252, e o primeiro símbolo das mensagens abortaria o comando.
+    _saida.preparar(sys.stdout, sys.stderr)
     argv = sys.argv[1:] if argv is None else argv
     if not argv:
         print("uso: koine <cliente|subcomando> ...\n"
