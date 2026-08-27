@@ -6,6 +6,8 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.2] — 2026-08-27
+
 ### Corrigido — `install.bat` deixa de depender do PowerShell
 
 Numa estação Windows corporativa com o `powershell.exe` bloqueado por política, o
@@ -30,6 +32,7 @@ Junto:
   acentos e travessões em UTF-8 dos comentários apareciam como mojibake na tela.
   Guarda de teste impede a recorrência.
 - **`KOINE_VERSAO` aceita a versão com ou sem o `v`.** `0.6.2` e `v0.6.2` valem.
+- **Separador restaurado na `kn-99`**, comido por uma edição da v0.6.1.
 - **Orientação de PATH sem PowerShell.** O aviso de `~/.local/bin` fora do PATH — no
   `.bat` e na mensagem `cliente não encontrado` — passa a indicar
   `rundll32 sysdm.cpl,EditEnvironmentVariables`, que abre o editor de variáveis do
