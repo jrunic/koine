@@ -1,6 +1,7 @@
 import os
 from dataclasses import dataclass, field
 
+from koine import agente as _agente
 from koine import bootstrap as _bootstrap
 from koine import frontmatter, paths, schema
 
@@ -52,6 +53,11 @@ class ContextoMontado:
     # sessão normal. Todo adapter que renderiza contexto_path renderiza esta também.
     instrucao_path: str = ""
     bootstrap: bool = False
+    # Nome que a pasta (ou o default do usuário) declarava e que não existe.
+    # Vazio na sessão normal. Quem decide o que fazer com isso é o CHAMADOR:
+    # `resolver` não conhece o modo, e a spec manda guiar no interativo e
+    # abortar sem tty.
+    agente_ausente: str = ""
     # pasta de trabalho absoluta — preenchida por cli._montar_cm; adapters com
     # bundle externo (copilot, opencode) derivam slot e alvo de symlink dela.
     pasta_abs: str = ""
@@ -129,7 +135,28 @@ def resolver(agente: str, pasta: str) -> ContextoMontado:
     escopo = schema.Escopo.from_fm(efm)
     refs = paths.resolver_tagged(escopo.pasta_referencias)
 
-    agente_path = _achar_agente(cfg, data, agente)
+    nome, fonte = _agente.resolver_nome(
+        posicional=agente,
+        fm_pasta=fm,
+        default_usuario=_agente.default_do_usuario(
+            _achar_usuario_opcional(cfg), frontmatter.ler_arquivo),
+    )
+    try:
+        agente_path = _achar_agente(cfg, data, nome)
+    except AgenteNaoEncontrado:
+        if fonte == _agente.POSICIONAL:
+            raise                    # dedo no teclado: erro com a lista
+        # Valor errado num arquivo: não há o que redigitar. O que fazer depende
+        # do MODO, e `resolver` não conhece o modo — quem bifurca é o chamador.
+        return ContextoMontado(
+            bootstrap=True,
+            usuario_path=_achar_usuario_opcional(cfg),
+            koine_path=os.path.join(data, "KOINE.md"),
+            agente_path=os.path.join(data, "agentes", "hermes.md"),
+            contexto_path=ctx_path,
+            instrucao_path=_bootstrap.instrucao_agente_inexistente(data),
+            agente_ausente=nome,
+        )
 
     return ContextoMontado(
         usuario_path=_achar_usuario(cfg),

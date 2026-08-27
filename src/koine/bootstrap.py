@@ -121,3 +121,10 @@ INSTRUCAO_PASTA_INCOMPLETA = ("bootstrap", "pasta-incompleta.md")
 
 def instrucao_pasta_incompleta(vault: str) -> str:
     return os.path.join(vault, *INSTRUCAO_PASTA_INCOMPLETA)
+
+
+def instrucao_agente_inexistente(data: str) -> str:
+    """Instrução lida pelo agente quando a pasta (ou o default do usuário)
+    declara um agente que não existe. Mesmo canal da pasta incompleta: o Koine
+    não escreve nada para consertar — quem corrige é o agente, conversando."""
+    return os.path.join(data, "bootstrap", "agente-inexistente.md")
