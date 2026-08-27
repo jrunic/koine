@@ -39,9 +39,12 @@ def test_opencode_renderizar_cru(tmp_path, monkeypatch):
     assert set(lanc.arquivos_externos) == {cfg_path}
     cfg = json.loads(lanc.arquivos_externos[cfg_path])
     assert cfg["$schema"] == "https://opencode.ai/config.json"
-    assert cfg["instructions"] == [cm.usuario_path, cm.agente_path, cm.escopo_path] + cm.indice_paths
+    assert cfg["instructions"] == ([cm.usuario_path, cm.agente_path, cm.escopo_path]
+                                   + cm.indice_paths + [cm.contexto_path])
     assert lanc.env_vars == {"OPENCODE_CONFIG": cfg_path, "OPENCODE_DISABLE_CLAUDE_CODE": "1"}
-    assert lanc.symlinks == {os.path.join(str(tmp_path), "AGENTS.md"): cm.contexto_path}
+    # o CONTEXTO.md chega por REFERÊNCIA no `instructions`; o symlink na pasta
+    # do usuário some junto com todo arquivo gerado ali
+    assert lanc.symlinks == {}
     assert lanc.extra_args == []
 
 
@@ -52,7 +55,7 @@ def test_opencode_sem_usuario_omite_do_instructions(tmp_path, monkeypatch):
     assert cfg["instructions"][0] == cm.agente_path
 
 
-def test_opencode_bootstrap_sem_symlink_contexto_em_instructions(tmp_path, monkeypatch):
+def test_opencode_bootstrap_contexto_em_instructions(tmp_path, monkeypatch):
     _isolar_home(monkeypatch, tmp_path / "home")
     cm = _cm(tmp_path, bootstrap=True, escopo_path="", indice_paths=[])
     lanc = opencode.renderizar(cm)

@@ -8,6 +8,7 @@ import os
 import pytest
 
 from koine import bootstrap, cli, contexto
+from tests.fixtures import bundle
 
 
 def _seam(monkeypatch):
@@ -79,9 +80,11 @@ def test_launch_onboarded_ausente_materializa_e_lanca_hermes(koine_home, monkeyp
     ctx = os.path.join(nova, "CONTEXTO.md")
     assert "bootstrap: true" in open(ctx, encoding="utf-8").read()
     assert "/kn-02-mantem-catalogo" in open(ctx, encoding="utf-8").read()
-    # bootstrap ignora o agente pedido e força Hermes → CLAUDE.md referencia hermes.md
-    claude = open(os.path.join(nova, "CLAUDE.md"), encoding="utf-8").read()
-    assert "hermes.md" in claude
+    # bootstrap ignora o agente pedido e força Hermes. A asserção é sobre o
+    # CONTEÚDO do agente no bundle, não sobre o caminho: com o contexto embutido
+    # não há mais `@hermes.md` para procurar — e conteúdo é prova mais forte.
+    entregue = bundle.conteudo("claude", nova)
+    assert "## Hermes" in entregue
     assert cap == {"cliente": "claude", "pasta": nova}
 
 
@@ -113,24 +116,24 @@ def test_launch_onboarded_incompleto_guia_e_preserva(koine_home, monkeypatch):
     assert rc == 0
     # o arquivo do usuário fica intocado — byte a byte
     assert open(os.path.join(nova, "CONTEXTO.md"), encoding="utf-8").read() == original
-    claude = open(os.path.join(nova, "CLAUDE.md"), encoding="utf-8").read()
-    assert "hermes.md" in claude                    # agente pedido é ignorado
-    assert "pasta-incompleta.md" in claude          # instrução do vault entra no contexto
-    assert os.path.join(nova, "CONTEXTO.md") in claude  # e o arquivo do usuário também
+    entregue = bundle.conteudo("claude", nova)
+    assert "## Hermes" in entregue                  # agente pedido é ignorado
+    assert "Instrução do Koine para esta sessão" in entregue  # instrução do vault
+    assert "conteúdo do usuário" in entregue        # e o arquivo dele, por conteúdo
     assert cap == {"cliente": "claude", "pasta": nova}
 
 
 def test_launch_incompleto_nao_materializa_nada_na_pasta(koine_home, monkeypatch):
-    """Só o arquivo do harness — nenhum artefato de bootstrap e nenhum symlink na
-    pasta do usuário. O CLAUDE.md é o de sempre; o que NÃO pode aparecer é um
-    CONTEXTO.md de bootstrap materializado ao lado do arquivo dele."""
+    """NADA na pasta além do que já estava: nenhum arquivo de harness, nenhum
+    artefato de bootstrap, nenhum symlink. O CONTEXTO.md incompleto do usuário
+    fica sozinho, como estava."""
     monkeypatch.setenv("HOME", koine_home["home"])
     _seam(monkeypatch)
     nova = os.path.join(koine_home["home"], "trab-inc-limpo"); os.makedirs(nova)
     open(os.path.join(nova, "CONTEXTO.md"), "w", encoding="utf-8").write("# só isso\n")
 
     assert cli.main(["claude", "hermes", nova]) == 0
-    assert sorted(os.listdir(nova)) == ["CLAUDE.md", "CONTEXTO.md"]
+    assert sorted(os.listdir(nova)) == ["CONTEXTO.md"]
 
 
 def test_launch_incompleto_nao_onboarded_redireciona(tmp_path, monkeypatch, capsys):
@@ -259,10 +262,12 @@ def test_launch_codex_onboarded_ausente_materializa(koine_home, monkeypatch):
     # codex é INLINE (não @path): a instrução kn-02 só desbloqueia o usuário se o
     # corpo do CONTEXTO for EMBUTIDO no AGENTS.md (snapshot). Provar conteúdo, não
     # só existência — "arquivo existe" ≠ "Hermes sabe rodar a entrevista".
-    agents = open(os.path.join(nova, "AGENTS.md"), encoding="utf-8").read()
+    agents = bundle.conteudo("codex", nova)
     assert "/kn-02-mantem-catalogo" in agents
     assert "hermes" in agents.lower()
     assert cap["cliente"] == "codex"
+    # e a pasta segue só com o CONTEXTO.md que o auto-guiar materializou
+    assert sorted(os.listdir(nova)) == ["CONTEXTO.md"]
 
 
 # ---- gerar / mostrar em pasta incompleta: erro, sem materializar -----------
@@ -296,7 +301,7 @@ def test_launch_codex_incompleto_embute_instrucao_e_conteudo(koine_home, monkeyp
         "---\ndescricao: pendencias\n---\n\n# Pendências\n\nmarcador-do-usuario\n")
 
     assert cli.main(["codex", "David", nova]) == 0
-    agents = open(os.path.join(nova, "AGENTS.md"), encoding="utf-8").read()
+    agents = bundle.conteudo("codex", nova)
     assert "/kn-02-mantem-catalogo" in agents      # a instrução veio junto
     assert "3b" in agents                          # e é o sub-fluxo de ATUALIZAR
     assert "marcador-do-usuario" in agents         # o conteúdo do usuário também

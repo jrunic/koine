@@ -1,6 +1,7 @@
 import os
 
 from koine import cli, conflito
+from tests.fixtures import bundle
 
 
 def test_koine_claude_gera_claude_md_e_lanca(koine_home, monkeypatch):
@@ -13,16 +14,14 @@ def test_koine_claude_gera_claude_md_e_lanca(koine_home, monkeypatch):
     rc = cli.main(["claude", "hermes", koine_home["trab"]])
     assert rc == 0
     assert capturado == {"cliente": "claude", "pasta": koine_home["trab"]}
-    py = open(os.path.join(koine_home["trab"], "CLAUDE.md"), encoding="utf-8").read()
-    # formato congelado: marcador na 1ª linha + @path das 4 camadas
+    # a pasta do usuário não recebe nada; o contexto vive no bundle do cache
+    assert not os.path.exists(os.path.join(koine_home["trab"], "CLAUDE.md"))
+    py = bundle.conteudo("claude", koine_home["trab"])
     assert py.split("\n", 1)[0] == conflito.MARCADOR_KOINE
-    for camada in (
-        os.path.join(koine_home["cfg"], "teste.md"),
-        os.path.join(koine_home["data"], "KOINE.md"),
-        os.path.join(koine_home["data"], "agentes", "hermes.md"),
-        os.path.join(koine_home["cfg"], "escopos", "fixture.md"),
-    ):
-        assert f"@{camada}" in py, f"camada ausente: {camada}"
+    # as camadas chegam por CONTEÚDO — o `@path` para fora da pasta não expande
+    for camada in ("Usuário de fixture.", "# fixture", "Hermes",
+                   "Pasta de trabalho de teste"):
+        assert camada in py, f"camada ausente: {camada}"
 
 
 def test_versao(capsys):

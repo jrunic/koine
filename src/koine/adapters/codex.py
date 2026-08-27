@@ -1,6 +1,6 @@
 import os
 
-from koine import render
+from koine import cache, render
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
 
@@ -14,8 +14,23 @@ def _agente_de(cm) -> str:
 
 
 def renderizar(cm: ContextoMontado) -> Lancamento:
-    return Lancamento(arquivos_working_dir={ARQUIVO: _render(cm)},
-                      extra_args=list(EXTRA_ARGS))
+    """Bundle no cache + `-c model_instructions_file=<arquivo>`.
+
+    O canal foi medido em 27/08/2026: a chave SOMA ao contexto em vez de
+    substituir as instruções base. A via que NÃO serve é `CODEX_HOME` — a
+    credencial mora na home do cliente, e redirecioná-la derruba a sessão com
+    401 (mesma família do GROK_HOME).
+
+    O arquivo é o mesmo documento inline de antes; o que muda é onde ele mora.
+    """
+    arquivo = os.path.join(
+        cache.caminho_bundle("codex-bundles", cache.slot_id(cm.pasta_abs)), ARQUIVO)
+    return Lancamento(
+        arquivos_externos={arquivo: _render(cm)},
+        # o valor varia por pasta e por isso NÃO cabe em EXTRA_ARGS, que o repo
+        # declara como constante de módulo — vai por instância, no Lancamento
+        extra_args=list(EXTRA_ARGS) + ["-c", f"model_instructions_file={arquivo}"],
+    )
 
 
 def renderizar_para_pasta(cm: ContextoMontado) -> tuple[str, str]:
@@ -49,19 +64,6 @@ def _render(cm: ContextoMontado) -> str:
             pass
 
     doc = render.mescar_documentos("Sessão Koine — Codex", partes)
-    corpo = doc + "\n\n" + _prosa_instrucao(cm)
+    corpo = doc + "\n\n" + render.prosa_sessao(cm, f"kn-codex {_agente_de(cm)} .")
     return MARCADOR + "\n" + corpo
 
-
-def _prosa_instrucao(cm) -> str:
-    regen = (f"Este `AGENTS.md` é regenerado a cada sessão por `kn-codex {_agente_de(cm)} .`. "
-             "**Não o edite.**")
-    if cm.bootstrap and not cm.contexto_path:
-        return ("## Instruções desta sessão\n\n"
-                "Esta pasta ainda não tem contexto Koine. Crie o `./CONTEXTO.md` desta pasta "
-                "com `/kn-02-mantem-catalogo` (Fluxo 3) antes de iniciar o trabalho. " + regen + "\n")
-    return ("## Instruções desta sessão\n\n"
-            "O contexto mutável desta sessão vive em `./CONTEXTO.md` (no diretório atual). "
-            "Leia e mantenha esse arquivo durante o trabalho — toda persistência de contexto "
-            "entre sessões vai para ele. O conteúdo acima é um snapshot; a fonte canônica é o arquivo. "
-            + regen + "\n")

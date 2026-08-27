@@ -3,26 +3,51 @@ import os
 from koine import cli
 
 
-def test_agy_escreve_gemini_nao_claude(koine_home, monkeypatch):
+def _bundle_do(lanc_externos):
+    return [os.path.basename(p) for p in lanc_externos]
+
+
+def test_agy_entrega_gemini_nao_claude(koine_home, monkeypatch):
+    """O adapter certo é escolhido pelo cliente — a regressão que este teste
+    guarda é `kn-agy` entregando o arquivo do Claude. O que mudou é ONDE: o
+    arquivo vive no bundle do cache, e a pasta não recebe nada."""
     monkeypatch.setenv("HOME", koine_home["home"])
     trab = koine_home["trab"]
-    monkeypatch.setattr("koine.launch.lancar", lambda *a, **k: None)  # não lança
-    for nome in ("CLAUDE.md", "GEMINI.md"):
-        p = os.path.join(trab, nome)
-        if os.path.exists(p):
-            os.remove(p)
-    rc = cli.main(["agy", "hermes", trab])
-    assert rc == 0
-    assert os.path.exists(os.path.join(trab, "GEMINI.md"))       # adapter agy
-    assert not os.path.exists(os.path.join(trab, "CLAUDE.md"))   # NÃO CLAUDE
-    conteudo = open(os.path.join(trab, "GEMINI.md"), encoding="utf-8").read()
-    assert conteudo.splitlines()[1] == "# GEMINI.md"
+    capturado = {}
+    monkeypatch.setattr("koine.cli._materializar",
+                        lambda lanc, pasta: capturado.update(lanc=lanc))
+    monkeypatch.setattr("koine.launch.lancar", lambda *a, **k: None)
+
+    assert cli.main(["agy", "hermes", trab]) == 0
+
+    nomes = _bundle_do(capturado["lanc"].arquivos_externos)
+    assert nomes == ["GEMINI.md"]
+    assert not os.path.exists(os.path.join(trab, "GEMINI.md"))
+    assert not os.path.exists(os.path.join(trab, "CLAUDE.md"))
 
 
-def test_claude_ainda_escreve_claude(koine_home, monkeypatch):
+def test_claude_entrega_claude_md_no_bundle(koine_home, monkeypatch):
+    monkeypatch.setenv("HOME", koine_home["home"])
+    trab = koine_home["trab"]
+    capturado = {}
+    monkeypatch.setattr("koine.cli._materializar",
+                        lambda lanc, pasta: capturado.update(lanc=lanc))
+    monkeypatch.setattr("koine.launch.lancar", lambda *a, **k: None)
+
+    assert cli.main(["claude", "hermes", trab]) == 0
+
+    assert _bundle_do(capturado["lanc"].arquivos_externos) == ["CLAUDE.md"]
+    assert not os.path.exists(os.path.join(trab, "CLAUDE.md"))
+
+
+def test_launch_nao_deixa_arquivo_novo_na_pasta(koine_home, monkeypatch):
+    """A régua do critério 3 da spec: listagem antes e depois, não a ausência de
+    um nome específico — com o nome, o mesmo defeito volta com outro arquivo."""
     monkeypatch.setenv("HOME", koine_home["home"])
     trab = koine_home["trab"]
     monkeypatch.setattr("koine.launch.lancar", lambda *a, **k: None)
-    rc = cli.main(["claude", "hermes", trab])
-    assert rc == 0
-    assert os.path.exists(os.path.join(trab, "CLAUDE.md"))       # regressão
+    antes = sorted(os.listdir(trab))
+
+    for cliente in ("claude", "agy", "codex", "copilot", "opencode"):
+        assert cli.main([cliente, "hermes", trab]) == 0
+        assert sorted(os.listdir(trab)) == antes, f"{cliente} sujou a pasta"

@@ -86,3 +86,24 @@ def documento_inline(titulo: str, cm) -> str:
     add("Instrução do Koine para esta sessão", cm.instrucao_path)
     add("Contexto da sessão (snapshot de ./CONTEXTO.md)", cm.contexto_path)
     return mescar_documentos(titulo, partes)
+
+
+def prosa_sessao(cm, comando: str) -> str:
+    """Instruções que acompanham todo documento inline.
+
+    O corpo do `CONTEXTO.md` entregue por conteúdo é um SNAPSHOT: sem esta prosa
+    o agente edita a cópia que leu, e o trabalho da sessão se perde. A fonte
+    canônica é sempre o arquivo na pasta.
+    """
+    regen = (f"Este contexto é regenerado a cada sessão por `{comando}`. "
+             "**Não o edite.**")
+    if cm.bootstrap and not cm.contexto_path:
+        return ("## Instruções desta sessão\n\n"
+                "Esta pasta ainda não tem contexto Koine. Crie o `./CONTEXTO.md` desta "
+                "pasta com `/kn-02-mantem-catalogo` (Fluxo 3) antes de iniciar o "
+                "trabalho. " + regen + "\n")
+    return ("## Instruções desta sessão\n\n"
+            "O contexto mutável desta sessão vive em `./CONTEXTO.md` (no diretório "
+            "atual). Leia e mantenha esse arquivo durante o trabalho — toda "
+            "persistência de contexto entre sessões vai para ele. O conteúdo acima é "
+            "um snapshot; a fonte canônica é o arquivo. " + regen + "\n")

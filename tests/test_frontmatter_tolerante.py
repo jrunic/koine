@@ -9,6 +9,7 @@ import os
 import pytest
 
 from koine import bootstrap, cli, frontmatter
+from tests.fixtures import bundle
 
 # Caso reportado em produção, reduzido ao essencial.
 CASO_REAL = """---
@@ -163,9 +164,8 @@ def test_launch_sobe_com_contexto_reparavel(koine_home, monkeypatch, capsys):
 
     assert cli.main(["claude", "hermes", trab]) == 0
     assert cap == {"pasta": trab}
-    # materializou o contexto do cliente, com o CONTEXTO.md referenciado
-    assert "CONTEXTO.md" in open(
-        os.path.join(trab, "CLAUDE.md"), encoding="utf-8").read()
+    # o contexto do cliente foi montado, com o CONTEXTO.md do usuário dentro
+    assert "# Gestão comercial" in bundle.conteudo("claude", trab)
     assert "sem aspas" in capsys.readouterr().err
 
 

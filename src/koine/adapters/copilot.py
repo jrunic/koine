@@ -4,8 +4,8 @@ from koine import cache, render
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
 
-# Arquivo de contexto do Copilot no working dir — entra via symlink, não
-# via arquivos_working_dir (porta de CaminhoArquivoContexto do copilot.go).
+# Arquivo do Copilot na pasta do usuário — hoje só no `gerar` (modo skills). No
+# launch a pasta não recebe nada: o bundle entrega tudo.
 ARQUIVO = os.path.join(".github", "copilot-instructions.md")
 MARCADOR = "<!-- gerado por kn-agente -->"
 
@@ -38,10 +38,12 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
         lanc.arquivos_externos[os.path.join(instr, "instrucao.instructions.md")] = \
             render.wrapar_instructions(_ler(cm.instrucao_path))
 
+    # O CONTEXTO.md vai por CONTEÚDO, no bundle. Antes chegava por symlink na
+    # pasta do usuário — e symlink na pasta é justamente o que sai de cena.
+    if cm.contexto_path:
+        lanc.arquivos_externos[os.path.join(instr, "contexto.instructions.md")] = \
+            render.wrapar_instructions(_ler(cm.contexto_path))
     if cm.bootstrap:
-        if cm.contexto_path:
-            lanc.arquivos_externos[os.path.join(instr, "bootstrap.instructions.md")] = \
-                render.wrapar_instructions(_ler(cm.contexto_path))
         return lanc
 
     if cm.escopo_path:
@@ -52,7 +54,6 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
         lanc.arquivos_externos[os.path.join(instr, f"kn-indice-{dom}.instructions.md")] = \
             render.wrapar_instructions(_ler(ip))
 
-    lanc.symlinks = {os.path.join(cm.pasta_abs, ARQUIVO): cm.contexto_path}
     return lanc
 
 

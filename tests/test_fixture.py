@@ -11,4 +11,7 @@ def test_fixture_gera_claude_md_valido(koine_home, monkeypatch):
     assert rc == 0
     out = open(os.path.join(koine_home["trab"], "CLAUDE.md"), encoding="utf-8").read()
     assert out.startswith(conflito.MARCADOR_KOINE)
-    assert "@" in out  # tem linhas @path
+    # conteúdo EMBUTIDO: o `@path` externo não expande em pasta não aprovada, e
+    # era por isso que a sessão remota subia sem contexto
+    assert "Usuário de fixture." in out
+    assert "Pasta de trabalho de teste" in out

@@ -12,7 +12,13 @@ def _cm(tmp_path):
         agente_path=w("hermes.md", "# Hermes\nPersona."),
         escopo_path=w("e.md", "# Escopo\nRegras."),
         indice_paths=[w("kn-indice-universal.md", "# Índice\nEntradas.")],
-        contexto_path=w("CONTEXTO.md", "---\nescopo: x\n---\n# Ctx\nSessão."))
+        contexto_path=w("CONTEXTO.md", "---\nescopo: x\n---\n# Ctx\nSessão."),
+        pasta_abs=str(tmp_path))
+
+
+def _saida(lanc):
+    (caminho,) = lanc.arquivos_externos
+    return lanc.arquivos_externos[caminho]
 
 
 def test_codex_arquivo_e_extra_args():
@@ -20,8 +26,10 @@ def test_codex_arquivo_e_extra_args():
     assert codex.EXTRA_ARGS == ["-c", "project_doc_max_bytes=1048576"]
 
 
-def test_codex_render_inline_e_prosa(tmp_path):
-    out = codex.renderizar(_cm(tmp_path)).arquivos_working_dir["AGENTS.md"]
+def test_codex_render_inline_e_prosa(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.delenv("XDG_CACHE_HOME", raising=False)
+    out = _saida(codex.renderizar(_cm(tmp_path)))
     assert out.startswith("<!-- gerado por kn-agente -->\n")
     assert "# Sessão Koine — Codex" in out
     assert "## Usuário" in out and "Bio." in out           # conteúdo INLINE, não @path
@@ -32,8 +40,10 @@ def test_codex_render_inline_e_prosa(tmp_path):
     assert out.endswith("\n")
 
 
-def test_codex_bootstrap_omite_escopo(tmp_path):
+def test_codex_bootstrap_omite_escopo(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.delenv("XDG_CACHE_HOME", raising=False)
     cm = _cm(tmp_path); cm.bootstrap = True
-    out = codex.renderizar(cm).arquivos_working_dir["AGENTS.md"]
+    out = _saida(codex.renderizar(cm))
     assert "## Escopo" not in out and "## Referências" not in out
     assert "## Instruções desta sessão" in out

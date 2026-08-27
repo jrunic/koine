@@ -30,7 +30,9 @@ def test_flag_usuario_repassada_ao_cliente(koine_home, monkeypatch):
     cap = {}
     _seam(monkeypatch, cap)
     assert cli.main(["claude", "hermes", koine_home["trab"], "--chrome"]) == 0
-    assert cap["args"] == ["--chrome"]
+    # a flag do usuário vem DEPOIS do canal do adapter (--add-dir <bundle>)
+    assert cap["args"][-1] == "--chrome"
+    assert cap["args"][:1] == ["--add-dir"]
     assert cap["pasta"] == koine_home["trab"]  # `.` — pasta não confundida com a flag
 
 
@@ -39,7 +41,9 @@ def test_sem_flag_nao_repassa_nada(koine_home, monkeypatch):
     cap = {}
     _seam(monkeypatch, cap)
     cli.main(["claude", "hermes", koine_home["trab"]])
-    assert cap["args"] is None  # sem flags → None (comportamento inalterado)
+    # sem flag do usuário sobra só o canal do adapter — nada do usuário é inventado
+    assert cap["args"][:1] == ["--add-dir"]
+    assert "--chrome" not in cap["args"]
 
 
 def test_flag_usuario_combina_com_extra_args_do_adapter(koine_home, monkeypatch):
@@ -47,5 +51,8 @@ def test_flag_usuario_combina_com_extra_args_do_adapter(koine_home, monkeypatch)
     cap = {}
     _seam(monkeypatch, cap)
     cli.main(["codex", "hermes", koine_home["trab"], "--chrome"])
-    # EXTRA_ARGS do codex (-c ...) PRIMEIRO, depois a flag do usuário
-    assert cap["args"] == ["-c", "project_doc_max_bytes=1048576", "--chrome"]
+    # EXTRA_ARGS do codex (-c ...) PRIMEIRO, depois o argumento dinâmico do
+    # canal, e a flag do usuário por último
+    assert cap["args"][:2] == ["-c", "project_doc_max_bytes=1048576"]
+    assert any("model_instructions_file=" in a for a in cap["args"])
+    assert cap["args"][-1] == "--chrome"

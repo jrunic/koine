@@ -1,5 +1,6 @@
-from datetime import datetime, timezone
+import os
 
+from koine import cache, render
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
 
@@ -8,51 +9,24 @@ ARQUIVO = "GEMINI.md"
 
 
 def renderizar(cm: ContextoMontado) -> Lancamento:
-    return Lancamento(arquivos_working_dir={ARQUIVO: _render(cm)})
+    """Bundle no cache + `--add-dir`: o cliente lê o GEMINI.md do diretório
+    adicionado. Medido em 27/08/2026, discriminado por dois nonces.
+
+    Conteúdo INLINE pelo mesmo motivo do adapter do claude: `@path` para fora da
+    pasta é texto morto.
+    """
+    bundle = cache.caminho_bundle("agy-bundles", cache.slot_id(cm.pasta_abs))
+    return Lancamento(
+        arquivos_externos={os.path.join(bundle, ARQUIVO): _render(cm)},
+        extra_args=["--add-dir", bundle],
+    )
 
 
 def renderizar_para_pasta(cm: ContextoMontado) -> tuple[str, str]:
-    """Materialização a pedido (`koine gerar`, modo skills): o arquivo que vai
-    para a pasta do usuário e o seu conteúdo."""
+    """Materialização a pedido (`koine gerar`, modo skills)."""
     return ARQUIVO, _render(cm)
 
 
 def _render(cm: ContextoMontado) -> str:
-    if cm.bootstrap:
-        return _render_bootstrap(cm)
-    # RFC3339 UTC, igual a time.Now().UTC().Format(time.RFC3339) do Go.
-    ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    linhas = [
-        MARCADOR,
-        "# GEMINI.md",
-        f"*Gerado por kn-agente em {ts}. Não editar — regerar com `kn-agy .`.*",
-        "",
-        f"@{cm.usuario_path}",
-        f"@{cm.koine_path}",
-        f"@{cm.agente_path}",
-        f"@{cm.escopo_path}",
-    ]
-    linhas += [f"@{p}" for p in cm.indice_paths]
-    linhas.append(f"@{cm.contexto_path}")
-    return "\n".join(linhas) + "\n"
-
-
-def _render_bootstrap(cm: ContextoMontado) -> str:
-    # Timestamp real (RFC3339 UTC), como o ramo não-bootstrap. O normalizador
-    # de paridade congela o `em <ts>` mas preserva o `Z` → casa com o Go.
-    ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    linhas = [
-        MARCADOR,
-        "# GEMINI.md",
-        f"*Gerado por kn-agente em {ts} — modo bootstrap. Não editar.*",
-        "",
-    ]
-    if cm.usuario_path:
-        linhas.append(f"@{cm.usuario_path}")
-    linhas.append(f"@{cm.koine_path}")
-    linhas.append(f"@{cm.agente_path}")
-    if cm.instrucao_path:
-        # instrução antes do contexto: o agente lê o que fazer, depois o material
-        linhas.append(f"@{cm.instrucao_path}")
-    linhas.append(f"@{cm.contexto_path}")
-    return "\n".join(linhas) + "\n\n"
+    doc = render.documento_inline("Sessão Koine — Antigravity", cm)
+    return MARCADOR + "\n" + doc + "\n\n" + render.prosa_sessao(cm, "kn-agy <agente> .")

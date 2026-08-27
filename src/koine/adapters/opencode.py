@@ -6,8 +6,8 @@ from koine import cache, render
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
 
-# Arquivo de contexto do OpenCode no working dir — entra via symlink, não
-# via arquivos_working_dir (porta de CaminhoArquivoContexto do opencode.go).
+# Arquivo do OpenCode na pasta do usuário — hoje só no `gerar` (modo skills). No
+# launch a pasta não recebe nada: o config do bundle entrega tudo.
 ARQUIVO = "AGENTS.md"
 MARCADOR = "<!-- gerado por kn-agente -->"
 
@@ -34,15 +34,16 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     instructions.append(cm.agente_path)
     if cm.instrucao_path:
         instructions.append(cm.instrucao_path)
-    if cm.bootstrap:
-        # Bootstrap explícito: CONTEXTO.md vai direto em instructions
-        # (não há symlink AGENTS.md → CONTEXTO.md em bootstrap, ver bloco final).
-        if cm.contexto_path:
-            instructions.append(cm.contexto_path)
-    else:
+    if not cm.bootstrap:
         if cm.escopo_path:
             instructions.append(cm.escopo_path)
         instructions.extend(cm.indice_paths)
+    # O CONTEXTO.md entra por REFERÊNCIA — e aqui isso é melhor que a cópia: o
+    # canal do opencode é uma lista de caminhos absolutos que o cliente abre, e
+    # o arquivo é lido vivo, não como snapshot. Antes chegava por symlink na
+    # pasta do usuário, que sai de cena.
+    if cm.contexto_path:
+        instructions.append(cm.contexto_path)
 
     cfg = {"$schema": "https://opencode.ai/config.json", "instructions": instructions}
     if sys.platform == "win32":
@@ -58,8 +59,6 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
         arquivos_externos={cfg_path: data},
         env_vars={"OPENCODE_CONFIG": cfg_path, "OPENCODE_DISABLE_CLAUDE_CODE": "1"},
     )
-    if not cm.bootstrap:
-        lanc.symlinks = {os.path.join(cm.pasta_abs, ARQUIVO): cm.contexto_path}
     return lanc
 
 

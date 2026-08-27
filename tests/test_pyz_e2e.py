@@ -4,7 +4,7 @@ import subprocess
 import sys
 
 from koine import conflito
-from tests.fixtures import seed, shim
+from tests.fixtures import bundle, seed, shim
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -17,16 +17,12 @@ def _build(tmp) -> str:
 
 
 def _assert_claude_md(conteudo: str, home: str) -> None:
-    """Formato congelado do CLAUDE.md gerado: marcador na 1ª linha + @path
-    das 4 camadas (usuário, KOINE, agente, escopo)."""
+    """Formato do CLAUDE.md do bundle: marcador na 1ª linha + as 4 camadas por
+    CONTEÚDO (usuário, KOINE, agente, escopo). Antes eram `@path`; fora da pasta
+    o import não expande, e era por isso que a sessão remota subia vazia."""
     assert conteudo.split("\n", 1)[0] == conflito.MARCADOR_KOINE
-    for camada in (
-        os.path.join(home, ".config", "koine", "teste.md"),
-        os.path.join(home, ".local", "share", "koine", "KOINE.md"),
-        os.path.join(home, ".local", "share", "koine", "agentes", "hermes.md"),
-        os.path.join(home, ".config", "koine", "escopos", "fixture.md"),
-    ):
-        assert f"@{camada}" in conteudo, f"camada ausente: {camada}"
+    for camada in ("Usuário de fixture.", "KOINE.md", "Hermes", "# fixture"):
+        assert camada in conteudo, f"camada ausente: {camada}"
 
 
 def test_pyz_versao(tmp_path):
@@ -55,8 +51,8 @@ def test_pyz_claude_gera_claude_md(tmp_path):
                    env={**os.environ, "HOME": fx["home"], "PATH": path},
                    check=True, capture_output=True, text=True,
                    stdin=subprocess.DEVNULL, timeout=60)
-    py = open(os.path.join(fx["trab"], "CLAUDE.md"), encoding="utf-8").read()
-    _assert_claude_md(py, fx["home"])
+    assert not os.path.exists(os.path.join(fx["trab"], "CLAUDE.md"))
+    _assert_claude_md(bundle.conteudo("claude", fx["trab"], fx["home"]), fx["home"])
 
 
 def test_zip_de_distribuicao_pyz_e_vault_lado_a_lado(tmp_path):
@@ -109,17 +105,14 @@ def test_greenfield_instalar_do_pyz_e_rodar_wrapper(tmp_path):
     subprocess.run([wrapper, "hermes", trab], env={"HOME": home, "PATH": path_launch},
                    check=True, capture_output=True, text=True,
                    stdin=subprocess.DEVNULL, timeout=60)
-    py = open(os.path.join(trab, "CLAUDE.md"), encoding="utf-8").read()
-    _assert_claude_md(py, home)
+    _assert_claude_md(bundle.conteudo("claude", trab, home), home)
 
     # 3. onboarding: rodar o wrapper na PASTA CANÔNICA (CONTEXTO bootstrap)
     canon = os.path.join(home, "koine")
     subprocess.run([wrapper, "hermes", canon], env={"HOME": home, "PATH": path_launch},
                    check=True, capture_output=True, text=True,
                    stdin=subprocess.DEVNULL, timeout=60)
-    py_b = open(os.path.join(canon, "CLAUDE.md"), encoding="utf-8").read()
+    py_b = bundle.conteudo("claude", canon, home)
     assert py_b.split("\n", 1)[0] == conflito.MARCADOR_KOINE
-    assert "modo bootstrap" in py_b
-    assert f"@{os.path.join(home, '.local', 'share', 'koine', 'KOINE.md')}" in py_b
-    assert f"@{os.path.join(home, '.local', 'share', 'koine', 'agentes', 'hermes.md')}" in py_b
-    assert f"@{os.path.join(canon, 'CONTEXTO.md')}" in py_b
+    for camada in ("KOINE.md", "Hermes", "/kn-01-recebe-usuario"):
+        assert camada in py_b, f"camada ausente no bootstrap: {camada}"
