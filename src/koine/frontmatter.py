@@ -324,3 +324,22 @@ def definir_campo(texto: str, chave: str, valor: str) -> tuple[str, bool]:
         linhas.append(f"{term}{chave}: {valor}{cauda}")
 
     return texto[:fatia.inicio] + "".join(linhas) + texto[fatia.fim:], True
+
+
+@dataclass
+class FatiaPublica:
+    """Onde o bloco de frontmatter TERMINA, contando o `---` de fechamento."""
+    fim_do_bloco: int
+
+
+def fatiar_publico(texto: str) -> "FatiaPublica | None":
+    """Limite do bloco INCLUINDO o `---` de fechamento.
+
+    `_Fatia.fim` aponta para ANTES dele — é o que o `normalizar` precisa, porque
+    ele edita linhas de dentro do bloco. Quem substitui o bloco inteiro precisa
+    do outro limite.
+    """
+    fatia = _fatiar(texto)
+    if fatia is None:
+        return None
+    return FatiaPublica(fim_do_bloco=texto.index("---", fatia.fim) + len("---"))

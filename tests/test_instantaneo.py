@@ -66,3 +66,78 @@ def test_guardar_nunca_derruba_a_sessao(tmp_path, monkeypatch):
         instantaneo.guardar(str(tmp_path / "trab"), FICHA)   # não levanta
     finally:
         os.chmod(sem_permissao, 0o755)
+
+
+from koine import ficha, frontmatter
+
+CORPO = "# Projeto X\n\nCorpo que não pode ser tocado pela reposição.\n"
+
+
+def test_repoe_quando_o_bloco_sumiu_inteiro(tmp_path):
+    """Sub-caso (a): o arquivo ficou só com o corpo."""
+    p = tmp_path / "CONTEXTO.md"
+    p.write_text(CORPO, encoding="utf-8", newline="")
+
+    assert ficha.repor_bloco(str(p), FICHA) is True
+
+    texto = p.read_text()
+    assert frontmatter.ler(texto)[0]["escopo"] == "projeto-x"
+    assert "Corpo que não pode ser tocado" in texto
+    assert os.path.exists(str(p) + ".bak")
+
+
+def test_repoe_substituindo_bloco_parcial(tmp_path):
+    """Sub-caso (b): sobrou um bloco sem `escopo:`. Substitui inteiro — merge
+    exigiria decidir campo a campo o que é mais recente, e um campo gravado
+    depois da foto é indistinguível de resíduo do arquivo comido."""
+    p = tmp_path / "CONTEXTO.md"
+    p.write_text("---\ndominios: [outro]\n---\n\n" + CORPO, encoding="utf-8", newline="")
+
+    assert ficha.repor_bloco(str(p), FICHA) is True
+
+    fm = frontmatter.ler(p.read_text())[0]
+    assert fm["escopo"] == "projeto-x"
+    assert fm.get("dominios") == ["tecnologia"], "o bloco parcial não sobrevive"
+    assert "Corpo que não pode ser tocado" in p.read_text()
+    assert "dominios: [outro]" in open(str(p) + ".bak").read(), "mas fica no .bak"
+
+
+def test_round_trip_byte_identico_lf(tmp_path):
+    """O teste que decide se o recorte do bloco está certo — em vez de
+    argumentar sobre índices no papel."""
+    from koine import bootstrap
+    original = "---\nescopo: projeto-x\ndominios: [tecnologia]\n---\n\n" + CORPO
+    p = tmp_path / "CONTEXTO.md"
+    p.write_text(original, encoding="utf-8", newline="")
+    bloco = bootstrap.bloco_do_contexto(str(tmp_path))
+
+    p.write_text(CORPO, encoding="utf-8", newline="")     # a ficha some
+    ficha.repor_bloco(str(p), bloco)
+
+    assert open(p, "rb").read() == original.encode("utf-8")
+
+
+def test_round_trip_byte_identico_crlf(tmp_path):
+    """Mesmo round-trip em CRLF: é onde o `\\r` pendurado do `_fatiar` e o
+    terminador da linha do `---` podem produzir arquivo misto."""
+    from koine import bootstrap
+    original = "---\r\nescopo: projeto-x\r\n---\r\n\r\n" + CORPO.replace("\n", "\r\n")
+    p = tmp_path / "CONTEXTO.md"
+    p.write_text(original, encoding="utf-8", newline="")
+    bloco = bootstrap.bloco_do_contexto(str(tmp_path))
+
+    p.write_text(CORPO.replace("\n", "\r\n"), encoding="utf-8", newline="")
+    ficha.repor_bloco(str(p), bloco)
+
+    bruto = open(p, "rb").read()
+    assert bruto == original.encode("utf-8")
+    assert b"\r\r" not in bruto
+
+
+def test_repor_recusa_symlink(tmp_path):
+    real = tmp_path / "real.md"
+    real.write_text(CORPO, encoding="utf-8")
+    link = tmp_path / "CONTEXTO.md"
+    os.symlink(str(real), str(link))
+    assert ficha.repor_bloco(str(link), FICHA) is False
+    assert "escopo" not in real.read_text()

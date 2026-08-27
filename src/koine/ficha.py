@@ -131,3 +131,47 @@ def definir_campo_arquivo(path: str, chave: str, valor: str) -> bool:
         _reportar(path, f"aviso: não consegui gravar `{chave}` em {path} ({e}).")
         return False
     return True
+
+
+def repor_bloco(path: str, bloco: str) -> bool:
+    """Devolve ao arquivo o bloco de frontmatter fotografado. True se escreveu.
+
+    EXCEÇÃO NOMEADA à regra de não fabricar ficha. `frontmatter.definir_campo`
+    recusa arquivo sem bloco de propósito — criar ficha ali seria o Koine
+    inventando estado que ele decidiu não inventar (v0.6.1). Aqui não há
+    invenção: o conteúdo é cópia literal do que o próprio arquivo tinha na
+    última sessão que abriu bem. `definir_campo` continua recusando; a exceção
+    mora aqui e em nenhum outro lugar.
+
+    Bloco parcial é SUBSTITUÍDO, não mesclado — o que estava lá fica no `.bak`.
+    """
+    if not bloco or not _pode_escrever(path):
+        return False
+    try:
+        with open(path, encoding="utf-8", newline="") as f:
+            texto = f.read()
+    except (OSError, UnicodeDecodeError):
+        return False
+    if not os.access(path, os.W_OK):
+        _reportar(path, f"aviso: {path} está somente-leitura — não consegui "
+                        "repor a ficha.")
+        return False
+
+    fatia = frontmatter.fatiar_publico(texto)
+    if fatia is None:
+        # sub-caso (a): sem bloco. O corpo começa no início do arquivo, e o
+        # terminador vem do BLOCO fotografado — é ele que dita o estilo do
+        # frontmatter que está voltando.
+        term = "\r\n" if "\r\n" in bloco else "\n"
+        novo = bloco + term + term + texto.lstrip("\r\n")
+    else:
+        # sub-caso (b): bloco parcial, substituído inteiro
+        novo = bloco + texto[fatia.fim_do_bloco:]
+
+    try:
+        _backup(path, texto)
+        _gravar(path, novo)
+    except OSError as e:
+        _reportar(path, f"aviso: não consegui repor a ficha de {path} ({e}).")
+        return False
+    return True

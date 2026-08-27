@@ -128,3 +128,16 @@ def instrucao_agente_inexistente(data: str) -> str:
     declara um agente que não existe. Mesmo canal da pasta incompleta: o Koine
     não escreve nada para consertar — quem corrige é o agente, conversando."""
     return os.path.join(data, "bootstrap", "agente-inexistente.md")
+
+
+def bloco_do_contexto(pasta: str) -> str:
+    """O bloco de frontmatter do CONTEXTO.md, COM os delimitadores — no formato
+    em que voltará ao arquivo. Vazio quando não há bloco."""
+    try:
+        with open(os.path.join(pasta, "CONTEXTO.md"), encoding="utf-8",
+                  newline="") as f:
+            texto = f.read()
+    except (OSError, UnicodeDecodeError):
+        return ""
+    fatia = frontmatter.fatiar_publico(texto)
+    return texto[:fatia.fim_do_bloco] if fatia else ""
