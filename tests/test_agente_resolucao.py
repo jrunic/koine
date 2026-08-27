@@ -43,7 +43,7 @@ import pathlib
 
 import pytest
 
-from koine import contexto
+from koine import cli, contexto
 
 VALIDO = """---
 escopo: fixture
@@ -147,3 +147,30 @@ def test_todo_adapter_renderiza_a_instrucao(koine_home, monkeypatch):
             f"adapter {nome} entrega o contexto mas não a instrução"
         assert _entrega(saida, cm.instrucao_path) != "ausente", \
             f"adapter {nome} não renderiza a instrução"
+
+
+def test_zero_posicionais_resolve_pela_pasta(koine_home, monkeypatch):
+    """Invocação dos providers remotos: nenhum posicional, a pasta resolve."""
+    monkeypatch.setenv("HOME", koine_home["home"])
+    pasta = _pasta_valido(koine_home, "hermes")
+    monkeypatch.chdir(pasta)
+    capturado = {}
+    # SEAM obrigatório: o launch faz execvpe e mataria o pytest.
+    monkeypatch.setattr("koine.launch.lancar",
+                        lambda *a, **k: capturado.update(chamou=True) or 0)
+
+    rc = cli.main(["claude"])
+
+    assert rc == 0
+    assert capturado.get("chamou"), "o launch não chegou a ser chamado"
+
+
+def test_um_posicional_continua_sendo_agente(koine_home, monkeypatch):
+    """`kn-claude <alias-de-pasta>` sozinho cai em agente inexistente, com a
+    lista — regra fixa em vez de adivinhação."""
+    monkeypatch.setenv("HOME", koine_home["home"])
+    pasta = _pasta_valido(koine_home, "hermes")
+    monkeypatch.chdir(pasta)
+    monkeypatch.setattr("koine.launch.lancar", lambda *a, **k: 0)
+
+    assert cli.main(["claude", "nao-e-agente"]) != 0

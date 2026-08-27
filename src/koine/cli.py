@@ -421,11 +421,11 @@ def _separar_args(args: list[str]) -> tuple[list[str], list[str]]:
 
 def _rodar_cliente(cliente: str, args: list[str]) -> int:
     posicionais, extras_usuario = _separar_args(args)
-    if not posicionais:
-        print("uso: kn-<cliente> <agente> [pasta] [--flag-do-cliente ...] "
-              "[-- flags-com-valor]", file=sys.stderr)
-        return 2
-    agente = posicionais[0]
+    # 0 posicionais: a pasta resolve o agente (é a invocação dos providers
+    # remotos, que são genéricos e fixos). 1: é AGENTE, efêmero. 2: agente +
+    # pasta. Regra fixa, não adivinhação — `kn-<cliente> <pasta>` sozinho cai em
+    # "agente inexistente" com a lista, que é autocorretivo.
+    agente = posicionais[0] if posicionais else ""
     try:
         pasta = pasta_mod.resolver(posicionais[1] if len(posicionais) >= 2 else "")
     except pasta_mod.ResolucaoErro as e:
