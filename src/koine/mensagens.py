@@ -312,3 +312,19 @@ def final_instalar() -> str:
 
 def atualizar_ja_recente(versao: str) -> str:
     return f"Koine já está na versão {versao}."
+
+
+def agente_declarado_inexistente(nome: str) -> str:
+    """Pasta (ou default do usuário) declara agente que não existe, e não há TTY
+    para conduzir a correção. Com TTY o Hermes guia; aqui a sessão para, porque
+    subir com o agente errado em silêncio é pior que não subir."""
+    return (
+        f"  ✗ a pasta declara o agente '{nome}', que não existe\n"
+        "\n"
+        "    A sessão não vai abrir com o agente errado sem avisar.\n"
+        "\n"
+        "    Corrija com um agente que exista:\n"
+        f"      koine definir-agente <nome>\n"
+        "\n"
+        "    Para ver os que existem:  koine mostrar\n"
+    )

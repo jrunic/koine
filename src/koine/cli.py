@@ -467,6 +467,15 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
     except contexto.EscopoNaoEncontrado as e:
         print(mensagens.escopo_nao_encontrado(e.escopo, e.disponiveis), file=sys.stderr)
         return 1
+    # Agente declarado num arquivo e inexistente: com TTY o Hermes conduz a
+    # correção (a instrução já veio no cm); sem TTY não há a quem perguntar, e
+    # subir em silêncio faria a sessão remota rodar com o agente errado sem
+    # ninguém perceber. Detecção por isatty, agnóstica de cliente — `--print` é
+    # vocabulário do Claude Code, não dos outros quatro.
+    if cm.agente_ausente and not sys.stdin.isatty():
+        print(mensagens.agente_declarado_inexistente(cm.agente_ausente),
+              file=sys.stderr)
+        return 1
     lanc = adapters.get(cliente).renderizar(cm)
     try:
         _materializar(lanc, pasta)

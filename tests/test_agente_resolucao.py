@@ -174,3 +174,30 @@ def test_um_posicional_continua_sendo_agente(koine_home, monkeypatch):
     monkeypatch.setattr("koine.launch.lancar", lambda *a, **k: 0)
 
     assert cli.main(["claude", "nao-e-agente"]) != 0
+
+
+def test_agente_declarado_inexistente_em_modo_interativo_segue_com_hermes(
+        koine_home, monkeypatch):
+    monkeypatch.setenv("HOME", koine_home["home"])
+    pasta = _pasta_valido(koine_home, "fantasma")
+    monkeypatch.chdir(pasta)
+    monkeypatch.setattr("sys.stdin.isatty", lambda: True)
+    monkeypatch.setattr("koine.launch.lancar", lambda *a, **k: 0)
+
+    assert cli.main(["claude"]) == 0
+
+
+def test_agente_declarado_inexistente_sem_tty_aborta(koine_home, monkeypatch, capsys):
+    """Sem TTY não há a quem perguntar e não há prompt: abrir Hermes em
+    silêncio faria a sessão remota rodar com o agente errado sem ninguém
+    perceber. É o caso do Paseo."""
+    monkeypatch.setenv("HOME", koine_home["home"])
+    pasta = _pasta_valido(koine_home, "fantasma")
+    monkeypatch.chdir(pasta)
+    monkeypatch.setattr("sys.stdin.isatty", lambda: False)
+    monkeypatch.setattr("koine.launch.lancar", lambda *a, **k: 0)
+
+    rc = cli.main(["claude"])
+
+    assert rc != 0
+    assert "fantasma" in capsys.readouterr().err
