@@ -11,7 +11,7 @@ Agentes de IA terminal abrem cada sessão zeradas. O usuário precisa repetir, a
 
 Koine resolve isso separando o que normalmente vem embaralhado em "memória de agente":
 
-1. **Harness** — `koine` carrega contexto e escreve o arquivo que o cliente IA lê na inicialização (`CLAUDE.md`, `GEMINI.md`, etc.)
+1. **Harness** — `koine` carrega o contexto e o entrega ao cliente IA pelo canal que ele oferece, sem escrever nada na sua pasta de trabalho
 2. **Habilidades** — skills `kn-*` que o agente invoca durante a sessão
 3. **Base de conhecimento** — bundle [OKF](https://github.com/GoogleCloudPlatform/knowledge-catalog/) com perfis, escopos, domínios e referências; propriedade do usuário
 4. **Sistema de arquivos** — recomendado, não obrigatório
@@ -113,7 +113,7 @@ Distribuídas no vault e disponíveis após `koine instalar`:
 | `/kn-02-mantem-catalogo` | Criar/ajustar arquivo do usuário, escopo, contexto de pasta, ou domínio |
 | `/kn-03-cria-agente` | Criar novo agente operacional especializado em um tipo de trabalho |
 | `/kn-11-mantem-referencia` | Catalogar conhecimento (pessoa, decisão, aprendizado) durante o trabalho |
-| `/kn-12-prepara-contexto` | Regenerar `CLAUDE.md` e índices de domínio sem o binário (modo skills) |
+| `/kn-12-prepara-contexto` | Materializar o contexto na pasta e regenerar os índices de domínio sem o binário (modo skills) |
 | `/kn-13-sabatina-plano` | Sabatinar um plano ou processo — entrevista que confere o que você afirma contra a evidência real |
 | `/kn-21-escreve-design` | Escrever o `DESIGN.md` de uma marca do escopo — cores, tipografia, tom visual |
 | `/kn-22-gera-imagem` | Gerar imagem na identidade da marca via [`imagio`](https://github.com/jrunic/imagio) |
@@ -127,11 +127,14 @@ Detalhes em [`docs/referencias/habilidades.md`](docs/referencias/habilidades.md)
 
 | Cliente | Comando | Mecanismo |
 |---|---|---|
-| Claude Code | `kn-claude` | `CLAUDE.md` com `@path` includes |
-| Antigravity (`agy`) | `kn-agy` | `GEMINI.md` com `@path` includes |
+| Claude Code | `kn-claude` | `--add-dir` + bundle em cache |
+| Antigravity (`agy`) | `kn-agy` | `--add-dir` + bundle em cache |
 | GitHub Copilot CLI | `kn-copilot` | `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` + bundle em cache |
 | OpenCode | `kn-opencode` | `OPENCODE_CONFIG` + JSON em cache |
-| Codex CLI | `kn-codex` | `AGENTS.md` inline + `-c project_doc_max_bytes` |
+| Codex CLI | `kn-codex` | `-c model_instructions_file` + arquivo em cache |
+
+Em nenhum deles o Koine escreve na sua pasta de trabalho. O pacote de contexto é
+descartável e vive em `~/.cache/koine/`.
 
 ## Documentação
 

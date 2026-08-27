@@ -6,6 +6,48 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Alterado — o contexto chega por fora da pasta, e a pasta volta a ser sua
+
+Até agora o Koine escrevia um arquivo na sua pasta de trabalho (`CLAUDE.md`,
+`GEMINI.md`, `AGENTS.md`) para entregar o contexto ao cliente. **Isso deixa de
+acontecer.** O contexto passa a ser entregue por fora, pelo canal que cada
+cliente oferece, a partir de um pacote descartável no cache.
+
+O que muda para você:
+
+- **Sua pasta para de receber arquivo gerado.** Na primeira sessão em cada
+  pasta, o arquivo que o Koine tinha deixado lá é removido, com aviso. Arquivo
+  **seu** — sem a marca do Koine na primeira linha — nunca é tocado.
+- **A sessão passa a receber o contexto em lugares onde antes não recebia.** Com
+  o mecanismo anterior, uma pasta aberta pela primeira vez, ou de longe, subia
+  **sem contexto e sem erro nenhum** — o agente respondia como um assistente
+  qualquer, e não havia como perceber. No terminal parecia funcionar porque o
+  agente abria os arquivos por conta própria.
+- **No Copilot, o agente passa a saber quem você é e qual agente está
+  operando.** Essas duas camadas estavam num arquivo que o Copilot não lê.
+- **Some a disputa pelo `AGENTS.md`.** Três clientes escreviam ou apontavam para
+  o mesmo nome na sua pasta.
+
+### Corrigido — `koine gerar` não destrói mais o seu `CLAUDE.md`
+
+Se você mantinha um `CLAUDE.md` próprio e rodou `koine gerar` naquela pasta, o
+arquivo era substituído **sem backup** — e o comando ainda dizia quantos bytes
+tinha escrito. Agora o seu arquivo é preservado em `.bak` antes, com aviso, como
+já acontecia ao abrir a sessão.
+
+Não há como recuperar o que se perdeu em sessões passadas.
+
+### Adicionado — `koine gerar --para <cliente>`
+
+O `gerar` sempre produzia um `CLAUDE.md`, mesmo para quem usa outro cliente. Ele
+agora aceita para qual cliente gerar (`claude`, `agy`, `codex`, `copilot`,
+`opencode`); sem a flag, segue gerando para o Claude.
+
+O arquivo gerado a pedido leva uma segunda marca dizendo que **foi pedido** — é
+ela que impede a limpeza automática de removê-lo. Quem trabalha no modo skills,
+sem os atalhos `kn-<cliente>`, depende desse arquivo: ali ele é a única via de
+entrega.
+
 ### Adicionado — a ficha do `CONTEXTO.md` volta sozinha quando some
 
 O bloco de configuração no topo do `CONTEXTO.md` — o que diz o escopo da pasta —

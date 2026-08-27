@@ -18,7 +18,15 @@ Audiência: mantenedores ou contribuidores que querem adicionar um adapter Koine
 
 ## Visão geral do contrato
 
-Cada adapter é um módulo em `src/koine/adapters/<novo>.py` que expõe `renderizar(cm) -> Lancamento`. A dataclass `Lancamento` (`src/koine/lancamento.py`) descreve tudo que o wrapper deve materializar:
+Cada adapter é um módulo em `src/koine/adapters/<novo>.py` que expõe **duas**
+operações:
+
+- `renderizar(cm) -> Lancamento` — a entrega da sessão, pelo canal do cliente.
+  **A pasta do usuário não recebe nada.**
+- `renderizar_para_pasta(cm) -> (arquivo, conteúdo)` — a materialização a pedido
+  (`koine gerar`), para ambientes sem wrapper, onde a pasta é a única via.
+
+A dataclass `Lancamento` (`src/koine/lancamento.py`) descreve tudo que o wrapper deve materializar:
 
 ```python
 @dataclass
@@ -30,23 +38,36 @@ class Lancamento:
     extra_args: list            # args extras para o cliente
 ```
 
-Adapter "simples" (cliente lê 1 arquivo no working dir com `@path` includes) preenche apenas `arquivos_working_dir`. Adapter "complexo" (cliente exige config externa + env var + symlink) preenche os demais campos.
+No launch, `arquivos_working_dir` e `symlinks` ficam **vazios**: o que o adapter
+preenche é `arquivos_externos` (o bundle, em `~/.cache/koine/`), `env_vars` e
+`extra_args`. Os dois primeiros campos seguem no contrato porque a
+materialização é genérica e o modo bootstrap ainda escreve o `CONTEXTO.md` — mas
+isso é do **launch**, não do adapter.
 
 ## Passos
 
 ### 1. Investigação empírica antes de codar
 
-Antes de qualquer código, abra uma pasta de teste e valide manualmente como o cliente IA carrega instruções:
+Antes de qualquer código, descubra **por qual canal externo** o cliente aceita
+receber contexto — e prove com o **protocolo do nonce**, nunca pela doc:
 
-```bash
-mkdir -p ~/tmp/koine-novo-cliente && cd ~/tmp/koine-novo-cliente
-# Crie manualmente o arquivo que você acha que o cliente lê
-echo "@/Users/<vc>/.config/koine/<nome>.md" > <arquivo-de-instrucao>
-<comando-do-cliente>
-# Pergunte ao agente algo que só estaria no arquivo apontado
-```
+1. Ponha uma palavra de controle única num arquivo que só o canal alcança.
+2. Rode o cliente **de uma pasta vazia**, com as ferramentas de leitura
+   desligadas onde ele permitir.
+3. Pergunte a palavra. Se ele responde, o canal entrega.
+4. Rode o **controle negativo**: a mesma pergunta sem o canal. Sem esse passo,
+   "o agente acertou" não distingue entrega de adivinhação.
 
-A doc oficial às vezes omite mecanismos importantes (caso real: o suporte a `@path` no Antigravity não está documentado mas funciona). Validar empiricamente economiza horas.
+`scripts/prova-viva-canais.sh` roteiriza os quatro passos. É manual e fora do
+CI — faz chamada real de LLM, autenticada e paga.
+
+**Com as ferramentas ligadas o teste vira falso positivo**: o agente lê o arquivo
+apontado com a ferramenta e responde certo, e você conclui que o mecanismo
+funciona quando ele não funciona. Foi assim que o `@path` externo do Claude
+passou por bom durante meses — e a diferença só apareceu em sessão remota.
+
+**Confira o artefato antes de interpretar a resposta.** Se o bundle não foi
+regenerado, a leitura apressada vira "o render perde conteúdo".
 
 ### 2. Criar o módulo do adapter em `src/koine/adapters/<novo>.py`
 
@@ -63,13 +84,31 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     ...
 ```
 
-Há três estilos de adapter, conforme o cliente entrega o contexto ao modelo:
+Todo adapter monta um bundle em `~/.cache/koine/<cliente>-bundles/<slot>/` (use
+`src/koine/cache.py` para o slot determinístico) e o entrega pelo canal do
+cliente. O que varia é **como o canal aponta para ele**:
 
-- **Ponteiro (`@path`)** — estilo Claude/Antigravity. O cliente resolve `@path` includes nativamente (injeta o conteúdo do arquivo antes do agente rodar). O adapter gera um arquivo de ponteiros; cabe em `renderizar` retornando só `arquivos_working_dir`. Zero duplicação. Referência: `src/koine/adapters/claude.py`.
-- **Bundle em cache** — estilo Copilot/OpenCode. O cliente carrega instruções via env var apontando para um diretório/arquivo descartável. Use `src/koine/cache.py` para slots determinísticos e `src/koine/render.py` para concatenar as seções; o adapter retorna `arquivos_externos` (em `~/.cache/koine/`) + `env_vars` + (opcional) `symlinks` para o `CONTEXTO.md` no working dir. Referência: `src/koine/adapters/copilot.py`.
-- **Inline no working dir** — estilo Codex. Use quando o cliente **não** resolve `@path` como include nativo — o Codex injeta o texto literal do arquivo de instruções, e o agente só leria os paths via tool call (best-effort, não garantido). O adapter então **embute o conteúdo** das seções (via `src/koine/render.py`) direto no arquivo do working dir e retorna `arquivos_working_dir` + `extra_args` (ex.: `-c project_doc_max_bytes=...` para não truncar bundles grandes). Sem cache, sem env var. `CONTEXTO.md` permanece separado, apontado por prosa. Referência: `src/koine/adapters/codex.py`.
+- **Diretório adicionado ao workspace** — `--add-dir <bundle>`, estilo
+  Claude/Antigravity. Conteúdo **embutido** no arquivo do bundle, via
+  `render.documento_inline`. Referência: `src/koine/adapters/claude.py`.
+- **Chave de config apontando um arquivo** — `-c model_instructions_file=`,
+  estilo Codex. O valor varia por pasta, então vai em `Lancamento.extra_args`,
+  **nunca** em `EXTRA_ARGS`, que é constante de módulo. Referência:
+  `src/koine/adapters/codex.py`.
+- **Env var apontando um diretório de instruções** — estilo Copilot. Atenção ao
+  que o canal de fato lê: o `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` entrega os
+  `*.instructions.md` e **ignora** o `AGENTS.md` do mesmo diretório. Referência:
+  `src/koine/adapters/copilot.py`.
+- **Config com lista de caminhos absolutos** — estilo OpenCode. Aqui o conteúdo
+  não é copiado: o cliente abre os arquivos, e o `CONTEXTO.md` chega **vivo** em
+  vez de como snapshot. Referência: `src/koine/adapters/opencode.py`.
 
-> Antes de assumir que um cliente resolve `@path` nativamente (estilo ponteiro), **valide empiricamente**: inspecione o transcript de uma sessão real e cheque se o agente leu os arquivos via tool call (Mecanismo B, inline) ou se o conteúdo chegou injetado sem leitura (Mecanismo A, ponteiro). A narração do agente ("li os arquivos") não distingue os dois.
+> **Não existe mais o estilo "ponteiro `@path`".** Import de caminho absoluto
+> para fora da pasta não expande em pasta não aprovada, e a aprovação é um
+> booleano por pasta que só o diálogo interativo escreve — pasta nova aberta
+> remotamente nunca é aprovada. Onde o conteúdo é embutido, a prosa de sessão
+> (`render.prosa_sessao`) avisa que o `CONTEXTO.md` acima é snapshot e que a
+> fonte canônica é o arquivo.
 
 ### 3. Registrar no `REGISTRY`
 
@@ -108,10 +147,11 @@ Se o cliente suporta skills instaláveis, adicionar o destino em `skills.HARNESS
 
 ## Pontos de atenção
 
-- **CONTEXTO.md é mutável e canônico** — agente IA edita esse arquivo entre sessões. O adapter NUNCA deve copiar `CONTEXTO.md` para outro lugar; aponta direto ou usa symlink.
+- **CONTEXTO.md é mutável e canônico** — o agente edita esse arquivo entre sessões. Onde o canal aceita caminho (opencode), aponte para ele; onde só aceita conteúdo, o snapshot vai junto **com** a prosa que diz que a fonte é o arquivo da pasta. O adapter nunca escreve no `CONTEXTO.md`.
 - **Configurações globais do cliente IA** (`~/.copilot/`, `~/.config/opencode/`, `~/.gemini/`, etc.) NUNCA são tocadas pelo adapter; mas o wrapper avisa quando elas existem e podem afetar a sessão.
 - **`os.symlink` no Windows** requer privilégio elevado — `cli._criar_symlink` degrada para cópia regenerada por sessão.
-- **Marker `<!-- gerado por kn-agente -->`** na primeira linha de arquivos gerados — permite detecção de conflito sem manifesto (`src/koine/conflito.py`). O marcador é congelado; não mudar.
+- **Marker `<!-- gerado por kn-agente -->`** na primeira linha de arquivos gerados — permite detecção de conflito sem manifesto (`src/koine/escrita.py`). O marcador é **congelado**; não mudar. A segunda linha, `<!-- gerado a pedido -->`, distingue intenção de propriedade: o que o `gerar` materializou não é removido pela limpeza de estoque.
+- **Nomeie o arquivo de pasta em `ARQUIVO`** — `estoque.NOMES` deriva do `REGISTRY`, então o adapter novo entra sozinho na limpeza. Se o cliente materializa um nome que outro já usa (três disputam `AGENTS.md`), teste os dois sentidos do cruzamento.
 
 ## Referências
 

@@ -62,12 +62,23 @@ Variáveis de ambiente:
 
 No Windows, se o download direto do github falhar por cadeia de certificado incompleta (o OpenSSL da stdlib não busca o CA intermediário via AIA), o download cai automaticamente para o `curl.exe` do sistema (Schannel, faz AIA); persistindo a falha, a mensagem orienta rodar Windows Update ou usar `KOINE_BASE_URL`.
 
-### `koine gerar <agente> [pasta]`
+### `koine gerar <agente> [pasta] [--para <cliente>]`
 
-Gera o arquivo de contexto do cliente (`CLAUDE.md`, `GEMINI.md`, etc.) na pasta, sem abrir o cliente. Útil para debug.
+Materializa o arquivo de contexto **na pasta**, sem abrir o cliente. É o modo
+skills: ambientes onde não há wrapper para configurar ambiente, e o arquivo na
+pasta é a única via de entrega. Serve também para depurar o que a sessão veria.
 
 - `<agente>` — nome do agente (`hermes` ou agente operacional do usuário).
 - `[pasta]` — opcional; default é `pwd`.
+- `--para <cliente>` — para qual cliente gerar (`claude`, `agy`, `codex`,
+  `copilot`, `opencode`). Default: `claude`.
+
+O arquivo nasce com duas marcas: a primeira diz que é do Koine, a segunda que foi
+**gerado a pedido** — e é ela que impede a limpeza automática de removê-lo quando
+você abrir uma sessão pelo `kn-<cliente>` na mesma pasta.
+
+Se já houver um arquivo seu no caminho, ele é preservado em `<nome>.bak` antes,
+com aviso.
 
 ### `koine mostrar <agente> <pasta>`
 
@@ -127,9 +138,30 @@ Sintaxe canônica para abrir sessão de cliente IA com contexto Koine.
   3. Path direto (relativo ou absoluto) que exista → usa.
   4. Fuzzy match em pastas conhecidas → oferece menu (`fzf` se disponível, fallback numerado); oferece salvar alias.
 
+### Onde o contexto é entregue
+
+A sessão **não** recebe arquivo gerado na pasta de trabalho. Cada cliente recebe
+o contexto por um canal próprio, a partir de um bundle em
+`~/.cache/koine/<cliente>-bundles/<slot>/`:
+
+| cliente | canal |
+|---|---|
+| `claude` | `--add-dir <bundle>` + variável de diretórios adicionais |
+| `agy` | `--add-dir <bundle>` |
+| `codex` | `-c model_instructions_file=<arquivo>` |
+| `copilot` | `COPILOT_CUSTOM_INSTRUCTIONS_DIRS=<bundle>` |
+| `opencode` | `OPENCODE_CONFIG=<json>` com `instructions` de caminhos absolutos |
+
+O bundle é derivado: apagá-lo não perde nada, e a sessão seguinte o refaz.
+
+Na primeira sessão de cada pasta, o arquivo que o mecanismo anterior deixava lá
+(`CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, `.github/copilot-instructions.md`) é
+removido, com aviso — **só** quando carrega o marcador do Koine. Arquivo seu,
+sem o marcador, fica onde está.
+
 ### Conflitos em arquivos gerenciados
 
-Ao materializar (`CLAUDE.md`, `GEMINI.md`, symlinks):
+Vale para o `koine gerar` e para o `CONTEXTO.md` que o modo bootstrap materializa:
 
 - Arquivo gerado pelo Koine (marcador `<!-- gerado por kn-agente -->` na 1ª linha) → regenerado sem backup.
 - Arquivo do usuário → preservado como `<nome>.bak` (nunca sobrescreve um `.bak` existente) com aviso em stderr.
