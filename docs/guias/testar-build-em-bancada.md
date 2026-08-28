@@ -85,6 +85,36 @@ publicar a tag, não antes.
   `cat ~/.local/bin/kn-claude` no Unix) aponta para a instalação, não para uma
   pasta de bancada.
 
+## Ao aposentar uma bancada, procure o que aponta para ela
+
+Apagar a pasta não basta. Medido em 28/08/2026, ao retirar a bancada da VM: havia
+uma **tarefa agendada** (`kn-diag`) apontando para um `.bat` dentro dela, que rodava
+`koine.pyz instalar` **do pyz da bancada**. Como o `instalar` bakeia nos wrappers o
+pyz que está executando, aquele job **desfazia a instalação boa toda vez que
+rodava** — e tinha rodado na noite anterior, revertendo os seis wrappers que eu
+havia acabado de verificar.
+
+Duas consequências práticas:
+
+- **Antes de apagar, liste o que referencia a pasta** — tarefas agendadas, atalhos,
+  entradas de PATH, `Run` do registro. Uma pasta apagada com um job vivo apontando
+  para ela troca um problema silencioso por outro barulhento.
+- **Verifique de novo depois de mexer.** Uma medição de wrappers vale para o
+  instante em que foi feita; o que a invalidou aqui foi um job noturno, não uma ação
+  humana.
+
+Para consertar wrappers que já foram bakeados para o lugar errado, use a forma das
+**duas pontas** — invocar o pyz instalado **e** passar `--pyz` apontando para ele:
+
+```cmd
+"%USERPROFILE%\AppData\Local\Python\...\python.exe" ^
+  "%USERPROFILE%\.local\share\koine\dist\koine.pyz" ^
+  instalar --pyz "%USERPROFILE%\.local\share\koine\dist\koine.pyz" < NUL
+```
+
+O `< NUL` não é enfeite: sem ele o `instalar` entra no modo interativo, para no
+prompt da pasta canônica e o comando fica pendurado sem erro.
+
 ## Ressalvas
 
 - **Tag de teste é pública e permanente.** O repositório é público, e
