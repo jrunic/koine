@@ -354,3 +354,9 @@ def ficha_sera_reposta(pasta: str, quando: str) -> str:
 def cliente_desconhecido(cliente: str, disponiveis: list[str]) -> str:
     return (f"cliente desconhecido: {cliente}\n"
             f"clientes disponíveis: {', '.join(disponiveis)}")
+
+
+def harness_desconhecido(valor: str, disponiveis: list[str]) -> str:
+    return (f"harness desconhecido: {valor}\n"
+            f"harnesses: {', '.join(disponiveis)}\n"
+            "use `todos` para instalar em todos os detectados, ou `nenhum` para pular")

@@ -10,22 +10,35 @@ tags: [referencia, cli, kn-agente]
 
 ## `koine` — motor administrativo
 
-### `koine instalar [--force] [--para=<harness>]`
+### `koine instalar [flags]`
 
 Comando único de configuração inicial. Executa as fases:
 
 1. **Extração do vault** — `vault/` do zip de distribuição (ao lado do `koine.pyz`) → `~/.local/share/koine/`
 2. **Plantio de domínios canônicos** — `~/.config/koine/dominios/` (universal, negocio, tecnologia, pessoal)
 3. **Wrappers de cliente** — `koine` + `kn-*` em `~/.local/bin/`, invocando o Python detectado na instalação
-4. **Pasta canônica + alias** — prompt-com-default (default `~/koine`); cria pasta; registra alias `koine` em `~/.config/koine/aliases.json`; gera `<pasta>/CONTEXTO.md` com `bootstrap: true` a partir de `vault/bootstrap/CONTEXTO.md`
-5. **Skills de harness** — detecta clientes IA no PATH; para cada detectado, prompt `Y/n` para instalar skills `kn-*`. Se zero detectados, exibe orientação completa (Node.js, Homebrew em macOS, lista dos 5 clientes IA com comandos por OS)
+4. **Pasta canônica + alias** — `--pasta-canonica`, ou prompt-com-default (default `~/koine`); cria pasta; registra alias `koine` em `~/.config/koine/aliases.json`; gera `<pasta>/CONTEXTO.md` com `bootstrap: true` a partir de `vault/bootstrap/CONTEXTO.md`
+5. **Skills de harness** — detecta clientes IA no PATH; para cada detectado, prompt `Y/n` para instalar skills `kn-*` (ou `--para`, que decide sem perguntar). Se zero detectados, exibe orientação completa (Node.js, Homebrew em macOS, lista dos 5 clientes IA com comandos por OS)
 
 Flags:
 
 - `--force` — alcança os seus `dominios/` em `~/.config/koine/`. O vault shipped divergente já é atualizado sem flag, com o anterior guardado em `~/.cache/koine/backups/<versão>/`.
-- `--para=<harness>` — instala skills do harness especificado sem prompt (suportados: `claude`, `agy`, `copilot`, `opencode`, `codex`).
+- `--para=<harness>` — instala skills do harness especificado sem prompt (suportados: `claude`, `agy`, `copilot`, `opencode`, `codex`). Aceita também `todos` (instala em todos os detectados) e `nenhum` (pula a etapa). Valor desconhecido **falha** com a lista, em vez de virar "nenhum harness" em silêncio.
+- `--nao-interativo` — não pergunta nada; usa o default de cada decisão.
+- `--pasta-canonica=<path>` — responde a fase 4 sem prompt (aceita `~`).
+- `--contexto-canonico=preservar|sobrescrever` — o que fazer com um `CONTEXTO.md` divergente na pasta canônica, nos dois casos (bootstrap desatualizado e personalizado).
 
-Idempotente em todas as fases. Em modo não-interativo (stdin sem TTY, detectado via `sys.stdin.isatty()`), aceita defaults sem prompts.
+Idempotente em todas as fases.
+
+**Modo interativo é decidido pela flag, não pelo terminal.** Sem flags, o comando pergunta quando há TTY (`sys.stdin.isatty()`) e aceita defaults quando não há. Toda flag acima **vence** essa inferência: dada a flag, o prompt correspondente não acontece nem com terminal.
+
+Isso existe porque inferir trava automação. Um script que roda o `instalar` de dentro de um terminal interativo — o caso de uma tarefa agendada ou de uma sessão de agente — para no primeiro prompt e fica pendurado **sem erro**. O contorno era redirecionar o stdin (`< NUL` no Windows, `< /dev/null` no Unix), que é obscuro e específico de plataforma.
+
+Exemplo de instalação inteiramente declarada:
+
+```bash
+koine instalar --nao-interativo --pasta-canonica ~/trabalho/koine --para todos
+```
 
 ### `koine definir-agente <nome> [pasta] [--default]`
 

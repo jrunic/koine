@@ -6,6 +6,20 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Adicionado — `koine instalar` pode ser inteiramente declarado na linha de comando
+
+As três decisões que o comando fazia por pergunta agora cabem em flags:
+`--pasta-canonica`, `--contexto-canonico` e `--para` (que passou a aceitar
+`todos` e `nenhum`). Mais `--nao-interativo`, que aceita o default de todas.
+
+O motivo é prático: o comando decidia se ia perguntar **olhando para o
+terminal**. Script rodado de dentro de um terminal — uma tarefa agendada, uma
+sessão de agente — parava no primeiro prompt e ficava pendurado **sem erro**.
+O contorno era redirecionar o stdin, que é obscuro e diferente em cada sistema.
+Agora a flag decide, e o terminal não opina.
+
+Nada muda para quem instala à mão: sem flags, o comportamento é o de antes.
+
 ### Corrigido — no Copilot e no OpenCode, o agente passa a saber o que é o Koine
 
 Nesses dois clientes faltava uma camada inteira do contexto: o `KOINE.md`, que é

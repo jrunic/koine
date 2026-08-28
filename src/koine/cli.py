@@ -79,8 +79,25 @@ def _cmd_instalar(args: list[str]) -> int:
     p.add_argument("--bin", default=None)
     p.add_argument("--pyz", default=None)
     p.add_argument("--force", action="store_true")
-    p.add_argument("--para", default=None)
+    p.add_argument("--para", default=None,
+                   help="harness para instalar as skills; `todos` instala em "
+                        "todos os detectados e `nenhum` pula a etapa")
+    # O modo era INFERIDO por isatty. Inferência é o que trava automação rodada
+    # de dentro de um terminal: o comando para num prompt e fica pendurado sem
+    # erro. A flag decide, o terminal não.
+    p.add_argument("--nao-interativo", action="store_true",
+                   help="não pergunta nada; usa os defaults de cada decisão")
+    p.add_argument("--pasta-canonica", default=None,
+                   help="pasta canônica para as sessões com o Hermes (default: ~/koine)")
+    p.add_argument("--contexto-canonico", choices=("preservar", "sobrescrever"),
+                   default=None,
+                   help="o que fazer com um CONTEXTO.md divergente na pasta canônica")
     ns = p.parse_args(args)
+
+    if ns.para and ns.para not in ("todos", "nenhum") and ns.para not in skills.HARNESS_SKILLS:
+        print(mensagens.harness_desconhecido(ns.para, sorted(skills.HARNESS_SKILLS)),
+              file=sys.stderr)
+        return 1
 
     vault_src = ns.vault or _localizar_vault()
     trocas, preservados = _instalar.extrair(vault_src, __version__, force=ns.force)
@@ -95,9 +112,11 @@ def _cmd_instalar(args: list[str]) -> int:
     # sys.executable = interpretador que rodou `instalar` (>=3.10 garantido);
     # bakear absoluto no wrapper evita `python3` puro pegar um Python antigo.
     wrappers.gerar(bindir, pyz, sys.executable)
-    # espelha term.IsTerminal(stdin) do Go (instalar.go:61)
-    interativo = sys.stdin.isatty()
-    canonica.configurar(vault_src, interativo=interativo)
+    # espelha term.IsTerminal(stdin) do Go (instalar.go:61) — e a flag vence
+    interativo = sys.stdin.isatty() and not ns.nao_interativo
+    canonica.configurar(vault_src, interativo=interativo,
+                        pasta_escolhida=ns.pasta_canonica or "",
+                        contexto=ns.contexto_canonico or "")
     try:
         _instalar_com_deteccao(ns.para, interativo)
     except (OSError, ValueError) as e:
@@ -114,10 +133,23 @@ def _instalar_com_deteccao(para: str | None, interativo: bool) -> None:
     PATH e instala skills com confirmação. `para` dado → instala sem prompt;
     não-interativo → apenas informa."""
     print("\nInstalando skills de harness:")
-    if para:
+    if para == "nenhum":
+        print("  → Pulado por --para nenhum.")
+        return
+    if para and para != "todos":
         _instalar_skills_e_imprimir(para, __version__)
         return
     detectados = skills.detectar_harnesses()
+    if para == "todos":
+        if not detectados:
+            print(mensagens.orientativa_sem_harness(), end="")
+            return
+        for h in detectados:
+            try:
+                _instalar_skills_e_imprimir(h, __version__)
+            except (OSError, ValueError) as e:
+                print(f"  aviso: {e}", file=sys.stderr)
+        return
     if not detectados:
         print(mensagens.orientativa_sem_harness(), end="")
         return

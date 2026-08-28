@@ -5,20 +5,28 @@ from pathlib import Path
 from koine import aliases
 
 
-def configurar(vault_src: str, interativo: bool = False) -> str:
+def configurar(vault_src: str, interativo: bool = False, pasta_escolhida: str = "",
+               contexto: str = "") -> str:
     """Configura a pasta canônica (porta de configurarPastaCanonica, instalar.go):
     prompt-com-default se interativo (default ~/koine), cria a pasta, registra o
     alias 'koine' (3 casos) e materializa o CONTEXTO.md bootstrap do vault
-    (4 casos). Idempotente. Devolve o path absoluto da pasta canônica."""
+    (4 casos). Idempotente. Devolve o path absoluto da pasta canônica.
+
+    `pasta_escolhida` e `contexto` são as respostas dadas na linha de comando:
+    dadas, o prompt correspondente não acontece — nem quando há terminal. Quem
+    decide é o chamador, e decisão explícita vence inferência por `isatty`.
+    """
     home = str(Path.home())
     pasta = os.path.join(home, "koine")
-    if interativo:
+    if pasta_escolhida:
+        pasta = _expandir_path(pasta_escolhida, home)
+    elif interativo:
         print("Onde fica sua pasta canônica para sessões com Hermes? [~/koine]: ",
               end="", flush=True)
         resp = sys.stdin.readline().strip()
         if resp:
             pasta = _expandir_path(resp, home)
-    else:
+    elif not pasta_escolhida:
         print("Pasta canônica: ~/koine (default, modo não-interativo)")
 
     os.makedirs(pasta, exist_ok=True)
@@ -29,7 +37,7 @@ def configurar(vault_src: str, interativo: bool = False) -> str:
         # degradação graciosa igual ao Go (instalar.go:161-163): alias falhou
         # não aborta a instalação
         print(f"aviso: alias: {e}", file=sys.stderr)
-    _materializar_contexto(vault_src, pasta, interativo)
+    _materializar_contexto(vault_src, pasta, interativo, contexto)
     return pasta
 
 
@@ -64,7 +72,8 @@ def _registrar_alias(pasta: str, home: str) -> None:
     print("✓ Alias 'koine' registrado")
 
 
-def _materializar_contexto(vault_src: str, pasta: str, interativo: bool) -> None:
+def _materializar_contexto(vault_src: str, pasta: str, interativo: bool,
+                           escolha: str = "") -> None:
     """Porta de materializarContextoBootstrap: ausente → escreve; idêntico →
     informa; divergente não-interativo → preserva com aviso; divergente
     interativo → [Y/n] (bootstrap) ou [y/N] (personalizado)."""
@@ -79,6 +88,15 @@ def _materializar_contexto(vault_src: str, pasta: str, interativo: bool) -> None
         atual = f.read()
     if atual == embed:
         print("✓ CONTEXTO.md já está em modo bootstrap (idêntico ao embed)")
+        return
+    if escolha:
+        # resposta dada na linha de comando: vale para os DOIS casos divergentes
+        # (bootstrap desatualizado e personalizado), que só diferem no default
+        if escolha == "sobrescrever":
+            with open(destino, "w", encoding="utf-8") as f:
+                f.write(embed)
+        else:
+            print("✓ CONTEXTO.md preservado")
         return
     if not interativo:
         # texto do Go com kn-agente→koine (regra global do port)
