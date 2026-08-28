@@ -7,6 +7,8 @@ tentativa de executar distingue os três desfechos que importam.
 A sonda é injetável porque teste que depende do `pwsh` real da máquina de quem
 roda a suíte não é reprodutível — o CI é POSIX-only.
 """
+import shutil
+import subprocess
 from dataclasses import dataclass
 
 # desfechos de uma sondagem
@@ -20,6 +22,15 @@ POWERSHELL = "powershell"
 BASH = "bash"
 CMD = "cmd"
 ESCADA = (PWSH, POWERSHELL, BASH, CMD)
+
+TIMEOUT = 15  # generoso: a partida do PowerShell 7 em máquina fria é lenta
+
+_ARGS = {
+    PWSH: ["-NoProfile", "-Command", "exit"],
+    POWERSHELL: ["-NoProfile", "-Command", "exit"],
+    BASH: ["-c", "exit"],
+    CMD: ["/c", "exit"],
+}
 
 
 @dataclass(frozen=True)
@@ -39,3 +50,32 @@ def melhor(aceitos, *, sonda=None):
         if estado == EXECUTOU:
             return Degrau(nome, invocacao, estado)
     return None
+
+
+def sondar(nome):
+    """(invocacao, estado) para um degrau. Executa; não olha só o disco.
+
+    Timeout conta como RECUSADO, não como ausente: shell que não termina um
+    `exit` não serve para o cliente, e a distinção que a orientação de
+    pré-requisitos precisa é entre "instale isto" (AUSENTE) e "peça à TI"
+    (RECUSADO).
+    """
+    invocacao = _resolver(nome)
+    if invocacao is None:
+        return nome, AUSENTE
+    try:
+        proc = subprocess.run([invocacao] + _ARGS[nome], timeout=TIMEOUT,
+                              stdin=subprocess.DEVNULL,
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except FileNotFoundError:
+        return invocacao, AUSENTE
+    except (OSError, subprocess.SubprocessError):
+        # o 1260 da política de grupo estoura na CRIAÇÃO do processo, então esta
+        # reprovação é instantânea — só o degrau que executa paga a partida.
+        return invocacao, RECUSADO
+    return invocacao, (EXECUTOU if proc.returncode == 0 else RECUSADO)
+
+
+def _resolver(nome):
+    """Onde está o binário deste degrau, ou None."""
+    return shutil.which(nome)
