@@ -2,7 +2,7 @@ import json
 import os
 import sys
 
-from koine import cache, render
+from koine import cache, render, shell
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
 
@@ -10,6 +10,11 @@ from koine.lancamento import Lancamento
 # launch a pasta não recebe nada: o config do bundle entrega tudo.
 ARQUIVO = "AGENTS.md"
 MARCADOR = "<!-- gerado por kn-agente -->"
+
+# Degraus que a chave `shell` do OpenCode aceita, medido em 28/08/2026: `bash`
+# funciona e `powershell` é tentado (falha com uv_spawn onde a política nega, em
+# vez de ser ignorado). A doc do produto aceita "absolute path or a short name".
+ACEITA_SHELL = (shell.PWSH, shell.POWERSHELL, shell.BASH, shell.CMD)
 
 
 def renderizar(cm: ContextoMontado) -> Lancamento:
@@ -19,7 +24,7 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     instructions (paths absolutos). Symlink <pasta>/AGENTS.md → CONTEXTO.md.
     Env OPENCODE_CONFIG + OPENCODE_DISABLE_CLAUDE_CODE=1. Bootstrap: contexto
     direto em instructions; sem symlink. Avisa se AGENTS.md global existe.
-    Em Windows declara shell=cmd (PowerShell restrito derruba o bash tool)."""
+    Em Windows declara o melhor shell que a máquina executa (escadinha em shell.py)."""
     cfg_path = cache.caminho_arquivo("opencode-configs", cache.slot_id(cm.pasta_abs), "json")
 
     # aviso: ~/.config/opencode/AGENTS.md é mesclado pelo OpenCode em toda sessão
@@ -51,11 +56,13 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
 
     cfg = {"$schema": "https://opencode.ai/config.json", "instructions": instructions}
     if sys.platform == "win32":
-        # Política corporativa que bloqueia o powershell.exe derruba o bash tool
-        # do opencode com uv_spawn. Declarar o shell tira a decisão do default,
-        # que varia por versão. Literal "cmd" — é a string que o binário do
-        # opencode trata explicitamente ao montar os argumentos.
-        cfg["shell"] = "cmd"
+        # O default do OpenCode varia por versão e, na estação que bloqueia o
+        # PowerShell, derruba a ferramenta de shell com `uv_spawn`. Em vez de
+        # fixar `cmd` para todo mundo — o que rebaixava a máquina saudável —, o
+        # Koine grava o melhor degrau que ESTA máquina executa.
+        escolhido = shell.melhor(ACEITA_SHELL)
+        if escolhido is not None:
+            cfg["shell"] = escolhido.invocacao
 
     # paridade com json.MarshalIndent(cfg, "", "  ") do Go: indent 2, UTF-8 cru
     data = json.dumps(cfg, indent=2, ensure_ascii=False)
