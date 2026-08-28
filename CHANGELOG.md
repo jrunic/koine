@@ -4,7 +4,7 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.8.0] — 2026-08-28
 
 ### Adicionado — `koine instalar` pode ser inteiramente declarado na linha de comando
 
@@ -660,7 +660,8 @@ Initial public release.
 First public release. API, on-disk layout, vault contents and adapter
 behavior may evolve until 1.0.
 
-[Unreleased]: https://github.com/jrunic/koine/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/jrunic/koine/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/jrunic/koine/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/jrunic/koine/compare/v0.6.3...v0.7.0
 [0.5.3]: https://github.com/jrunic/koine/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/jrunic/koine/compare/v0.5.1...v0.5.2
