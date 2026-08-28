@@ -125,12 +125,6 @@ def test_todas_as_camadas_chegam(cm_e_pasta, nome):
     cm, _ = cm_e_pasta
     entregue = _entregue(adapters.REGISTRY[nome].renderizar(cm), cm)
     for camada, marca in LINHAS.items():
-        if camada == "koine" and nome in ("copilot", "opencode"):
-            # Nem o bundle do Copilot nem o config do OpenCode levaram o KOINE.md
-            # desde o Go. É gap de CONTEÚDO, não de canal: fora do escopo desta
-            # spec, que muda o canal e não o texto. Registrado aqui para não
-            # passar por decisão.
-            continue
         assert marca in entregue, f"{nome}: camada {camada} não chega"
 
 

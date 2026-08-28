@@ -19,6 +19,10 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     COPILOT_CUSTOM_INSTRUCTIONS_DIRS. Bootstrap: usuário + agente + env
     (+ bootstrap.instructions.md se houver CONTEXTO.md); sem symlink.
 
+    O KOINE.md entra aqui desde a v0.7.1: o bundle nunca o levou (herança do
+    copilot.go), e sem ele o agente sabia quem é o usuário e em que pasta está,
+    mas não sabia o que é o Koine — em 3682 bytes, ~3% do input da sessão.
+
     O bundle NÃO tem AGENTS.md: medido em 27/08 com discriminante na mesma
     execução, o canal COPILOT_CUSTOM_INSTRUCTIONS_DIRS entrega os
     `*.instructions.md` e ignora o AGENTS.md. Usuário e agente moravam nele —
@@ -31,6 +35,9 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     if cm.usuario_path:
         lanc.arquivos_externos[os.path.join(instr, "usuario.instructions.md")] = \
             render.wrapar_instructions(_ler(cm.usuario_path))
+    if cm.koine_path:
+        lanc.arquivos_externos[os.path.join(instr, "koine.instructions.md")] = \
+            render.wrapar_instructions(_ler(cm.koine_path))
     lanc.arquivos_externos[os.path.join(instr, "agente.instructions.md")] = \
         render.wrapar_instructions(_ler(cm.agente_path))
 

@@ -31,6 +31,10 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     instructions = []
     if cm.usuario_path:
         instructions.append(cm.usuario_path)
+    # ordem canônica dos outros três adapters: usuário, Koine, agente, escopo,
+    # índices. O KOINE.md faltava aqui desde o opencode.go.
+    if cm.koine_path:
+        instructions.append(cm.koine_path)
     instructions.append(cm.agente_path)
     if cm.instrucao_path:
         instructions.append(cm.instrucao_path)

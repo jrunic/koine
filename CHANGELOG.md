@@ -4,6 +4,24 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Corrigido — no Copilot e no OpenCode, o agente passa a saber o que é o Koine
+
+Nesses dois clientes faltava uma camada inteira do contexto: o `KOINE.md`, que é
+onde está descrito o que a ferramenta é e como se opera. O agente sabia quem é
+você, qual agente estava operando e em que pasta — mas não conhecia o método. Vem
+de antes, dos adapters originais.
+
+### Corrigido — `koine definir-agente` deixa de ser desfeito quando a ficha some
+
+Se você rodava `koine definir-agente`, e depois o bloco de configuração do topo do
+`CONTEXTO.md` sumia, a sessão seguinte repunha a ficha **sem** o agente que você
+tinha definido — e o arquivo de backup também não o tinha. A linha se perdia.
+
+Agora, quem escreve a ficha também fotografa: o que você grava sobrevive à
+reposição.
+
 ## [0.7.0] — 2026-08-28
 
 ### Alterado — o contexto chega por fora da pasta, e a pasta volta a ser sua

@@ -5,7 +5,8 @@
 # por cliente, quando o canal muda.
 #
 # O que ele prova, e a ordem importa:
-#   1. monta um HOME isolado com um nonce POR CAMADA;
+#   1. monta um HOME isolado com um nonce POR CAMADA (usuário, Koine, agente,
+#      contexto da pasta);
 #   2. roda o launch com um shim, capturando env e args do cliente;
 #   3. CONFERE os nonces dentro do artefato com grep — antes de perguntar
 #      qualquer coisa ao cliente. Numa das medições de 27/08 o bundle não tinha
@@ -43,6 +44,7 @@ sys.path.insert(0, os.environ["REPO"])
 from tests.fixtures import seed
 d = seed.montar(sys.argv[1])
 alvos = ((os.path.join(d["cfg"], "teste.md"), "NONCE-USUARIO"),
+         (os.path.join(d["data"], "KOINE.md"), "NONCE-KOINE"),
          (os.path.join(d["data"], "agentes", "hermes.md"), "NONCE-AGENTE"),
          (os.path.join(d["trab"], "CONTEXTO.md"), "NONCE-CONTEXTO"))
 for path, nonce in alvos:
@@ -70,7 +72,7 @@ echo "== 3. os nonces estão no artefato?  (antes de perguntar ao cliente)"
 # referência, que é o que o cliente vai fazer.
 REFS=$(grep -rhoE '"/[^"]+\.md"' "$HOME_T/.cache/koine" 2>/dev/null | tr -d '"')
 FALTOU=0
-for n in NONCE-USUARIO NONCE-AGENTE NONCE-CONTEXTO; do
+for n in NONCE-USUARIO NONCE-KOINE NONCE-AGENTE NONCE-CONTEXTO; do
   if grep -rq "$n" "$HOME_T/.cache/koine" 2>/dev/null; then
     echo "   ok   $n no bundle (conteúdo)"
   elif [ -n "$REFS" ] && echo "$REFS" | xargs grep -lq "$n" 2>/dev/null; then
