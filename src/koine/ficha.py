@@ -10,7 +10,8 @@ não é arquivo regular nosso, e falhar em gravar jamais derrubar a sessão.
 import os
 import sys
 
-from koine import frontmatter, paths
+from koine import bootstrap, frontmatter, paths
+from koine import instantaneo as _instantaneo
 
 from koine import backup as _backup_mod
 
@@ -98,6 +99,39 @@ def _backup(path: str, texto: str) -> None:
 def _gravar(path: str, texto: str) -> None:
     with open(path, "w", encoding="utf-8", newline="") as f:
         f.write(texto)
+    _fotografar_se_valida(path, texto)
+
+
+def _fotografar_se_valida(path: str, texto: str) -> None:
+    """Quem escreve a ficha, fotografa.
+
+    Antes o único fotógrafo era o launch, e havia DOIS escritores fora dele —
+    `definir-agente` e `koine validar --corrigir`. O campo gravado entre dois
+    launches se perdia se a ficha sumisse no meio: a reposição devolvia a foto
+    antiga, e o `.bak` não ajudava, porque guarda o arquivo já sem ficha nenhuma.
+    Medido no aceite do ciclo de 27/08 (jd-task #671).
+
+    Duas condições, as duas necessárias:
+
+    - **só `CONTEXTO.md`** — `definir-agente --default` grava no arquivo do
+      usuário, e fotografar a pasta dele seria guardar a ficha errada;
+    - **só ficha `VALIDO`** — fotografar bloco sem `escopo:` faria a reposição
+      devolver algo que continua incompleto, e o launch seguinte repetiria a
+      reposição, com um `.bak` novo a cada sessão. A cura viraria a doença.
+
+    O texto vem por parâmetro, não de uma releitura: reler por
+    `ler_arquivo(normalizar_disco=True)` chamaria o normalizar de volta aqui.
+    """
+    if os.path.basename(path) != "CONTEXTO.md":
+        return
+    try:
+        fm, _ = frontmatter.ler(texto)
+    except frontmatter.FrontmatterInvalido:
+        return
+    if bootstrap.estado_do_fm(fm) != bootstrap.VALIDO:
+        return
+    pasta = os.path.dirname(os.path.abspath(path))
+    _instantaneo.guardar(pasta, bootstrap.bloco_do_contexto(pasta))
 
 
 def definir_campo_arquivo(path: str, chave: str, valor: str) -> bool:

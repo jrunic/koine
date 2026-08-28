@@ -273,3 +273,108 @@ def test_mostrar_anuncia_a_foto_sem_repor(koine_home, monkeypatch, capsys):
     saida = capsys.readouterr()
     assert "ficha" in (saida.out + saida.err).lower()
     assert ctx.read_bytes() == antes, "mostrar NÃO pode escrever"
+
+
+# ---- quem escreve a ficha, fotografa (#671) --------------------------------
+
+def _apagar_ficha(path):
+    """Simula o que o agente faz no fim da sessão: reescreve o CONTEXTO.md sem
+    o bloco. É o bug de produção que a #605 existe para curar."""
+    with open(path, encoding="utf-8", newline="") as f:
+        texto = f.read()
+    corpo = texto.split("---", 2)[2].lstrip("\r\n")
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        f.write(corpo)
+
+
+def test_definir_agente_sobrevive_a_perda_da_ficha(koine_home, monkeypatch):
+    """A sequência medida no aceite do ciclo de 27/08:
+
+    launch (fotografa) → definir-agente (grava e NÃO fotografava) → a ficha some
+    → o launch seguinte repõe a foto ANTIGA, sem o `agente:`.
+
+    O campo não está no `.bak` — o `.bak` guarda o arquivo já sem ficha. A linha
+    se perde de verdade, e o usuário não tem de onde tirá-la."""
+    from koine import cli
+    monkeypatch.setenv("HOME", koine_home["home"])
+    monkeypatch.setattr("koine.launch.lancar", lambda *a, **k: 0)
+    pasta = koine_home["trab"]
+    ctx = os.path.join(pasta, "CONTEXTO.md")
+
+    assert cli.main(["claude", "hermes", pasta]) == 0      # fotografa
+    assert cli.main(["definir-agente", "hermes", pasta]) == 0
+    assert "agente: hermes" in open(ctx, encoding="utf-8").read()
+
+    _apagar_ficha(ctx)
+    assert cli.main(["claude", "hermes", pasta]) == 0      # repõe
+
+    reposta = open(ctx, encoding="utf-8").read()
+    assert "agente: hermes" in reposta, \
+        "a reposição reverteu em silêncio o que o `definir-agente` gravou"
+
+
+def test_definir_agente_em_pasta_incompleta_nao_fotografa(koine_home, monkeypatch):
+    """Guarda contra a cura virar doença: fotografar ficha SEM `escopo:` faria a
+    reposição devolver um bloco que continua incompleto — o launch seguinte
+    repetiria a reposição, com um `.bak` novo a cada sessão."""
+    from koine import cli, instantaneo as inst
+    monkeypatch.setenv("HOME", koine_home["home"])
+    nova = os.path.join(koine_home["home"], "trab-incompleta")
+    os.makedirs(nova, exist_ok=True)
+    with open(os.path.join(nova, "CONTEXTO.md"), "w", encoding="utf-8") as f:
+        f.write("---\ndescricao: sem escopo\n---\n\n# Pendências\n")
+
+    cli.main(["definir-agente", "hermes", nova])
+
+    assert inst.recuperar(nova) is None, "guardou foto de ficha incompleta"
+
+
+def test_a_foto_do_definir_agente_preserva_crlf(koine_home, monkeypatch):
+    """Arquivo do usuário em CRLF: nem a gravação nem a reposição podem trocar
+    as quebras de linha. É a armadilha que já custou uma correção na #605."""
+    from koine import cli
+    monkeypatch.setenv("HOME", koine_home["home"])
+    monkeypatch.setattr("koine.launch.lancar", lambda *a, **k: 0)
+    pasta = koine_home["trab"]
+    ctx = os.path.join(pasta, "CONTEXTO.md")
+    with open(ctx, encoding="utf-8", newline="") as f:
+        texto = f.read()
+    with open(ctx, "w", encoding="utf-8", newline="") as f:
+        f.write(texto.replace("\n", "\r\n"))
+
+    assert cli.main(["claude", "hermes", pasta]) == 0
+    assert cli.main(["definir-agente", "hermes", pasta]) == 0
+    _apagar_ficha(ctx)
+    assert cli.main(["claude", "hermes", pasta]) == 0
+
+    bruto = open(ctx, "rb").read()
+    assert b"agente: hermes" in bruto
+    assert b"\r\n" in bruto, "as quebras CRLF do usuário viraram LF"
+    assert b"\r\r\n" not in bruto, "sobrou \\r pendurado"
+
+
+def test_só_o_contexto_md_vira_foto(tmp_path, monkeypatch):
+    """Fotografar é consequência de escrever A FICHA — não de escrever qualquer
+    arquivo que por acaso esteja numa pasta que tem `CONTEXTO.md`.
+
+    O caso que discrimina: `koine validar --corrigir` normaliza um arquivo
+    QUALQUER dentro de uma pasta de sessão. Sem o guard de nome, isso fotografa
+    a ficha da pasta — uma foto que ninguém validou como sessão que abriu bem.
+    """
+    from koine import ficha, instantaneo as inst
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.delenv("XDG_CACHE_HOME", raising=False)
+    pasta = tmp_path / "sessao"
+    pasta.mkdir()
+    (pasta / "CONTEXTO.md").write_text(
+        "---\ntype: contexto\nescopo: fixture\n---\n\n# Pasta\n", encoding="utf-8")
+    # o arquivo alheio declara `escopo:` — é o que faz a condição de VALIDO
+    # passar e deixa SÓ o guard de nome entre ele e a foto
+    outro = pasta / "notas.md"
+    outro.write_text("---\nescopo: fixture\ndescricao: Vendas B2B: metas\n---\n\n# Notas\n",
+                     encoding="utf-8")
+
+    ficha.normalizar_arquivo(str(outro))   # é o que o `validar --corrigir` faz
+
+    assert inst.recuperar(str(pasta)) is None, \
+        "escrever um arquivo qualquer fotografou a ficha da pasta"
