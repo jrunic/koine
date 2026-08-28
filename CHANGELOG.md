@@ -4,7 +4,7 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.7.0] — 2026-08-27
+## [0.7.0] — 2026-08-28
 
 ### Alterado — o contexto chega por fora da pasta, e a pasta volta a ser sua
 
