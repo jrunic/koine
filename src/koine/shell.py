@@ -7,6 +7,7 @@ tentativa de executar distingue os três desfechos que importam.
 A sonda é injetável porque teste que depende do `pwsh` real da máquina de quem
 roda a suíte não é reprodutível — o CI é POSIX-only.
 """
+import os
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -77,5 +78,35 @@ def sondar(nome):
 
 
 def _resolver(nome):
-    """Onde está o binário deste degrau, ou None."""
-    return shutil.which(nome)
+    """Onde está o binário deste degrau, ou None.
+
+    Para o bash o PATH não basta, e isso é medição: na bancada de 28/08/2026 o
+    `where bash` falha (o PATH tem só a pasta `cmd` do Git) e mesmo assim Claude
+    e OpenCode usam o bash — os dois sondam a instalação do Git sozinhos.
+    """
+    achado = shutil.which(nome)
+    if achado:
+        return achado
+    if nome == BASH:
+        for candidato in _bash_do_git():
+            if os.path.isfile(candidato):
+                return candidato
+    return None
+
+
+def _bash_do_git():
+    """Lugares padrão do Git para Windows, do mais provável ao menos.
+
+    O perfil vem primeiro porque é onde o instalador cai SEM administrador, que
+    é a condição do público-alvo.
+    """
+    local = os.environ.get("LOCALAPPDATA", "")
+    arquivos = os.environ.get("ProgramFiles", "")
+    arquivos86 = os.environ.get("ProgramFiles(x86)", "")
+    caminhos = []
+    if local:
+        caminhos.append(os.path.join(local, "Programs", "Git", "bin", "bash.exe"))
+    for base in (arquivos, arquivos86):
+        if base:
+            caminhos.append(os.path.join(base, "Git", "bin", "bash.exe"))
+    return caminhos

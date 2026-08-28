@@ -88,3 +88,37 @@ def test_sondar_usa_os_argumentos_certos_por_familia(monkeypatch):
     assert vistos["powershell"] == ["-NoProfile", "-Command", "exit"]
     assert vistos["bash"] == ["-c", "exit"]
     assert vistos["cmd"] == ["/c", "exit"]
+
+
+def test_bash_e_procurado_na_instalacao_do_git_quando_falta_no_path(monkeypatch, tmp_path):
+    # instalação sem administrador: o Git cai no perfil do usuário.
+    git_bin = tmp_path / "Local" / "Programs" / "Git" / "bin"
+    git_bin.mkdir(parents=True)
+    bash = git_bin / "bash.exe"
+    bash.write_text("")
+
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "Local"))
+    monkeypatch.delenv("ProgramFiles", raising=False)
+    monkeypatch.delenv("ProgramFiles(x86)", raising=False)
+    monkeypatch.setattr(shell.shutil, "which", lambda n: None)
+    monkeypatch.setattr(shell.subprocess, "run",
+                        lambda *a, **k: subprocess.CompletedProcess(a[0], 0))
+
+    invocacao, estado = shell.sondar(shell.BASH)
+    assert estado == shell.EXECUTOU
+    assert invocacao == str(bash)   # caminho ABSOLUTO, que é o que o opencode aceita
+
+
+def test_bash_no_path_vence_a_busca_no_git(monkeypatch):
+    monkeypatch.setattr(shell.shutil, "which", lambda n: r"C:\path\bash.exe")
+    monkeypatch.setattr(shell.subprocess, "run",
+                        lambda *a, **k: subprocess.CompletedProcess(a[0], 0))
+    assert shell.sondar(shell.BASH)[0] == r"C:\path\bash.exe"
+
+
+def test_sem_bash_em_lugar_nenhum_o_degrau_e_ausente(monkeypatch, tmp_path):
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "vazio"))
+    monkeypatch.delenv("ProgramFiles", raising=False)
+    monkeypatch.delenv("ProgramFiles(x86)", raising=False)
+    monkeypatch.setattr(shell.shutil, "which", lambda n: None)
+    assert shell.sondar(shell.BASH)[1] == shell.AUSENTE
