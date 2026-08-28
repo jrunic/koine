@@ -123,12 +123,27 @@ Imprime versão e sai.
 
 Sintaxe canônica para abrir sessão de cliente IA com contexto Koine.
 
+A pasta de trabalho **não recebe arquivo gerado**: cada adapter monta um bundle em
+`~/.cache/koine/<cliente>-bundles/<slot>/` e o entrega pelo canal do cliente.
+
 | Wrapper | Cliente lançado | Mecanismo |
 |---|---|---|
-| `kn-claude` | `claude` | `<pasta>/CLAUDE.md` com `@path` includes |
-| `kn-agy` | `agy` | `<pasta>/GEMINI.md` com `@path` includes |
-| `kn-copilot` | `copilot` | `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` apontando para bundle em `~/.cache/koine/copilot-bundles/<slot>/` + symlink `<pasta>/.github/copilot-instructions.md → <pasta>/CONTEXTO.md` |
-| `kn-opencode` | `opencode` | `OPENCODE_CONFIG` apontando para JSON em `~/.cache/koine/opencode-configs/<slot>.json` + symlink `<pasta>/AGENTS.md → <pasta>/CONTEXTO.md` + `OPENCODE_DISABLE_CLAUDE_CODE=1`. No Windows, o JSON declara `"shell": "cmd"` |
+| `kn-claude` | `claude` | `--add-dir <bundle>`, com o conteúdo **embutido** no `CLAUDE.md` do bundle |
+| `kn-agy` | `agy` | `--add-dir <bundle>`, com o conteúdo embutido no `GEMINI.md` do bundle |
+| `kn-codex` | `codex` | `-c model_instructions_file=<arquivo do bundle>` |
+| `kn-copilot` | `copilot` | `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` apontando para o bundle |
+| `kn-opencode` | `opencode` | `OPENCODE_CONFIG` apontando para JSON em `~/.cache/koine/opencode-configs/<slot>.json` + `OPENCODE_DISABLE_CLAUDE_CODE=1` |
+
+**No Windows, o Koine escolhe o shell.** A máquina é sondada por **execução** — presença
+não responde, porque a estação corporativa tem o `pwsh` no PATH e negado por política. A
+ordem de preferência é `pwsh` → `powershell` → `bash` → `cmd`, recortada pelo que cada
+cliente aceita:
+
+| cliente | o que recebe |
+|---|---|
+| `opencode` | o melhor degrau na chave `shell` do JSON — nome curto, ou caminho absoluto quando o `bash` do Git está fora do PATH |
+| `claude` | `CLAUDE_CODE_USE_POWERSHELL_TOOL=0` **quando nenhum PowerShell executa**, para o modelo não escolher uma ferramenta que a política recusa. Onde o PowerShell roda, o Koine não escreve nada |
+| demais | nada — não expõem chave de seleção de shell |
 
 ### Argumentos
 

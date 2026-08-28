@@ -4,6 +4,33 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Não publicado]
+
+### Corrigido — o shell no Windows deixa de ser sempre `cmd`
+
+O Koine passa a **medir** quais shells a máquina consegue executar e a escolher o
+melhor que cada cliente aceita, na ordem `pwsh` → `powershell` → `bash` → `cmd`.
+
+Fixar `cmd` era remendo de um incidente real — estação corporativa que bloqueia o
+`powershell.exe`, onde o default do OpenCode derrubava a ferramenta de shell — e
+tinha sido aplicado a **toda** máquina Windows. Quem não tem restrição nenhuma
+recebia o shell mais pobre da lista sem que ninguém tivesse decidido isso.
+
+A medição é por **execução**, não por presença: na estação travada o `pwsh.exe`
+existe, está no PATH e é recusado. E o `bash` é procurado também **fora do PATH**,
+na instalação padrão do Git — é onde ele fica quando o Git é instalado sem
+administrador, e é onde os próprios clientes o encontram.
+
+### Corrigido — o Claude não recebe mais uma ferramenta PowerShell que não funciona
+
+Onde a política de grupo nega o PowerShell, o Claude Code ainda carregava a
+ferramenta PowerShell além da Bash. Ela não podia funcionar, e a sessão só não
+quebrava enquanto o modelo preferisse a Bash — bastava ele escolher a outra para o
+usuário levar um erro de política no meio do trabalho, sem entender por quê.
+
+Agora o Koine grava `CLAUDE_CODE_USE_POWERSHELL_TOOL=0` nessas máquinas. Onde o
+PowerShell executa, nada é escrito e o default do cliente vale.
+
 ## [0.8.0] — 2026-08-28
 
 ### Adicionado — `koine instalar` pode ser inteiramente declarado na linha de comando
