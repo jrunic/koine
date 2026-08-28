@@ -1,6 +1,7 @@
 import os
+import sys
 
-from koine import cache, render
+from koine import cache, render, shell
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
 
@@ -21,9 +22,17 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     sendo texto morto dentro do bundle.
     """
     bundle = cache.caminho_bundle("claude-bundles", cache.slot_id(cm.pasta_abs))
+    env = {"CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD": "1"}
+    if sys.platform == "win32" and not shell.powershell_executa():
+        # Medido em 28/08/2026: com Git Bash instalado o Claude ainda carrega a
+        # ferramenta PowerShell, e onde a política nega o powershell.exe ela não
+        # pode funcionar. A sessão só não quebra enquanto o modelo preferir o
+        # Bash — desligar tira a escolha errada da mesa. O caminho contrário
+        # (ligar) não é nosso: onde o PowerShell roda, o default do cliente vale.
+        env["CLAUDE_CODE_USE_POWERSHELL_TOOL"] = "0"
     return Lancamento(
         arquivos_externos={os.path.join(bundle, ARQUIVO): _render(cm)},
-        env_vars={"CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD": "1"},
+        env_vars=env,
         extra_args=["--add-dir", bundle],
     )
 
