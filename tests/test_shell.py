@@ -122,3 +122,24 @@ def test_sem_bash_em_lugar_nenhum_o_degrau_e_ausente(monkeypatch, tmp_path):
     monkeypatch.delenv("ProgramFiles(x86)", raising=False)
     monkeypatch.setattr(shell.shutil, "which", lambda n: None)
     assert shell.sondar(shell.BASH)[1] == shell.AUSENTE
+
+
+def test_powershell_executa_e_verdadeiro_com_qualquer_das_duas_familias():
+    assert shell.powershell_executa(sonda=_sonda_falsa({shell.PWSH: shell.EXECUTOU}))
+    assert shell.powershell_executa(sonda=_sonda_falsa({shell.POWERSHELL: shell.EXECUTOU}))
+
+
+def test_powershell_executa_e_falso_quando_as_duas_sao_recusadas():
+    sonda = _sonda_falsa({shell.PWSH: shell.RECUSADO,
+                          shell.POWERSHELL: shell.RECUSADO,
+                          shell.BASH: shell.EXECUTOU})
+    assert not shell.powershell_executa(sonda=sonda)
+
+
+def test_diagnostico_devolve_o_motivo_de_cada_degrau():
+    sonda = _sonda_falsa({shell.PWSH: shell.RECUSADO, shell.BASH: shell.EXECUTOU})
+    estados = {d.nome: d.estado for d in shell.diagnostico(shell.ESCADA, sonda=sonda)}
+    assert estados == {shell.PWSH: shell.RECUSADO,
+                       shell.POWERSHELL: shell.AUSENTE,
+                       shell.BASH: shell.EXECUTOU,
+                       shell.CMD: shell.AUSENTE}

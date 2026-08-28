@@ -110,3 +110,27 @@ def _bash_do_git():
         if base:
             caminhos.append(os.path.join(base, "Git", "bin", "bash.exe"))
     return caminhos
+
+
+POWERSHELLS = (PWSH, POWERSHELL)
+
+
+def powershell_executa(*, sonda=None):
+    """Alguma das duas famílias de PowerShell roda nesta máquina?"""
+    return melhor(POWERSHELLS, sonda=sonda) is not None
+
+
+def diagnostico(aceitos, *, sonda=None):
+    """Estado de CADA degrau, sem parar no primeiro que executa.
+
+    É o contrato com a orientação de pré-requisitos: "não instalado" e
+    "bloqueado pela política" pedem mensagens opostas ao usuário.
+    """
+    sonda = sonda or sondar
+    saida = []
+    for nome in ESCADA:
+        if nome not in aceitos:
+            continue
+        invocacao, estado = sonda(nome)
+        saida.append(Degrau(nome, invocacao, estado))
+    return saida
