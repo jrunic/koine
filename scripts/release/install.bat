@@ -7,6 +7,9 @@ REM powershell.exe por politica roda este script sem admin.
 REM
 REM Requisitos: Python >= 3.12 no PATH e curl.exe (Windows 10 1803+).
 REM Overrides:  set KOINE_VERSAO=v0.6.1   (pina a tag)
+REM             set KOINE_INSTALAR_ARGS=--nao-interativo
+REM                 (repassado ao "koine instalar"; use para instalar
+REM                  sem nenhuma pergunta, em automacao)
 REM             set KOINE_BASE_URL=<url>  (espelho interno)
 REM Documentacao: https://github.com/jrunic/koine
 REM
@@ -76,7 +79,7 @@ echo Pacote extraido em %DEST%
 echo.
 
 REM --------------------------------------- 6. Delega ao instalador do produto
-"%PY%" %PYARG% "%DEST%\koine.pyz" instalar
+"%PY%" %PYARG% "%DEST%\koine.pyz" instalar %KOINE_INSTALAR_ARGS%
 if errorlevel 1 goto falha_instalar
 
 REM ------------------------------------------------------------- 7. PATH

@@ -78,7 +78,10 @@ echo
 
 # 5. Delegar ao instalador do produto (vault → XDG, wrappers com interpretador
 #    absoluto, pasta canônica, skills com prompt quando interativo)
-"$PY" "$PYZ" instalar
+# KOINE_INSTALAR_ARGS: repassado ao `koine instalar` — p.ex.
+# `--nao-interativo`, para instalar sem nenhuma pergunta.
+# shellcheck disable=SC2086 -- expansão de palavras é o objetivo aqui
+"$PY" "$PYZ" instalar ${KOINE_INSTALAR_ARGS:-}
 
 # 6. PATH
 case ":$PATH:" in

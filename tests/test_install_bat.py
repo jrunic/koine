@@ -81,3 +81,18 @@ def test_install_bat_nao_expande_substring_de_variavel_talvez_vazia():
     assert ofensoras == [], (
         "expansão de substring guardada por `if defined` na mesma linha "
         f"(o cmd expande antes de avaliar): {ofensoras}")
+
+
+def test_instaladores_repassam_args_do_instalar():
+    """Sem isto, as flags do `koine instalar` são inalcançáveis para quem instala
+    pelo one-liner — que é justamente o caminho da automação, onde o prompt
+    trava. Uma flag que só existe para quem já tem o pyz na mão não resolve o
+    problema que ela foi criada para resolver."""
+    bat = _bytes().decode("ascii", errors="replace")
+    sh_path = os.path.join(os.path.dirname(BAT), "install.sh")
+    with open(sh_path, encoding="utf-8") as f:
+        sh = f.read()
+    assert "%KOINE_INSTALAR_ARGS%" in bat
+    assert "KOINE_INSTALAR_ARGS:-" in sh, "sem o :- o `set -u` aborta o instalador"
+    # o override tem que estar documentado no cabeçalho, junto dos outros
+    assert "KOINE_INSTALAR_ARGS" in bat.split("REM ---")[0]
