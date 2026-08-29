@@ -8,6 +8,10 @@ from koine.lancamento import Lancamento
 MARCADOR = "<!-- gerado por kn-agente -->"
 ARQUIVO = "CLAUDE.md"
 
+# Degraus de shell que este cliente aceita, medido em 28/08/2026: bash/zsh, ou a
+# ferramenta PowerShell nativa. O `cmd` nunca foi opcao para ele.
+ACEITA_SHELL = (shell.PWSH, shell.POWERSHELL, shell.BASH)
+
 
 def renderizar(cm: ContextoMontado) -> Lancamento:
     """Bundle no cache + `--add-dir`, com o CLAUDE.md do bundle INLINE.

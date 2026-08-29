@@ -1,11 +1,16 @@
 import os
 
-from koine import cache, render
+from koine import cache, render, shell
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
 
 MARCADOR = "<!-- gerado por kn-agente -->"
 ARQUIVO = "GEMINI.md"
+
+# Medido em 28/08/2026: falha com o 1260 de politica de grupo onde o PowerShell
+# e negado, e nao expoe chave de shell. QUAL binario ele tenta e INFERENCIA — o
+# log dele nao registra o processo filho —, mas `cmd` e `bash` rodam nessa conta.
+ACEITA_SHELL = (shell.PWSH, shell.POWERSHELL)
 
 
 def renderizar(cm: ContextoMontado) -> Lancamento:

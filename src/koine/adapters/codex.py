@@ -1,12 +1,16 @@
 import os
 
-from koine import cache, render
+from koine import cache, render, shell
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
 
 MARCADOR = "<!-- gerado por kn-agente -->"
 ARQUIVO = "AGENTS.md"
 EXTRA_ARGS = ["-c", "project_doc_max_bytes=1048576"]
+
+# Medido em 28/08/2026: usa PowerShell e SO PowerShell no Windows, e nao expoe
+# chave para trocar. Onde a politica nega o powershell.exe, nao tem shell.
+ACEITA_SHELL = (shell.PWSH, shell.POWERSHELL)
 
 
 def _agente_de(cm) -> str:

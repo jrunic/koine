@@ -1,6 +1,6 @@
 import os
 
-from koine import cache, render
+from koine import cache, render, shell
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
 
@@ -8,6 +8,10 @@ from koine.lancamento import Lancamento
 # launch a pasta não recebe nada: o bundle entrega tudo.
 ARQUIVO = os.path.join(".github", "copilot-instructions.md")
 MARCADOR = "<!-- gerado por kn-agente -->"
+
+# Medido em 28/08/2026: usa PowerShell e SO PowerShell no Windows, e nao expoe
+# chave para trocar. Onde a politica nega o powershell.exe, nao tem shell.
+ACEITA_SHELL = (shell.PWSH, shell.POWERSHELL)
 
 
 def renderizar(cm: ContextoMontado) -> Lancamento:
