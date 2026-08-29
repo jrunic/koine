@@ -360,3 +360,72 @@ def harness_desconhecido(valor: str, disponiveis: list[str]) -> str:
     return (f"harness desconhecido: {valor}\n"
             f"harnesses: {', '.join(disponiveis)}\n"
             "use `todos` para instalar em todos os detectados, ou `nenhum` para pular")
+
+
+_ARQUIVO_GIT = {"ARM64": "ARM64 Git for Windows Setup",
+                "AMD64": "64-bit Git for Windows Setup"}
+
+
+def relatorio_prerequisitos(achados, arquitetura=None) -> str:
+    """O que vai funcionar nesta máquina. Informacional: não bloqueia nada."""
+    if not achados:
+        return "\nPré-requisitos: tudo certo para os clientes detectados.\n"
+    partes = ["\nPré-requisitos desta máquina:\n\n"]
+    for a in achados:
+        partes.append(_bloco_achado(a, arquitetura))
+        partes.append("\n")
+    return "".join(partes)
+
+
+def _bloco_achado(achado, arquitetura) -> str:
+    if achado.codigo == "sem_shell":
+        return (
+            f"  ! {achado.cliente}: não vai conseguir executar comandos aqui.\n"
+            "    A sessão abre normalmente e o contexto chega — o agente lê e\n"
+            "    escreve arquivos. O que não funciona é rodar comando: este\n"
+            "    cliente usa PowerShell e só PowerShell, e a política desta\n"
+            "    máquina o bloqueia.\n"
+            "    Não há ajuste no Koine nem no cliente, e instalar o Git Bash\n"
+            "    NÃO resolve para ele. O caminho é pedir liberação à TI.\n")
+    if achado.codigo == "claude_sem_bash":
+        arquivo = _ARQUIVO_GIT.get((arquitetura or "").upper(),
+                                   "Git for Windows Setup da sua arquitetura")
+        return (
+            "  ! claude: precisa do Git Bash nesta máquina.\n"
+            "    A política bloqueia o PowerShell, e o Claude Code usa\n"
+            "    PowerShell ou bash. Instale o Git para Windows:\n"
+            "      https://git-scm.com/download/win\n"
+            f"      arquivo: {arquivo}\n"
+            "    Não precisa de administrador, e deixe o local padrão que o\n"
+            "    instalador sugere — o Claude procura a instalação do Git nesse\n"
+            "    lugar, não no PATH. Depois disso não há mais nenhum passo.\n")
+    if achado.codigo == "opencode_tui_arm64":
+        return (
+            "  ! opencode: a interface de terminal não abre em Windows ARM64.\n"
+            "    É bug do próprio OpenCode, não do Koine nem desta máquina.\n"
+            "    Alternativa enquanto não sai correção: `opencode web`.\n")
+    if achado.codigo == "codex_incompleto":
+        return (
+            "  ! codex: a instalação está incompleta e toda ferramenta vai\n"
+            "    falhar — falta o `codex-code-mode-host` ao lado do binário.\n"
+            "    Reinstale pelo pacote completo (`codex-package-<arch>`), não\n"
+            "    pelo zip do executável isolado.\n")
+    return f"  ! {achado.cliente}: {achado.codigo}\n"
+
+
+def aviso_launch_sem_shell(cliente: str, codigo: str = "sem_shell") -> str:
+    """Uma linha, no stderr, antes do cliente subir.
+
+    Avisa e não bloqueia: a sessão tem valor sem shell — o contexto chega e o
+    agente lê e escreve arquivos. Recusar a abrir tiraria do usuário mais do que
+    a política tirou. Mesma limitação do aviso de ficha reposta: vai para o
+    stderr antes do `execvpe`, e em sessão remota pode não chegar.
+
+    Duas formas, porque um dos casos tem saída e o outro não.
+    """
+    if codigo == "claude_sem_bash":
+        return (f"aviso: {cliente} não consegue executar comandos nesta máquina "
+                "— instale o Git Bash (https://git-scm.com/download/win, sem "
+                "administrador). A sessão abre assim mesmo.")
+    return (f"aviso: {cliente} não consegue executar comandos nesta máquina "
+            "(PowerShell bloqueado por política) — a sessão abre, mas sem shell.")
