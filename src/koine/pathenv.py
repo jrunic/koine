@@ -107,3 +107,32 @@ def garantir(pasta, *, reg=None, expandir=os.path.expandvars, notificar=None):
         return FALHOU
     notificar()
     return ADICIONADO
+
+
+WM_SETTINGCHANGE = 0x001A
+HWND_BROADCAST = 0xFFFF
+SMTO_ABORTIFHUNG = 0x0002
+
+
+def _user32():
+    import ctypes
+    return ctypes.windll.user32
+
+
+def broadcast():
+    """Avisa o sistema que o ambiente mudou, para processo NOVO enxergar sem logoff.
+
+    Best-effort por desenho: se falhar, a escrita continua válida e a mensagem
+    manda reabrir o terminal. E com PRAZO — `SendMessageTimeoutW`, nunca o
+    `SendMessage` bloqueante, que penduraria o instalador numa janela que não
+    responde.
+
+    `ctypes` é stdlib e chama DLL do sistema; a restrição de "zero código nativo"
+    é sobre `.pyd`/`.so`/`.dll` DENTRO do pyz, que o antivírus corporativo bloqueia.
+    """
+    try:
+        _user32().SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0,
+                                      "Environment", SMTO_ABORTIFHUNG, 2000, None)
+        return True
+    except (OSError, AttributeError):
+        return False

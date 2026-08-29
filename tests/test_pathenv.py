@@ -140,3 +140,27 @@ def test_escrita_negada_degrada_e_nao_levanta():
     reg = RegistroFalso(r"C:\Windows", RegistroFalso.EXPAND_SZ, negar_escrita=True)
     st = pathenv.garantir(r"C:\bin", reg=reg, expandir=lambda s: s, notificar=lambda: True)
     assert st == pathenv.FALHOU
+
+
+def test_broadcast_usa_SendMessageTimeoutW_e_nao_o_bloqueante(monkeypatch):
+    # SendMessage bloqueante pendura o instalador quando uma janela não responde
+    # — é a família do shell órfão que esta frota já pagou.
+    chamadas = {}
+
+    class FakeUser32:
+        def SendMessageTimeoutW(self, *a):
+            chamadas["args"] = a
+            return 1
+
+    monkeypatch.setattr(pathenv, "_user32", lambda: FakeUser32())
+    assert pathenv.broadcast() is True
+    assert chamadas["args"][1] == pathenv.WM_SETTINGCHANGE
+
+
+def test_broadcast_que_falha_nao_levanta(monkeypatch):
+    # Best-effort: a escrita continua válida, e a mensagem manda reabrir o terminal.
+    def explode():
+        raise OSError("sem user32 aqui")
+
+    monkeypatch.setattr(pathenv, "_user32", explode)
+    assert pathenv.broadcast() is False
