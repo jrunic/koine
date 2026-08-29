@@ -180,3 +180,13 @@ def test_garantir_degrada_quando_a_CAMADA_de_registro_nao_existe():
 
     assert pathenv.garantir(r"C:\bin", reg=RegistroQuebrado(),
                             expandir=lambda s: s, notificar=lambda: True) == pathenv.FALHOU
+
+
+def test_limpar_a_cauda_de_uma_pasta_JA_PRESENTE_nao_e_ADICIONADO():
+    # Achado pelo fixture real da bancada: o Path da conta restrita já tem a
+    # nossa pasta E termina em `;`. O `compor` devolve valor novo (a cauda sai),
+    # mas dizer "acrescentado ao PATH" seria mentira — ela já estava.
+    reg = RegistroFalso(r"C:\Windows;C:\bin;", RegistroFalso.EXPAND_SZ)
+    st = pathenv.garantir(r"C:\bin", reg=reg, expandir=lambda s: s, notificar=lambda: True)
+    assert st == pathenv.JA_ESTAVA
+    assert reg.valor == r"C:\Windows;C:\bin"      # escreveu, limpando a cauda

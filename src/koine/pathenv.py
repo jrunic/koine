@@ -99,6 +99,10 @@ def garantir(pasta, *, reg=None, expandir=os.path.expandvars, notificar=None):
         # ImportError também: `winreg` não existe em Python sem Windows, e a
         # promessa da docstring é absoluta. Degradar mantém a instalação de pé.
         return FALHOU
+    # A pergunta "já estava?" é ANTES de compor: o compor também devolve valor
+    # novo quando só limpa a cauda vazia, e dizer "acrescentado" nesse caso seria
+    # mentira. Achado no fixture real da bancada.
+    estava = ja_tem(valor or "", pasta, expandir=expandir)
     novo = compor(valor or "", pasta, expandir=expandir)
     if novo is None:
         return JA_ESTAVA
@@ -108,7 +112,7 @@ def garantir(pasta, *, reg=None, expandir=os.path.expandvars, notificar=None):
     except (OSError, ImportError):
         return FALHOU
     notificar()
-    return ADICIONADO
+    return JA_ESTAVA if estava else ADICIONADO
 
 
 WM_SETTINGCHANGE = 0x001A
