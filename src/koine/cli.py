@@ -594,6 +594,16 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
         print(str(e), file=sys.stderr)
         return 1
     args_cliente = (lanc.extra_args or []) + extras_usuario
+    if sys.platform == "win32":
+        # Uma linha: o relatório completo é da instalação. Aqui é o que o usuário
+        # precisa para não perder tempo — e a sessão SOBE assim mesmo, porque sem
+        # shell ela ainda entrega contexto e leitura de arquivos. Vale para os
+        # DOIS códigos: o claude sem Git Bash também não tem shell, e é o único
+        # com remédio, então é o aviso mais útil dos dois.
+        achado = prerequisitos.avaliar_cliente(cliente)
+        if achado is not None:
+            print(mensagens.aviso_launch_sem_shell(cliente, achado.codigo),
+                  file=sys.stderr)
     try:
         launch.lancar(cliente, pasta, env=lanc.env_vars or None, args=args_cliente or None)
     except launch.ClienteNaoEncontrado as e:
