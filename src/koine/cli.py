@@ -1,6 +1,7 @@
 import argparse
 import os
 import pathlib
+import platform
 import shutil
 import subprocess
 import sys
@@ -24,6 +25,7 @@ from koine import (
     mensagens,
     pasta as pasta_mod,
     paths,
+    prerequisitos,
     saida as _saida,
     schema,
     skills,
@@ -123,6 +125,14 @@ def _cmd_instalar(args: list[str]) -> int:
         # degradação graciosa, instalar.go:68-70 — skills falhando não aborta
         print(f"aviso: skills: {e}", file=sys.stderr)
     print("Instalação concluída.")
+    if sys.platform == "win32":
+        # Informacional, sempre: o problema aparece na primeira sessão, e a
+        # instalação é onde o usuário ainda está prestando atenção. Não bloqueia
+        # e não pergunta — relatório que trava o install é pior que nenhum.
+        achados = prerequisitos.avaliar(skills.detectar_harnesses(),
+                                        arquitetura=platform.machine(),
+                                        pasta_codex=prerequisitos.codex_dir())
+        print(mensagens.relatorio_prerequisitos(achados, platform.machine()), end="")
     # mensagem final SEMPRE imprime, mesmo com skills falhando (instalar.go:72-83)
     print(mensagens.final_instalar(), end="")
     return 0
