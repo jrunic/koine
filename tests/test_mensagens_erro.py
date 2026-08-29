@@ -6,8 +6,12 @@ def test_cliente_nao_encontrado_windows_guia_path(monkeypatch):
     msg = mensagens.cliente_nao_encontrado("codex")
     assert "não encontrado no PATH" in msg
     assert "where codex" in msg  # diagnóstico Windows
-    assert "SetEnvironmentVariable" in msg  # correção de PATH sem admin
-    # e o caminho cmd, para estação onde o powershell.exe está bloqueado
+    # O comando PowerShell saiu de propósito na #676: na estação que motiva este
+    # produto o powershell.exe é o que está bloqueado. O remédio para a pasta do
+    # Koine passou a ser o próprio instalador, que agora sabe escrever no PATH.
+    assert "koine instalar" in msg
+    assert "SetEnvironmentVariable" not in msg
+    # e o caminho cmd continua, para a pasta de outro programa
     assert "sysdm.cpl,EditEnvironmentVariables" in msg
 
 

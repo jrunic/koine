@@ -150,12 +150,12 @@ def cliente_nao_encontrado(cliente: str) -> str:
             "        • nada listado  → não instalado, ou a pasta não está no PATH\n",
             f"        • lista caminho → o '{cliente}' está no PATH (reabra o terminal e tente de novo)\n",
             "\n",
-            "    Adicionar ao PATH do usuário (sem admin), trocando <PASTA>:\n",
+            "    Se a pasta do Koine é que está fora do PATH, o próprio instalador\n",
+            "    resolve — rode `koine instalar` de novo e reabra o terminal.\n",
+            "\n",
+            "    Para a pasta de OUTRO programa, sem administrador:\n",
             "      cmd:  rundll32 sysdm.cpl,EditEnvironmentVariables\n",
             "            em Variáveis de usuário, edite Path e acrescente <PASTA>\n",
-            "      PowerShell (se liberado):\n",
-            '        [Environment]::SetEnvironmentVariable("PATH", "<PASTA>;" + '
-            '[Environment]::GetEnvironmentVariable("PATH","User"), "User")\n',
             "    Depois reabra o terminal.\n",
         ]
     else:
@@ -429,3 +429,29 @@ def aviso_launch_sem_shell(cliente: str, codigo: str = "sem_shell") -> str:
                 "administrador). A sessão abre assim mesmo.")
     return (f"aviso: {cliente} não consegue executar comandos nesta máquina "
             "(PowerShell bloqueado por política) — a sessão abre, mas sem shell.")
+
+
+def path_resultado(status, pasta, na_sessao) -> str:
+    """O que dizer depois de mexer (ou não) no PATH do usuário.
+
+    Três situações distintas, que o aviso antigo colapsava numa mentira só: ele
+    comparava contra a SESSÃO e dizia "não está no seu PATH" com a pasta já no
+    registro.
+    """
+    if status == "adicionado":
+        return (f"\n✓ {pasta} acrescentado ao PATH do seu usuário.\n"
+                "  Reabra o terminal para os comandos `koine` e `kn-*` funcionarem\n"
+                "  pelo nome.\n")
+    if status == "ja_estava":
+        if na_sessao:
+            return ""
+        return (f"\n{pasta} já está no PATH do seu usuário, mas não neste terminal —\n"
+                "  ele foi aberto antes. Reabra o terminal e os comandos `koine` e\n"
+                "  `kn-*` funcionarão pelo nome.\n")
+    return (f"\n! não consegui acrescentar {pasta} ao PATH do seu usuário.\n"
+            "  Sem isso, os comandos só funcionam pelo caminho completo.\n"
+            "  Para fazer à mão, sem administrador:\n"
+            "    1. rode:  rundll32 sysdm.cpl,EditEnvironmentVariables\n"
+            "    2. em Variáveis de usuário, selecione Path e clique em Editar\n"
+            f"    3. Novo  →  {pasta}  →  OK\n"
+            "    4. reabra o terminal\n")

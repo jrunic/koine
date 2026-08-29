@@ -136,3 +136,13 @@ def broadcast():
         return True
     except (OSError, AttributeError):
         return False
+
+
+def na_sessao(pasta, *, ambiente=None, expandir=os.path.expandvars):
+    """A pasta está no PATH DESTA sessão? Segunda pergunta, não a primeira.
+
+    O aviso antigo comparava só contra a sessão e por isso mentia: dizia "não
+    está no seu PATH" com a pasta presente no registro.
+    """
+    amb = ambiente if ambiente is not None else os.environ
+    return ja_tem(amb.get("PATH", ""), pasta, expandir=expandir)
