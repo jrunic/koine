@@ -53,3 +53,57 @@ def compor(valor, pasta, *, expandir=os.path.expandvars):
     if not vista:
         saida.append(pasta)
     return ";".join(saida)
+
+
+ADICIONADO = "adicionado"
+JA_ESTAVA = "ja_estava"
+FALHOU = "falhou"
+
+REG_EXPAND_SZ = 2   # winreg.REG_EXPAND_SZ, sem importar winreg fora do Windows
+_CHAVE = "Environment"
+_VALOR = "Path"
+
+
+class RegistroUsuario:
+    """Acesso ao HKCU\\Environment. Só existe no Windows; é a costura que a suíte
+    substitui, e por isso o `import winreg` mora DENTRO dos métodos."""
+
+    def ler(self):
+        import winreg
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, _CHAVE) as k:
+                valor, tipo = winreg.QueryValueEx(k, _VALOR)
+                return valor, tipo
+        except FileNotFoundError:
+            return None, None
+
+    def gravar(self, valor, tipo):
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, _CHAVE, 0,
+                            winreg.KEY_READ | winreg.KEY_WRITE) as k:
+            winreg.SetValueEx(k, _VALOR, 0, tipo, valor)
+
+
+def garantir(pasta, *, reg=None, expandir=os.path.expandvars, notificar=None):
+    """Acrescenta a pasta ao PATH do usuário se faltar. Devolve o status.
+
+    Nunca levanta: registro negado por política vira FALHOU, e o chamador cai na
+    orientação manual. Derrubar a instalação por causa do PATH seria trocar um
+    problema pequeno por um grande.
+    """
+    reg = reg if reg is not None else RegistroUsuario()
+    notificar = notificar if notificar is not None else broadcast
+    try:
+        valor, tipo = reg.ler()
+    except OSError:
+        return FALHOU
+    novo = compor(valor or "", pasta, expandir=expandir)
+    if novo is None:
+        return JA_ESTAVA
+    try:
+        # o tipo ORIGINAL volta; criando do zero, EXPAND_SZ
+        reg.gravar(novo, tipo if tipo is not None else REG_EXPAND_SZ)
+    except OSError:
+        return FALHOU
+    notificar()
+    return ADICIONADO

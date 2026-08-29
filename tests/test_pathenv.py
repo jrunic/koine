@@ -84,3 +84,59 @@ def test_compor_preserva_entrada_vazia_NO_MEIO():
     # vira `;;` no próximo append.
     valor = r"C:\Windows;;C:\outra"
     assert pathenv.compor(valor, r"C:\bin", expandir=lambda s: s) == valor + r";C:\bin"
+
+
+class RegistroFalso:
+    """Duplo do HKCU\\Environment. Guarda valor E tipo — o tipo é metade do que
+    esta tarefa protege: `setx` grava REG_SZ e destrói as %VAR%."""
+
+    EXPAND_SZ = 2
+    SZ = 1
+
+    def __init__(self, valor=None, tipo=None, negar_escrita=False):
+        self.valor, self.tipo = valor, tipo
+        self.negar_escrita = negar_escrita
+        self.escritas = []
+
+    def ler(self):
+        if self.valor is None:
+            return None, None
+        return self.valor, self.tipo
+
+    def gravar(self, valor, tipo):
+        if self.negar_escrita:
+            raise PermissionError("acesso negado pela política")
+        self.valor, self.tipo = valor, tipo
+        self.escritas.append((valor, tipo))
+
+
+def test_garantir_acrescenta_e_preserva_o_tipo():
+    reg = RegistroFalso(r"C:\Windows", RegistroFalso.EXPAND_SZ)
+    st = pathenv.garantir(r"C:\bin", reg=reg, expandir=lambda s: s, notificar=lambda: True)
+    assert st == pathenv.ADICIONADO
+    assert reg.valor == r"C:\Windows;C:\bin"
+    assert reg.tipo == RegistroFalso.EXPAND_SZ      # o tipo original volta
+
+
+def test_garantir_e_idempotente_e_nao_escreve_de_novo():
+    reg = RegistroFalso(r"C:\Windows", RegistroFalso.EXPAND_SZ)
+    for _ in range(3):
+        st = pathenv.garantir(r"C:\bin", reg=reg, expandir=lambda s: s, notificar=lambda: True)
+    assert st == pathenv.JA_ESTAVA
+    assert len(reg.escritas) == 1                   # escreveu UMA vez em três
+    assert reg.valor == r"C:\Windows;C:\bin"
+
+
+def test_garantir_cria_o_valor_quando_nao_existe():
+    reg = RegistroFalso()
+    st = pathenv.garantir(r"C:\bin", reg=reg, expandir=lambda s: s, notificar=lambda: True)
+    assert st == pathenv.ADICIONADO
+    assert reg.valor == r"C:\bin"
+    assert reg.tipo == pathenv.REG_EXPAND_SZ        # cria como EXPAND_SZ
+
+
+def test_escrita_negada_degrada_e_nao_levanta():
+    # Estação onde até o registro é negado: a instalação TERMINA.
+    reg = RegistroFalso(r"C:\Windows", RegistroFalso.EXPAND_SZ, negar_escrita=True)
+    st = pathenv.garantir(r"C:\bin", reg=reg, expandir=lambda s: s, notificar=lambda: True)
+    assert st == pathenv.FALHOU
