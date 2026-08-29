@@ -6,7 +6,7 @@ instalação é onde o usuário ainda está prestando atenção.
 """
 import os
 
-from koine import cli, shell, skills
+from koine import cli, prerequisitos, shell, skills
 
 
 def _sonda(mapa):
@@ -23,7 +23,16 @@ def _vault():
     return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "vault")
 
 
+def _sem_codex(monkeypatch):
+    """Forçar `sys.platform="win32"` no macOS faz o `shutil.which` entrar no ramo
+    Windows e estourar em `_winapi`. Quem chama o which direto aqui é o
+    `codex_dir`; nos testes ele responde "não achei", que é a verdade nesta
+    máquina. Sem isto o teste morre por artefato de harness, não por defeito."""
+    monkeypatch.setattr(prerequisitos.shutil, "which", lambda n: None)
+
+
 def _instalar(koine_home, monkeypatch):
+    _sem_codex(monkeypatch)
     monkeypatch.setenv("HOME", koine_home["home"])
     bindir = os.path.join(koine_home["home"], "bin")
     return cli.main(["instalar", "--vault", _vault(), "--bin", bindir,
