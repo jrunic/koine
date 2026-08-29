@@ -21,3 +21,13 @@ def _isola_xdg(monkeypatch):
 @pytest.fixture
 def koine_home(tmp_path):
     return seed.montar(str(tmp_path))
+
+
+@pytest.fixture(autouse=True)
+def _limpa_cache_de_shell():
+    # A sonda e memoizada por processo, e o pytest e UM processo para a suite
+    # inteira. Sem zerar entre testes, o cenario de um contamina o seguinte.
+    from koine import shell
+    shell.limpar_cache()
+    yield
+    shell.limpar_cache()

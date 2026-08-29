@@ -143,3 +143,31 @@ def test_diagnostico_devolve_o_motivo_de_cada_degrau():
                        shell.POWERSHELL: shell.AUSENTE,
                        shell.BASH: shell.EXECUTOU,
                        shell.CMD: shell.AUSENTE}
+
+
+def test_sondar_nao_repete_o_processo_para_o_mesmo_degrau(monkeypatch):
+    # Dois consumidores por launch (adapter + aviso) não podem custar duas
+    # partidas de PowerShell.
+    chamadas = []
+
+    def conta(argv, **k):
+        chamadas.append(argv[0])
+        return subprocess.CompletedProcess(argv, 0)
+
+    monkeypatch.setattr(shell.shutil, "which", lambda n: n)
+    monkeypatch.setattr(shell.subprocess, "run", conta)
+    shell.sondar(shell.PWSH)
+    shell.sondar(shell.PWSH)
+    assert chamadas == ["pwsh"]
+
+
+def test_limpar_cache_devolve_a_sonda_ao_zero(monkeypatch):
+    # Sem isto, o resultado de um teste vaza para o seguinte — e a suíte passa a
+    # medir o cache, não o código.
+    monkeypatch.setattr(shell.shutil, "which", lambda n: n)
+    monkeypatch.setattr(shell.subprocess, "run",
+                        lambda a, **k: subprocess.CompletedProcess(a, 0))
+    assert shell.sondar(shell.CMD)[1] == shell.EXECUTOU
+    shell.limpar_cache()
+    monkeypatch.setattr(shell.shutil, "which", lambda n: None)
+    assert shell.sondar(shell.CMD)[1] == shell.AUSENTE

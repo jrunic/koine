@@ -53,7 +53,29 @@ def melhor(aceitos, *, sonda=None):
     return None
 
 
+_CACHE = {}
+
+
 def sondar(nome):
+    # (invocacao, estado) para um degrau, memoizado POR PROCESSO.
+    #
+    # O processo do launch morre no execvpe, entao nao ha invalidacao a
+    # resolver: dentro de um lancamento a maquina nao muda. O cache existe
+    # porque ha DOIS consumidores — o adapter, que escolhe o shell, e o aviso
+    # de pre-requisitos, que decide se fala — e sondar duas vezes custaria uma
+    # segunda partida de PowerShell na maquina saudavel.
+    if nome not in _CACHE:
+        _CACHE[nome] = _sondar_agora(nome)
+    return _CACHE[nome]
+
+
+def limpar_cache():
+    # Zera a memoizacao. Existe para o teste: sem isto o resultado de um cenario
+    # vaza para o proximo e a suite passa a medir o cache.
+    _CACHE.clear()
+
+
+def _sondar_agora(nome):
     """(invocacao, estado) para um degrau. Executa; não olha só o disco.
 
     Timeout conta como RECUSADO, não como ausente: shell que não termina um
