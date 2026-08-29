@@ -24,6 +24,7 @@ from koine import (
     launch,
     mensagens,
     pasta as pasta_mod,
+    pathenv,
     paths,
     prerequisitos,
     saida as _saida,
@@ -114,6 +115,12 @@ def _cmd_instalar(args: list[str]) -> int:
     # sys.executable = interpretador que rodou `instalar` (>=3.10 garantido);
     # bakear absoluto no wrapper evita `python3` puro pegar um Python antigo.
     wrappers.gerar(bindir, pyz, sys.executable)
+    if sys.platform == "win32":
+        # A pasta entra no PATH DEPOIS de existir e ter os wrappers: PATH
+        # apontando para pasta vazia é pior que PATH sem a pasta.
+        _status_path = pathenv.garantir(bindir)
+        print(mensagens.path_resultado(_status_path, bindir, pathenv.na_sessao(bindir)),
+              end="")
     # espelha term.IsTerminal(stdin) do Go (instalar.go:61) — e a flag vence
     interativo = sys.stdin.isatty() and not ns.nao_interativo
     canonica.configurar(vault_src, interativo=interativo,

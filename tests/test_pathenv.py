@@ -164,3 +164,19 @@ def test_broadcast_que_falha_nao_levanta(monkeypatch):
 
     monkeypatch.setattr(pathenv, "_user32", explode)
     assert pathenv.broadcast() is False
+
+
+def test_garantir_degrada_quando_a_CAMADA_de_registro_nao_existe():
+    # A docstring do `garantir` promete "nunca levanta" — e ele levantava:
+    # ModuleNotFoundError é ImportError, não OSError. Achado pela suíte ao rodar
+    # o instalar com sys.platform forçado a win32 fora do Windows, mas a promessa
+    # é absoluta e vale para qualquer Python sem winreg.
+    class RegistroQuebrado:
+        def ler(self):
+            raise ModuleNotFoundError("No module named 'winreg'")
+
+        def gravar(self, valor, tipo):
+            raise AssertionError("não devia chegar aqui")
+
+    assert pathenv.garantir(r"C:\bin", reg=RegistroQuebrado(),
+                            expandir=lambda s: s, notificar=lambda: True) == pathenv.FALHOU

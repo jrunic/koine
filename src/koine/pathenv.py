@@ -95,7 +95,9 @@ def garantir(pasta, *, reg=None, expandir=os.path.expandvars, notificar=None):
     notificar = notificar if notificar is not None else broadcast
     try:
         valor, tipo = reg.ler()
-    except OSError:
+    except (OSError, ImportError):
+        # ImportError também: `winreg` não existe em Python sem Windows, e a
+        # promessa da docstring é absoluta. Degradar mantém a instalação de pé.
         return FALHOU
     novo = compor(valor or "", pasta, expandir=expandir)
     if novo is None:
@@ -103,7 +105,7 @@ def garantir(pasta, *, reg=None, expandir=os.path.expandvars, notificar=None):
     try:
         # o tipo ORIGINAL volta; criando do zero, EXPAND_SZ
         reg.gravar(novo, tipo if tipo is not None else REG_EXPAND_SZ)
-    except OSError:
+    except (OSError, ImportError):
         return FALHOU
     notificar()
     return ADICIONADO
