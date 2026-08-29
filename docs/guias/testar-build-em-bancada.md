@@ -115,6 +115,25 @@ Para consertar wrappers que já foram bakeados para o lugar errado, use a forma 
 O `< NUL` não é enfeite: sem ele o `instalar` entra no modo interativo, para no
 prompt da pasta canônica e o comando fica pendurado sem erro.
 
+## Reincidiu em 28/08/2026, e não foi por um job
+
+A seção acima descreve o caso da tarefa agendada. O de 28/08 foi mais simples e mais
+difícil de ver: **o mantenedor** validou dois incrementos rodando `koine instalar` a partir
+de um pyz em `C:\Users\Public\<pasta-de-medição>`, e depois apagou a pasta na limpeza. Os
+seis wrappers das duas contas ficaram apontando para um arquivo inexistente, e a instalação
+de uma delas passou horas quebrada sem que nada reclamasse — o defeito só aparece quando
+alguém chama um `kn-<cliente>`.
+
+Duas coisas que isso ensina sobre este guia:
+
+- **A regra não é sobre conforto, é sobre não estragar a bancada.** Copiar o pyz parece
+  atalho barato porque a medição em si funciona; o que quebra é o que fica para trás.
+- **Verificar o wrapper faz parte da limpeza, não só do teste.** A lista de "o que verificar"
+  acima vale de novo **depois** de apagar qualquer pasta usada na validação.
+
+Se a validação for pequena demais para justificar uma tag, o caminho é `KOINE_BASE_URL`
+apontando para um espelho — não copiar o pyz.
+
 ## Ressalvas
 
 - **Tag de teste é pública e permanente.** O repositório é público, e

@@ -6,6 +6,27 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Não publicado]
 
+### Adicionado — o `instalar` diz o que vai funcionar nesta máquina Windows
+
+Ao final da instalação, um relatório por cliente detectado: quem consegue executar
+comandos ali e quem não. Informacional — não bloqueia, não pergunta.
+
+Onde a política bloqueia o PowerShell, **copilot, codex e antigravity ficam sem
+ferramenta de shell**, e não há configuração que resolva — nem instalar o Git Bash,
+que resolve só para o Claude Code. O relatório diz isso com todas as letras, e diz
+também o que fazer quando há o que fazer: para o Claude, o link do Git para Windows,
+o nome do arquivo conforme a arquitetura, que não precisa de administrador, e que a
+instalação deve ficar no local padrão — é lá que ele procura, não no PATH.
+
+Dois avisos que não são de shell entram no mesmo relatório, porque quem instala não
+faz essa distinção: a interface do OpenCode não abre em Windows ARM64 (bug do próprio
+projeto; a alternativa é `opencode web`), e uma instalação de Codex feita pelo zip do
+executável isolado está incompleta — sem o `codex-code-mode-host`, toda ferramenta
+falha com um erro que parece limitação do modelo.
+
+E o launch avisa, em uma linha, quando o cliente que está subindo é um desses. A
+sessão abre assim mesmo: o contexto chega e o agente lê e escreve arquivos.
+
 ### Corrigido — o shell no Windows deixa de ser sempre `cmd`
 
 O Koine passa a **medir** quais shells a máquina consegue executar e a escolher o

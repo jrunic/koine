@@ -19,6 +19,7 @@ Comando único de configuração inicial. Executa as fases:
 3. **Wrappers de cliente** — `koine` + `kn-*` em `~/.local/bin/`, invocando o Python detectado na instalação
 4. **Pasta canônica + alias** — `--pasta-canonica`, ou prompt-com-default (default `~/koine`); cria pasta; registra alias `koine` em `~/.config/koine/aliases.json`; gera `<pasta>/CONTEXTO.md` com `bootstrap: true` a partir de `vault/bootstrap/CONTEXTO.md`
 5. **Skills de harness** — detecta clientes IA no PATH; para cada detectado, prompt `Y/n` para instalar skills `kn-*` (ou `--para`, que decide sem perguntar). Se zero detectados, exibe orientação completa (Node.js, Homebrew em macOS, lista dos 5 clientes IA com comandos por OS)
+6. **Relatório de pré-requisitos (só Windows)** — por cliente detectado, o que vai funcionar naquela máquina. Informacional: não bloqueia, não pergunta, não muda o código de saída. Cobre o cliente **sem shell** (numa estação que nega o PowerShell, `copilot`, `codex` e `agy` não têm ferramenta de shell, e o Git Bash não os resolve), o Claude **sem Git Bash** (com link, nome do arquivo por arquitetura, sem administrador, e a instrução de manter o local padrão — ele sonda a instalação do Git, não o PATH), a interface do OpenCode quebrada em **ARM64**, e a instalação de **Codex incompleta** (sem o `codex-code-mode-host`, toda ferramenta falha). Zero clientes detectados ainda imprime o relatório
 
 Flags:
 
@@ -138,6 +139,10 @@ A pasta de trabalho **não recebe arquivo gerado**: cada adapter monta um bundle
 não responde, porque a estação corporativa tem o `pwsh` no PATH e negado por política. A
 ordem de preferência é `pwsh` → `powershell` → `bash` → `cmd`, recortada pelo que cada
 cliente aceita:
+
+O `kn-<cliente>` também **avisa em uma linha**, no stderr, quando o cliente que está subindo
+não tem shell naquela máquina — inclusive o `claude` sem Git Bash, onde a linha aponta o
+remédio. A sessão **abre assim mesmo**: o contexto chega e o agente lê e escreve arquivos.
 
 | cliente | o que recebe |
 |---|---|
