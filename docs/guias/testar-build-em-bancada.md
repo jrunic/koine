@@ -134,6 +134,12 @@ Duas coisas que isso ensina sobre este guia:
 Se a validação for pequena demais para justificar uma tag, o caminho é `KOINE_BASE_URL`
 apontando para um espelho — não copiar o pyz.
 
+## Onde este guia entra
+
+Ele cobre **como** levar um build para a máquina de teste. **Quando** esse gate é
+obrigatório — e quando se pode pular com critério — está no
+[`publicar-release.md`](publicar-release.md), junto do ritual de release inteiro.
+
 ## Ressalvas
 
 - **Tag de teste é pública e permanente.** O repositório é público, e
