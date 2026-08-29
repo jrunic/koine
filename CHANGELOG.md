@@ -4,7 +4,26 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Não publicado]
+## [0.9.0] — 2026-08-29
+
+### Adicionado — o instalador põe a pasta do Koine no seu PATH (Windows)
+
+Até aqui o Koine avisava e mandava editar as variáveis de ambiente à mão — que é
+onde a instalação morria para quem não é técnico. Agora ele acrescenta a própria
+pasta ao `Path` do usuário, por API do registro. **Só a dele:** o PATH é do
+usuário, e o que estiver lá de outros programas fica exatamente como está,
+inclusive duplicata óbvia.
+
+Nunca por `setx`, que trunca a variável em 1024 caracteres **em silêncio** e
+destrói as variáveis não expandidas (`%USERPROFILE%`) que o PATH costuma carregar.
+E a comparação expande essas variáveis antes de decidir — sem isso o instalador
+não reconheceria a própria pasta já presente, e duplicaria.
+
+E o aviso deixa de mentir. Ele comparava contra o terminal aberto, então dizia
+"não está no seu PATH" quando a pasta estava lá e faltava só reabrir a janela.
+Agora são três situações distintas: o que o instalador acabou de corrigir, o que
+depende de você reabrir o terminal, e o que não deu para fazer — com a orientação
+manual, sem PowerShell, que é justamente o que a estação corporativa bloqueia.
 
 ### Adicionado — o `instalar` diz o que vai funcionar nesta máquina Windows
 

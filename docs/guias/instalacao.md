@@ -135,6 +135,9 @@ Este é o passo que instala de fato — tudo que vem antes é transporte. O `koi
 - gera os **wrappers** `koine` e `kn-claude`/`kn-agy`/`kn-codex`/`kn-copilot`/`kn-opencode` em `~/.local/bin/`, com o caminho absoluto do interpretador aprovado no passo 1 gravado dentro (imune a `python3` errado no PATH de amanhã);
 - configura a **pasta canônica** `~/koine` com um `CONTEXTO.md` inicial e registra o alias `koine` (num terminal interativo, pergunta onde você quer a pasta);
 - detecta **clientes IA** no PATH e oferece instalar as skills `kn-*` de cada um (`[S/n]`; sem terminal interativo, apenas lista e mostra o comando para depois);
+- **no Windows**, acrescenta `~/.local/bin` ao `Path` do seu usuário — só a entrada
+  dele, sem tocar no que outros programas puseram lá; se não conseguir escrever no
+  registro, a instalação termina normalmente e mostra o passo manual;
 - termina mostrando o comando da sua **primeira sessão**.
 
 ### 6. PATH
@@ -149,7 +152,11 @@ export PATH="$HOME/.local/bin:$PATH"    # adicione ao ~/.zshrc ou ~/.bashrc
 
 Sem PowerShell, pelo cmd: `rundll32 sysdm.cpl,EditEnvironmentVariables` abre o editor de variáveis do usuário — selecione `Path`, `Editar`, `Novo`, e acrescente `%USERPROFILE%\.local\bin`.
 
-Os wrappers só funcionam por nome (`kn-claude ...`) se `~/.local/bin` estiver no PATH. No Unix é uma linha no profile do shell; no Windows a alteração persiste no ambiente do usuário, sem admin. Reabra o terminal depois.
+Os wrappers só funcionam por nome (`kn-claude ...`) se `~/.local/bin` estiver no PATH.
+**No Windows isso é automático desde a 0.9.0** — o `koine instalar` acrescenta a pasta
+ao `Path` do seu usuário, sem admin, e os comandos acima ficam como recurso para o caso
+de a política da máquina bloquear até a escrita no registro. **No Unix** continua sendo
+uma linha no profile do shell, que é seu. Nos dois casos, reabra o terminal depois.
 
 ## Variantes
 
