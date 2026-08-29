@@ -83,19 +83,15 @@ REM --------------------------------------- 6. Delega ao instalador do produto
 if errorlevel 1 goto falha_instalar
 
 REM ------------------------------------------------------------- 7. PATH
-echo ";%PATH%;" | find /i ";%BINDIR%;" >nul
-if not errorlevel 1 goto fim
-echo.
-echo AVISO: %BINDIR% nao esta no seu PATH.
-echo.
-echo   Sem isso, os comandos kn-claude / kn-codex / koine so funcionam pelo
-echo   caminho completo. Para adicionar a pasta ao PATH do usuario (sem admin):
-echo.
-echo     1. rode:  rundll32 sysdm.cpl,EditEnvironmentVariables
-echo     2. em "Variaveis de usuario", selecione Path e clique em Editar
-echo     3. Novo  ->  %BINDIR%   ->  OK
-echo     4. reabra o terminal
-echo.
+REM Quem decide sobre o PATH do usuario e o `koine instalar` (secao 6): ele
+REM compara contra o REGISTRO, que e a verdade duravel, e escreve se faltar.
+REM O .bat nao repete esse aviso porque so enxerga a sessao - e foi assim que
+REM ele passou a dizer que a pasta faltava com ela ja no registro.
+REM
+REM O que so o .bat pode fazer: consertar a PROPRIA sessao. Processo filho nao
+REM altera o ambiente do pai, entao o python que rodou o instalar nao tem como
+REM mexer no %PATH% daqui.
+set "PATH=%BINDIR%;%PATH%"
 goto fim
 
 REM ====================================================== rotinas e mensagens

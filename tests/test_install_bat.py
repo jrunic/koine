@@ -96,3 +96,17 @@ def test_instaladores_repassam_args_do_instalar():
     assert "KOINE_INSTALAR_ARGS:-" in sh, "sem o :- o `set -u` aborta o instalador"
     # o override tem que estar documentado no cabeçalho, junto dos outros
     assert "KOINE_INSTALAR_ARGS" in bat.split("REM ---")[0]
+
+
+def test_install_bat_nao_repete_o_aviso_de_path():
+    # Quem decide sobre o PATH agora é o `koine instalar`; o .bat repetindo o
+    # aviso voltaria a mentir, porque ele só enxerga a sessão.
+    texto = _bytes().decode("ascii", errors="replace")
+    assert "nao esta no seu PATH" not in texto
+
+
+def test_install_bat_conserta_a_sessao_corrente():
+    # É a única coisa que o .bat pode fazer e o Koine não: processo filho não
+    # altera o ambiente do pai.
+    texto = _bytes().decode("ascii", errors="replace")
+    assert 'set "PATH=%BINDIR%;%PATH%"' in texto
