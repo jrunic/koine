@@ -158,6 +158,25 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
 - **SSL do Python falha em qualquer SO → fallback curl do sistema** — o OpenSSL da stdlib pode não verificar o cert: no Windows por não buscar o CA intermediário via AIA, no macOS por faltar o bundle de CA. O curl do SO usa o trust store nativo (Schannel/Keychain/CA bundle) e funciona onde o urllib falha. `atualizar` usa esse fallback em `resolver_versao`/`baixar`/sums desde a v0.4.7 (antes era win32-only; a v0.4.6 travava no macOS). Máquina já travada se recupera reinstalando via `install.sh` (100% curl) — `KOINE_VERSAO=... koine atualizar` NÃO resolve (morre igual no download).
 - **O ritual de release deste repo tem guia próprio, e o gate de bancada tem critério** — `docs/guias/publicar-release.md`. Ele existe porque o ritual de repo de frota não serve aqui: o Koine não tem `production` e vai por tag → Release → instaladores, então o script de bump genérico sai `2` e a conferência é contra a release publicada. **O gate em VM AppLocker é obrigatório quando o diff toca launch, wrappers, `atualizar`, escrita fora do território do Koine (registro, PATH), código Windows-only ou saída em caminho novo** — e dispensável só quando o `git diff --stat` prova que a mudança é inerte para Windows. Sem esse critério o gate foi pulado três vezes por não ter tamanho definido. **Mudança que afeta Windows valida em VM AppLocker antes de release** — self-update (`atualizar`), launch e wrappers. O CI é **POSIX-only e não pega bug Windows-only**: na v0.4.3 o handoff finalizava com o pyz alvo baixado, que pode não ter `--finalizar` → finalizar com cópia do pyz atual. Lab reutilizável: Win11 ARM Enterprise (CrystalFetch + Fusion) com AppLocker escopado a um usuário restrito; o roteiro de montagem fica nos documentos internos do autor, fora deste repositório. **O build de teste vai por tag de pré-release, instalado pelo instalador de verdade — não se copia o `koine.pyz` para a máquina de teste**, e o procedimento inteiro está em `docs/guias/testar-build-em-bancada.md`. O ponteiro está aqui porque a armadilha é silenciosa e reincidente: o `instalar` bakeia nos wrappers o pyz **que está executando**, então validar a partir de uma pasta descartável deixa os seis wrappers apontando para ela, e apagar a pasta quebra a instalação sem nenhum erro na hora.
 
+- **Skill que gera configuração prescreve a forma, não só o resultado** — quatro
+  defeitos da v0.10.0 tiveram a mesma origem: a skill descrevia o que produzir e
+  deixava a **forma** aberta (nome do provider, chave de relay, caminho do wrapper).
+  O agente escolheu bem, e diferente em cada máquina; duas escolhas quebravam em
+  silêncio. Quando a decisão precisa ser igual em toda instalação, ela vira campo do
+  `koine paseo-info` ou frase imperativa com o valor — nunca "escreva o que fizer
+  sentido". E **duas bancadas não são luxo**: os quatro passaram limpos no Windows.
+- **Ao mexer no canal do orquestrador, conferir antes os três defaults que mordem** —
+  estão em `docs/referencias/paseo.md`, medidos: omitir a chave de relay **expõe** a
+  máquina (a doc do produto diz o contrário); o CLI cai na porta padrão e acerta o
+  serviço de outro usuário da máquina; e a pasta de configuração é **identidade e
+  registro** — movê-la custa o pareamento de todos os aparelhos, sem mensagem de erro.
+- **Pendências abertas do acesso remoto** — jd-tasks **#708** (o entry `-hermes` do
+  opencode não converge no macOS; as bancadas têm versões diferentes do cliente, e
+  igualá-las é o primeiro passo), **#709** (escopo ou agente inexistente ainda derruba
+  o provider no canal, contra a decisão de que estado de pasta nunca derruba ali) e
+  **#710** (login do copilot na bancada de macOS). Conferir se ainda valem antes de
+  assumir que sim.
+
 ## Família `kn-2N` espelha o `jd-cria-design` do brain
 
 As três skills de marca (`kn-21`/`kn-22`/`kn-23`) são a versão portável do skill interno `jd-cria-design` do Jedi Brain: mesma doutrina, dependências públicas (`npx @google/design.md`, `imagio`, `prelo`) e destinos em pasta-referências de escopo em vez de taxonomia do brain.
