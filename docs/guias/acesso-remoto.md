@@ -142,6 +142,18 @@ Duas situações em que insistir não resolve, e o caminho é pedir liberação:
   contexto chega — o agente lê e escreve arquivos —, mas rodar comando não funciona.
   O `koine instalar` diz quais dos seus clientes estão nessa situação.
 
+## Se o celular parar de encontrar o computador
+
+O sintoma é tempo esgotado no aparelho, sem mensagem de erro.
+
+A causa mais comum é a **identidade do serviço ter mudado**. Ela vive na pasta de
+configuração do Paseo, junto com o registro dos seus projetos — se essa pasta for
+movida, renomeada ou apagada, o serviço renasce com identidade nova e os aparelhos
+pareados passam a procurar algo que não existe mais.
+
+Duas saídas: parear de novo pela tela do aplicativo, ou devolver a pasta antiga ao
+lugar. Por isso, ao mexer nela por qualquer motivo, **mova em vez de apagar**.
+
 ## Segurança do pareamento
 
 O pareamento do celular acontece na tela do aplicativo, em **Ajustes → o seu host →

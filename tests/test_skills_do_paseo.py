@@ -90,3 +90,16 @@ def test_a_skill_de_organizacao_aponta_a_de_conexao():
     o Paseo configurado tem que dizer isso, não falhar."""
     assert "kn-04" in _texto("kn-14-organiza-workspaces"), \
         "kn-14: não manda fazer a conexão antes"
+
+
+def test_a_skill_de_conexao_desliga_o_relay_explicitamente():
+    """Omitir a chave de relay EXPÕE a máquina, ao contrário do que a doc diz.
+
+    Medido em 30/08/2026 na mesma máquina, mudando só a chave: ausente, o
+    serviço conecta ao relay e fica alcançável pela internet; `enabled: false`,
+    não conecta. Quem decide expor é o usuário, na tela do aplicativo — nunca a
+    skill por omissão.
+    """
+    texto = _texto("kn-04-conecta-o-paseo")
+    assert '"relay"' in texto, "kn-04: não escreve a chave de relay"
+    assert '"enabled": false' in texto, "kn-04: não desliga o relay explicitamente"

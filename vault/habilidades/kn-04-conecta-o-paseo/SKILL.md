@@ -98,6 +98,9 @@ truque que economiza o download.
 ```json
 {
   "version": 1,
+  "daemon": {
+    "relay": { "enabled": false }
+  },
   "features": {
     "dictation": {
       "stt": { "provider": "local", "model": "parakeet-tdt-0.6b-v3-int8" }
@@ -106,6 +109,16 @@ truque que economiza o download.
   }
 }
 ```
+
+**A chave de relay é obrigatória, e escrever `false` não é redundância.** Medido em
+30/08/2026, na mesma máquina, mudando só isso: com a chave **ausente** o serviço
+conecta ao relay e fica alcançável pela internet; com `enabled: false`, não conecta.
+A documentação diz que o padrão é desligado — escrito à mão, o comportamento é o
+oposto.
+
+Omitir a chave **expõe a máquina do usuário sem ele decidir**, e é justamente a
+decisão que esta skill não pode tomar por ele. Quem liga o relay é ele, na tela do
+aplicativo, depois de você explicar o que é.
 
 - **`parakeet-tdt-0.6b-v3-int8`** entende 25 idiomas europeus e detecta sozinho qual
   está sendo falado. Não existe ajuste de idioma para ele: o campo `language` que
@@ -195,7 +208,8 @@ empresa, peça que confirme que a política permite.** Se não permitir, o camin
 pedir à TI — não contornar.
 
 O caminho na interface: **Ajustes → o seu host → Parear dispositivo**. O relay se liga
-ali mesmo. A tela mostra um código e um link.
+ali mesmo — e é ali que ele deve ser ligado, porque a configuração que você escreveu o
+deixou desligado de propósito. A tela mostra um código e um link.
 
 > **Diga isto com todas as letras:** esse link é uma senha. Quem o tiver abre sessões
 > na máquina dele. Não colar em conversa, não mandar por mensagem, não guardar em
@@ -219,6 +233,19 @@ O usuário ainda **não tem pastas para abrir no celular**. Projeto e workspace 
 etapa seguinte, e quem faz é a `/kn-14-organiza-workspaces`.
 
 Mande rodar agora, com as pastas que ele quer alcançar de fora.
+
+## A identidade do serviço, e por que não se mexe nela
+
+A pasta `.paseo` do usuário guarda **a identidade do serviço** — o par de chaves e o
+identificador que os aparelhos pareados conhecem. Mover ou apagar essa pasta faz o
+serviço renascer com identidade nova, e **todo celular pareado deixa de encontrá-lo**:
+o sintoma é tempo esgotado no aparelho, sem mensagem de erro.
+
+Se isso acontecer, há duas saídas: parear de novo, ou devolver os dois arquivos de
+identidade da cópia antiga para a pasta nova. A segunda preserva o pareamento.
+
+Ao mexer nessa pasta por qualquer motivo, **mova, não apague** — ela também guarda o
+registro de projetos e workspaces.
 
 ## Quando reiniciar o serviço
 
