@@ -4,6 +4,27 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Não publicado]
+
+### Corrigido — o provider não fecha mais a porta na sua cara
+
+Uma pasta configurada, cujo `escopo:` aponta para um escopo que **não existe mais**,
+encerrava a sessão aberta pelo celular com um erro — e por ali não há como ler erro
+nem redigitar nada. O mesmo acontecia quando o provider pedia um agente que não
+existe: em vez de abrir, não abria.
+
+Renomear ou apagar um escopo põe nesse estado **todas** as pastas que o declaravam,
+e quem escreve o nome do agente no provider é a `/kn-04` — errar é plausível.
+
+Agora, nos dois casos, a sessão **sobe com o Hermes** e ele diz na primeira mensagem
+o que está faltando, com o nome exato, e conduz a correção. Nada é escrito na sua
+pasta. No terminal nada muda: lá existe alguém para ler a mensagem, e o erro alto,
+com a lista do que está cadastrado, continua sendo a resposta certa.
+
+A correção é diferente conforme a origem do nome: agente errado **na pasta** se
+conserta com `koine definir-agente`; agente errado **no provider** se conserta
+reescrevendo o provider, e arrumar a pasta não adiantaria nada.
+
 ## [0.10.0] — 2026-08-30
 
 ### Adicionado — duas conversas que põem o Koine no seu celular

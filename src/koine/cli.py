@@ -279,18 +279,29 @@ def _pyz_padrao() -> str:
     return os.path.abspath(sys.argv[0])
 
 
-def _montar_cm(agente: str, pasta: str) -> contexto.ContextoMontado:
+def _montar_cm(agente: str, pasta: str,
+               canal: bool = False) -> contexto.ContextoMontado:
     ctx_path = os.path.join(pasta, "CONTEXTO.md")
     fm, _ = frontmatter.ler_arquivo(ctx_path, normalizar_disco=True)
     # bootstrap e pasta incompleta não têm escopo nem índices; resolver trata os ramos.
     if not fm.get("bootstrap") and fm.get("escopo"):
-        # índices antes do render (o adapter os referencia)
-        escopo_fm, _ = frontmatter.ler_arquivo(
-            contexto.resolver_escopo_path(paths.config_dir(), fm["escopo"]),
-            normalizar_disco=True)
-        refs = paths.resolver_tagged(schema.Escopo.from_fm(escopo_fm).pasta_referencias)
-        indice.gerar(refs, fm.get("dominios", []))
-    cm = contexto.resolver(agente, pasta)
+        try:
+            # índices antes do render (o adapter os referencia)
+            escopo_fm, _ = frontmatter.ler_arquivo(
+                contexto.resolver_escopo_path(paths.config_dir(), fm["escopo"]),
+                normalizar_disco=True)
+        except contexto.EscopoNaoEncontrado:
+            # Sem cadastro não há pasta de referências, e portanto não há índice
+            # a gerar. Quem decide a política é `resolver`, logo abaixo: no
+            # terminal ele levanta de novo, com a lista; no canal devolve a
+            # sessão de bootstrap. Engolir aqui sem reencaminhar seria o silêncio.
+            if not canal:
+                raise
+        else:
+            refs = paths.resolver_tagged(
+                schema.Escopo.from_fm(escopo_fm).pasta_referencias)
+            indice.gerar(refs, fm.get("dominios", []))
+    cm = contexto.resolver(agente, pasta, canal=canal)
     cm.pasta_abs = pasta
     return cm
 
@@ -642,7 +653,7 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
               else mensagens.contexto_ilegivel(pasta), file=sys.stderr)
         return 1
     try:
-        cm = _montar_cm(agente, pasta)
+        cm = _montar_cm(agente, pasta, canal=canal_paseo)
     except contexto.AgenteNaoEncontrado as e:
         print(mensagens.agente_nao_encontrado(e.agente, e.disponiveis), file=sys.stderr)
         return 1
@@ -657,7 +668,12 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
     # subir em silêncio faria a sessão remota rodar com o agente errado sem
     # ninguém perceber. Detecção por isatty, agnóstica de cliente — `--print` é
     # vocabulário do Claude Code, não dos outros quatro.
-    if cm.agente_ausente and not sys.stdin.isatty():
+    #
+    # O canal é a exceção, e não por conveniência: ali NUNCA há tty, e mesmo
+    # assim há gente do outro lado — a pessoa está no celular. O isatty, que
+    # aqui é procuração para "há alguém para avisar", erra o sinal; quem avisa
+    # é a instrução que o `cm` já carrega (jd-task #709).
+    if cm.agente_ausente and not canal_paseo and not sys.stdin.isatty():
         print(mensagens.agente_declarado_inexistente(cm.agente_ausente),
               file=sys.stderr)
         return 1

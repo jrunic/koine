@@ -50,6 +50,13 @@ terminal. Ele difere em três pontos:
 - **nunca escreve na sua pasta de trabalho** — pasta ainda não configurada recebe uma
   instrução dizendo onde configurá-la.
 
+E **nunca encerra a sessão** por estado da pasta. Por aqui não há terminal para ler
+mensagem de erro nem prompt para redigitar: sessão que não abre é beco sem saída.
+Três casos que no terminal são erro alto sobem, por este canal, com o Hermes
+avisando — pasta sem contexto, `escopo:` que aponta para um escopo inexistente, e
+agente inexistente (declarado pela pasta ou pedido pelo provider). Em todos, o
+`CONTEXTO.md` fica intacto e o aviso traz o nome exato do que não foi encontrado.
+
 `koine atualizar` regenera os wrappers, então quem já tem instalado os recebe sem
 reinstalar.
 

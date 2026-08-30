@@ -165,7 +165,7 @@ def test_extra_args_com_valor_dinamico_chegam_ao_cliente(cm_e_pasta, monkeypatch
                         lambda cliente, p=None, env=None, args=None: capturado.update(
                             args=args or []) or 0)
     monkeypatch.chdir(pasta)
-    monkeypatch.setattr("koine.cli._montar_cm", lambda a, p: cm)
+    monkeypatch.setattr("koine.cli._montar_cm", lambda a, p, canal=False: cm)
     cli.main(["codex", "hermes", pasta])
 
     assert any("model_instructions_file=" in a for a in capturado["args"]), \

@@ -32,7 +32,8 @@ def _preparar_pasta_valida(tmp_path, monkeypatch, agente_da_pasta="sheldon"):
     shutil.copy(os.path.join(REPO, "vault", "agentes", "hermes.md"),
                 data / "agentes" / "hermes.md")
     for instr in ("pasta-incompleta.md", "agente-inexistente.md",
-                  "pasta-fora-do-koine.md"):
+                  "pasta-fora-do-koine.md", "escopo-inexistente.md",
+                  "agente-do-canal-inexistente.md"):
         origem = os.path.join(REPO, "vault", "bootstrap", instr)
         if os.path.exists(origem):
             shutil.copy(origem, data / "bootstrap" / instr)
@@ -56,9 +57,9 @@ def _preparar_pasta_valida(tmp_path, monkeypatch, agente_da_pasta="sheldon"):
 
 
 def _espiar_agente(original, capturado):
-    def espiao(agente, pasta):
+    def espiao(agente, pasta, canal=False):
         capturado["agente"] = agente
-        return original(agente, pasta)
+        return original(agente, pasta, canal=canal)
     return espiao
 
 
@@ -92,16 +93,20 @@ def test_o_separador_e_o_que_impede_o_valor_de_virar_pasta(sem_launch, tmp_path,
     separador; a segunda mostra que sem ele o comando quebra, que é o que torna
     o separador load-bearing no wrapper e não enfeite. Sem a segunda metade,
     este teste passaria com e sem a correção — e não provaria nada.
+
+    Desde a #709 o dano da segunda metade mudou de forma: o canal não derruba
+    mais por agente inexistente, então a sessão SOBE — com o Hermes e o aviso —
+    e o que se vê é a flag chegando ao cliente sem o valor, arrancado dela.
     """
     trab = _preparar_pasta_valida(tmp_path, monkeypatch)
     assert cli.main(["claude", "--canal-paseo", "--", "--model", "x-1"]) == 0
     assert sem_launch["args"][-2:] == ["--model", "x-1"]
     assert sem_launch["cwd"] == str(trab)
 
-    # sem o separador: `x-1` vira posicional, é lido como AGENTE e não existe
+    # sem o separador: `x-1` vira posicional, é lido como AGENTE
     sem_launch.clear()
-    assert cli.main(["claude", "--canal-paseo", "--model", "x-1"]) == 1
-    assert sem_launch == {}, "não deveria ter chegado ao launch"
+    assert cli.main(["claude", "--canal-paseo", "--model", "x-1"]) == 0
+    assert sem_launch["args"][-1] == "--model", "o valor foi arrancado da flag"
 
 
 # --- o agente por variável -------------------------------------------------
@@ -205,6 +210,105 @@ def test_fora_do_canal_o_comportamento_do_terminal_nao_muda(tmp_path, monkeypatc
     cli.main(["claude"])
     if estado in ("ausente", "vazio"):
         assert (trab / "CONTEXTO.md").exists(), "o terminal ainda auto-guia"
+
+
+# --- pasta VÁLIDA cujo escopo ou agente não existe (jd-task #709) -----------
+#
+# Os quatro estados acima são de BOOTSTRAP: o CONTEXTO.md não serve. Aqui o
+# arquivo serve — tem ficha, tem `escopo:` — e o que não existe é aquilo que ele
+# aponta. Cai depois da classificação, e por isso escapou do canal: derrubava.
+
+def _quebrar_escopo(trab):
+    (trab / "CONTEXTO.md").write_text(
+        "---\ntype: contexto\nescopo: fantasma\nagente: sheldon\n---\n\n# T\n",
+        encoding="utf-8")
+
+
+def _entregue(capturado):
+    return "\n".join(capturado["lanc"].arquivos_externos.values())
+
+
+@pytest.fixture
+def espiar_lancamento(monkeypatch):
+    cap = {}
+    monkeypatch.setattr(cli, "_materializar", lambda lanc, pasta: cap.update(lanc=lanc))
+    return cap
+
+
+def test_no_canal_escopo_inexistente_sobe_avisando(sem_launch, espiar_lancamento,
+                                                   tmp_path, monkeypatch):
+    """Escopo renomeado ou apagado põe toda pasta que o declarava neste estado.
+    No canal, sair com código não-zero é beco sem saída: sobe com a instrução."""
+    trab = _preparar_pasta_valida(tmp_path, monkeypatch)
+    _quebrar_escopo(trab)
+    assert cli.main(["claude", "--canal-paseo", "--"]) == 0
+    assert "cwd" in sem_launch, "a sessão precisa ter subido"
+    entregue = _entregue(espiar_lancamento)
+    assert "escopo que não existe" in entregue
+    assert "fantasma" in entregue, "o nome do escopo sumido tem que chegar ao agente"
+
+
+def test_no_canal_escopo_inexistente_nao_escreve_na_pasta(sem_launch, tmp_path,
+                                                          monkeypatch):
+    """Bytes, não nomes: o CONTEXTO.md já existe, e um teste por nome passaria
+    com e sem a correção."""
+    trab = _preparar_pasta_valida(tmp_path, monkeypatch)
+    _quebrar_escopo(trab)
+    antes = {p.name: p.read_bytes() for p in trab.iterdir()}
+    cli.main(["claude", "--canal-paseo", "--"])
+    assert {p.name: p.read_bytes() for p in trab.iterdir()} == antes
+
+
+def test_no_canal_a_variavel_com_agente_inexistente_sobe_avisando(
+        sem_launch, espiar_lancamento, tmp_path, monkeypatch):
+    """Quem escreve KOINE_AGENTE no entry é a /kn-04 — errar o nome é plausível,
+    e o sintoma seria um provider que não abre, sem dizer por quê."""
+    _preparar_pasta_valida(tmp_path, monkeypatch)
+    monkeypatch.setenv("KOINE_AGENTE", "fantasma")
+    assert cli.main(["claude", "--canal-paseo", "--"]) == 0
+    assert "cwd" in sem_launch
+    entregue = _entregue(espiar_lancamento)
+    assert "provider desta sessão pede um agente que não existe" in entregue
+    # O NOME, não só a prosa: a instrução manda o agente dizer qual nome falta, e
+    # ele mora no frontmatter — que o render remove. A prova viva da #709 pegou a
+    # instrução chegando sem o dado.
+    assert "fantasma" in entregue
+    # A correção é no ENTRY do provider, não no CONTEXTO.md: `definir-agente`
+    # conserta o campo da pasta e o aviso voltaria para sempre.
+    assert "koine definir-agente" not in entregue
+
+
+def test_no_canal_o_agente_declarado_na_pasta_nao_derruba(sem_launch, tmp_path,
+                                                          monkeypatch):
+    """A guarda por `isatty` fecha a sessão quando não há terminal — e no canal
+    NUNCA há, embora haja gente do outro lado (o celular). O aviso chega pela
+    instrução; derrubar é que era o silêncio."""
+    trab = _preparar_pasta_valida(tmp_path, monkeypatch, agente_da_pasta="fantasma")
+    monkeypatch.setattr(cli.sys.stdin, "isatty", lambda: False)
+    assert cli.main(["claude", "--canal-paseo", "--"]) == 0
+    assert "cwd" in sem_launch
+
+
+def test_fora_do_canal_o_escopo_inexistente_continua_derrubando(tmp_path, monkeypatch,
+                                                                capsys):
+    """Pronto-quando 3: no terminal há um humano, e o erro alto com a lista dos
+    escopos cadastrados continua sendo a resposta certa."""
+    monkeypatch.setattr(cli.launch, "lancar", lambda c, p, env=None, args=None: None)
+    trab = _preparar_pasta_valida(tmp_path, monkeypatch)
+    _quebrar_escopo(trab)
+    assert cli.main(["claude"]) == 1
+    err = capsys.readouterr().err
+    assert "fantasma" in err and "fixture" in err, "a lista dos cadastrados é o que cura"
+
+
+def test_fora_do_canal_o_agente_declarado_sem_tty_continua_derrubando(tmp_path,
+                                                                      monkeypatch):
+    """A guarda do terminal não é afrouxada: sessão não-interativa fora do canal
+    (um `--print`, um script) segue abortando em vez de rodar com o agente errado."""
+    monkeypatch.setattr(cli.launch, "lancar", lambda c, p, env=None, args=None: None)
+    _preparar_pasta_valida(tmp_path, monkeypatch, agente_da_pasta="fantasma")
+    monkeypatch.setattr(cli.sys.stdin, "isatty", lambda: False)
+    assert cli.main(["claude"]) == 1
 
 
 # --- o prefixo de subcomando da rota ---------------------------------------

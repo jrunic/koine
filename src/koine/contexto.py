@@ -58,6 +58,10 @@ class ContextoMontado:
     # `resolver` não conhece o modo, e a spec manda guiar no interativo e
     # abortar sem tty.
     agente_ausente: str = ""
+    # Escopo que a pasta declarava e que não existe em config/escopos. Vazio na
+    # sessão normal — e só preenchido no canal de máquina, porque no terminal
+    # `resolver` continua levantando `EscopoNaoEncontrado` com a lista.
+    escopo_ausente: str = ""
     # pasta de trabalho absoluta — preenchida por cli._montar_cm; adapters com
     # bundle externo (copilot, opencode) derivam slot e alvo de symlink dela.
     pasta_abs: str = ""
@@ -100,7 +104,16 @@ def _achar_agente(cfg: str, data: str, agente: str) -> str:
     raise AgenteNaoEncontrado(agente, sorted(set(disponiveis)))
 
 
-def resolver(agente: str, pasta: str, sem_contexto: bool = False) -> ContextoMontado:
+def resolver(agente: str, pasta: str, sem_contexto: bool = False,
+             canal: bool = False) -> ContextoMontado:
+    """Monta o contexto da sessão.
+
+    `canal=True` marca invocação por máquina (orquestrador), e muda a POLÍTICA
+    de dois erros de dado do usuário — nunca o que se resolve. Ali não há
+    terminal para ler mensagem nem prompt para redigitar: provider que sai com
+    código não-zero é beco sem saída. Os dois viram sessão de bootstrap com a
+    instrução do vault, e quem avisa é o agente (jd-task #709).
+    """
     cfg, data = paths.config_dir(), paths.vault_dir()
     ctx_path = os.path.join(pasta, "CONTEXTO.md")
     if sem_contexto:
@@ -142,7 +155,20 @@ def resolver(agente: str, pasta: str, sem_contexto: bool = False) -> ContextoMon
     escopo_slug = fm["escopo"]
     doms = fm.get("dominios", [])
 
-    esc_path = resolver_escopo_path(cfg, escopo_slug)
+    try:
+        esc_path = resolver_escopo_path(cfg, escopo_slug)
+    except EscopoNaoEncontrado:
+        if not canal:
+            raise                # terminal: erro alto, com a lista dos cadastrados
+        return ContextoMontado(
+            bootstrap=True,
+            usuario_path=_achar_usuario_opcional(cfg),
+            koine_path=os.path.join(data, "KOINE.md"),
+            agente_path=os.path.join(data, "agentes", "hermes.md"),
+            contexto_path=ctx_path,
+            instrucao_path=_bootstrap.instrucao_escopo_inexistente(data),
+            escopo_ausente=escopo_slug,
+        )
     efm, _ = frontmatter.ler_arquivo(esc_path, normalizar_disco=True)
     escopo = schema.Escopo.from_fm(efm)
     refs = paths.resolver_tagged(escopo.pasta_referencias)
@@ -156,8 +182,13 @@ def resolver(agente: str, pasta: str, sem_contexto: bool = False) -> ContextoMon
     try:
         agente_path = _achar_agente(cfg, data, nome)
     except AgenteNaoEncontrado:
-        if fonte == _agente.POSICIONAL:
+        do_chamador = fonte == _agente.POSICIONAL
+        if do_chamador and not canal:
             raise                    # dedo no teclado: erro com a lista
+        # No canal o "posicional" não veio de dedo no teclado: veio de
+        # KOINE_AGENTE, gravado no entry do provider pela /kn-04. É dado de
+        # arquivo como o `agente:` da pasta — e a remediação é outra, porque
+        # `definir-agente` conserta a pasta e o entry continuaria errado.
         # Valor errado num arquivo: não há o que redigitar. O que fazer depende
         # do MODO, e `resolver` não conhece o modo — quem bifurca é o chamador.
         return ContextoMontado(
@@ -166,7 +197,9 @@ def resolver(agente: str, pasta: str, sem_contexto: bool = False) -> ContextoMon
             koine_path=os.path.join(data, "KOINE.md"),
             agente_path=os.path.join(data, "agentes", "hermes.md"),
             contexto_path=ctx_path,
-            instrucao_path=_bootstrap.instrucao_agente_inexistente(data),
+            instrucao_path=(_bootstrap.instrucao_agente_do_canal_inexistente(data)
+                            if do_chamador
+                            else _bootstrap.instrucao_agente_inexistente(data)),
             agente_ausente=nome,
         )
 

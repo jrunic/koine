@@ -231,7 +231,8 @@ def test_reposicao_cura_a_sessao_tambem_nao_so_o_disco(koine_home, monkeypatch):
     capturado = {}
     original = _ctx.resolver
     monkeypatch.setattr(_ctx, "resolver",
-                        lambda a, p: capturado.setdefault("cm", original(a, p)))
+                        lambda a, p, **kw: capturado.setdefault(
+                            "cm", original(a, p, **kw)))
 
     cli.main(["claude"])
 

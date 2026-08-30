@@ -142,6 +142,25 @@ def instrucao_agente_inexistente(data: str) -> str:
     return os.path.join(data, "bootstrap", "agente-inexistente.md")
 
 
+def instrucao_escopo_inexistente(data: str) -> str:
+    """Instrução lida pelo agente quando o `escopo:` declarado não existe.
+
+    A pasta é VÁLIDA — ficha completa, campo preenchido —, e o que sumiu é o
+    cadastro. Escopo renomeado ou apagado põe nesse estado TODAS as pastas que o
+    declaravam, então a correção que interessa é no catálogo, não numa pasta.
+    """
+    return os.path.join(data, "bootstrap", "escopo-inexistente.md")
+
+
+def instrucao_agente_do_canal_inexistente(data: str) -> str:
+    """Irmã da `instrucao_agente_inexistente`, para quando o nome veio do
+    CHAMADOR e não do arquivo da pasta — no canal de máquina, do entry do
+    provider. A remediação é outra: `definir-agente` conserta o campo da pasta,
+    e o aviso voltaria para sempre porque o defeito está na configuração do
+    orquestrador."""
+    return os.path.join(data, "bootstrap", "agente-do-canal-inexistente.md")
+
+
 def bloco_do_contexto(pasta: str) -> str:
     """O bloco de frontmatter do CONTEXTO.md, COM os delimitadores — no formato
     em que voltará ao arquivo. Vazio quando não há bloco."""

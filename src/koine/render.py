@@ -57,6 +57,38 @@ def dominio_de(indice_path: str) -> str:
     return base
 
 
+def dado_da_instrucao(cm) -> str:
+    """O nome concreto que falta nesta sessão, para acompanhar a instrução.
+
+    A instrução do vault é prosa fixa e manda o agente dizer QUAL escopo (ou
+    qual agente) a pasta declara. Ele não teria como: o nome mora no frontmatter
+    do `CONTEXTO.md`, que o render remove, e o snapshot entrega só o corpo.
+    Medido em 30/08/2026, na prova viva da #709 — a instrução chegava e o dado
+    não.
+    """
+    if cm.escopo_ausente:
+        return ("> **Escopo declarado por esta pasta e não encontrado:** "
+                f"`{cm.escopo_ausente}`")
+    if cm.agente_ausente:
+        return ("> **Agente pedido para esta sessão e não encontrado:** "
+                f"`{cm.agente_ausente}`")
+    return ""
+
+
+def add_instrucao(partes: list, cm) -> None:
+    """Seção da instrução do Koine, com o dado da sessão colado no topo."""
+    if not cm.instrucao_path:
+        return
+    try:
+        with open(cm.instrucao_path, encoding="utf-8") as f:
+            texto = f.read()
+    except OSError:
+        return
+    dado = dado_da_instrucao(cm)
+    partes.append(Parte("Instrução do Koine para esta sessão",
+                        f"{dado}\n\n{texto}" if dado else texto))
+
+
 def documento_inline(titulo: str, cm) -> str:
     """Todas as camadas do `cm` embutidas num documento só.
 
@@ -83,7 +115,7 @@ def documento_inline(titulo: str, cm) -> str:
         add("Escopo", cm.escopo_path)
         for ip in cm.indice_paths:
             add("Referências — " + dominio_de(ip), ip)
-    add("Instrução do Koine para esta sessão", cm.instrucao_path)
+    add_instrucao(partes, cm)
     add("Contexto da sessão (snapshot de ./CONTEXTO.md)", cm.contexto_path)
     return mescar_documentos(titulo, partes)
 
