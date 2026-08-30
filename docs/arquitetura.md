@@ -17,6 +17,7 @@ tags: [arquitetura, koine, python, cli]
 | `src/koine/adapters/claude.py` | Adapter Claude Code — bundle em cache + `--add-dir` + variável de diretórios adicionais |
 | `src/koine/adapters/antigravity.py` | Adapter Antigravity (`agy`) — bundle em cache + `--add-dir` |
 | `src/koine/adapters/copilot.py` | Adapter Copilot CLI — bundle de `*.instructions.md` + `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` |
+| `src/koine/paseo.py` | Matriz de rotas pelo orquestrador — qual cliente é alcançável e por qual mecanismo |
 | `src/koine/adapters/opencode.py` | Adapter OpenCode — config JSON em cache, com `instructions` apontando para o documento composto + env vars |
 | `src/koine/adapters/codex.py` | Adapter Codex CLI — arquivo inline em cache + `-c model_instructions_file=` |
 | `src/koine/lancamento.py` | Dataclass `Lancamento` — contrato adapter → materialização |

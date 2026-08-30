@@ -187,6 +187,31 @@ o contexto por um canal próprio, a partir de um bundle em
 
 O bundle é derivado: apagá-lo não perde nada, e a sessão seguinte o refaz.
 
+### Sessão aberta por orquestrador
+
+Além do `kn-<cliente>`, a instalação emite `kn-<cliente>-paseo` para os clientes
+alcançáveis por um orquestrador de sessões — o caminho para abrir uma sessão
+Koine do celular ou do browser.
+
+Esse wrapper difere do humano em três pontos, e só neles:
+
+- **repassa a lista de argumentos do orquestrador intacta**, sem lê-la como
+  agente e pasta;
+- **lê o agente de `KOINE_AGENTE`**, porque um orquestrador não tem como passar
+  argumento posicional. A variável vale **só** por esse caminho, e ausência dela
+  é normal — quem resolve o agente aí é a pasta;
+- **nunca escreve na sua pasta de trabalho.** Pasta que ainda não é de trabalho
+  recebe uma instrução dizendo onde configurá-la, e o arquivo não é tocado.
+
+```
+koine paseo-info          # quais clientes têm rota
+koine paseo-info --json   # a mesma coisa, para ferramenta consumir
+```
+
+**Nem todo cliente tem rota, e configurar um que não tem falha em silêncio:** o
+provider fica disponível, abre sessão e responde — sem contexto nenhum. É por
+isso que o wrapper só existe para quem foi medido.
+
 Na primeira sessão de cada pasta, o arquivo que o mecanismo anterior deixava lá
 (`CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, `.github/copilot-instructions.md`) é
 removido, com aviso — **só** quando carrega o marcador do Koine. Arquivo seu,

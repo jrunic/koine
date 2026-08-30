@@ -6,6 +6,24 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Não publicado]
 
+### Adicionado — sessão do Koine por orquestrador, com o agente que você pedir
+
+A instalação passa a emitir um wrapper por cliente para uso por orquestrador de
+sessões, ao lado dos que você já usa no terminal. Com ele, uma sessão aberta do
+celular ou do browser sobe com o seu contexto e com o agente que a pasta declara —
+ou com o que você pedir, pela variável `KOINE_AGENTE`.
+
+E a sua pasta de trabalho **não é tocada**. Antes, uma sondagem do orquestrador
+podia fazer o Koine criar um `CONTEXTO.md` numa pasta qualquer, porque a sondagem
+roda de onde o serviço subiu — e isso aconteceu. Agora, pasta que ainda não é de
+trabalho recebe uma instrução dizendo onde configurá-la, e nada é escrito. No
+terminal nada muda: lá você entrou na pasta de propósito, e o Koine continua
+conduzindo a configuração ali mesmo.
+
+`koine paseo-info` lista quais clientes funcionam por esse caminho. **Nem todos
+funcionam, e configurar um que não funciona falha em silêncio** — o provider
+parece saudável, a sessão abre e responde, e o contexto simplesmente não está lá.
+
 ### Corrigido — no OpenCode, o agente que você pede vence o da pasta
 
 Abrir sessão com um agente explícito numa pasta que declara outro devolvia **o da
