@@ -23,6 +23,7 @@ from koine import (
     instalar as _instalar,
     launch,
     mensagens,
+    paseo,
     pasta as pasta_mod,
     pathenv,
     paths,
@@ -540,6 +541,15 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
     canal_paseo = "--canal-paseo" in args
     if canal_paseo:
         args = [a for a in args if a != "--canal-paseo"]
+    # Subcomando que o cliente exige para falar o protocolo do orquestrador. Vem
+    # ANTES de tudo: é subcomando, não flag. Calculado uma vez porque os dois
+    # ramos de lançamento (pasta válida e pasta sem contexto) precisam dele — e
+    # a sondagem do orquestrador roda justamente do segundo.
+    prefixo = []
+    if canal_paseo:
+        _rota = paseo.rota(cliente)
+        if _rota is not None:
+            prefixo = list(_rota.args)
     posicionais, extras_usuario = _separar_args(args)
     # 0 posicionais: a pasta resolve o agente (é a invocação dos providers
     # remotos, que são genéricos e fixos). 1: é AGENTE, efêmero. 2: agente +
@@ -569,7 +579,7 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
         # Abortar: provider que sai com código não-zero é beco sem saída, e como
         # o orquestrador apresenta isso NÃO foi medido — a escolha conservadora
         # é subir avisando.
-        return _lancar_avisando_sem_contexto(cliente, pasta, extras_usuario)
+        return _lancar_avisando_sem_contexto(cliente, pasta, prefixo + extras_usuario)
     if estado in (_bootstrap.AUSENTE, _bootstrap.VAZIO):
         if not _bootstrap.usuario_onboarded(paths.config_dir()):
             print(mensagens.pasta_sem_contexto_nao_onboarded(cliente), file=sys.stderr)
@@ -640,7 +650,7 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
     except conflito.ConflitoErro as e:
         print(str(e), file=sys.stderr)
         return 1
-    args_cliente = (lanc.extra_args or []) + extras_usuario
+    args_cliente = prefixo + (lanc.extra_args or []) + extras_usuario
     if sys.platform == "win32":
         # Uma linha: o relatório completo é da instalação. Aqui é o que o usuário
         # precisa para não perder tempo — e a sessão SOBE assim mesmo, porque sem

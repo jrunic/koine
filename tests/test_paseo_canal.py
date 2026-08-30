@@ -205,3 +205,39 @@ def test_fora_do_canal_o_comportamento_do_terminal_nao_muda(tmp_path, monkeypatc
     cli.main(["claude"])
     if estado in ("ausente", "vazio"):
         assert (trab / "CONTEXTO.md").exists(), "o terminal ainda auto-guia"
+
+
+# --- o prefixo de subcomando da rota ---------------------------------------
+
+def test_a_rota_do_opencode_injeta_o_subcomando_antes_de_tudo(sem_launch, tmp_path,
+                                                              monkeypatch):
+    """O servidor de protocolo do opencode é um SUBCOMANDO: tem que ser o
+    primeiro argumento, antes de qualquer coisa que o orquestrador passe."""
+    _preparar_pasta_valida(tmp_path, monkeypatch)
+    cli.main(["opencode", "--canal-paseo", "--", "--porta", "1"])
+    assert sem_launch["args"][0] == "acp"
+    assert sem_launch["args"][-2:] == ["--porta", "1"]
+
+
+def test_cliente_com_rota_sem_subcomando_nao_ganha_prefixo(sem_launch, tmp_path,
+                                                           monkeypatch):
+    _preparar_pasta_valida(tmp_path, monkeypatch)
+    cli.main(["claude", "--canal-paseo", "--", "--model", "x-1"])
+    assert "acp" not in sem_launch["args"]
+
+
+def test_o_prefixo_vale_tambem_na_pasta_sem_contexto(sem_launch, tmp_path, monkeypatch):
+    """A sondagem do orquestrador roda do cwd dele, que é justamente uma pasta
+    sem contexto — se o prefixo não valesse nesse ramo, o cliente subiria no
+    modo errado exatamente onde o provider é avaliado."""
+    _pasta_no_estado(tmp_path, monkeypatch, "ausente")
+    cli.main(["opencode", "--canal-paseo", "--"])
+    assert sem_launch["args"][0] == "acp"
+
+
+def test_fora_do_canal_o_opencode_nao_ganha_o_subcomando(sem_launch, tmp_path,
+                                                         monkeypatch):
+    """No terminal `kn-opencode` sobe a interface, não o servidor de protocolo."""
+    _preparar_pasta_valida(tmp_path, monkeypatch)
+    cli.main(["opencode"])
+    assert "acp" not in sem_launch["args"]
