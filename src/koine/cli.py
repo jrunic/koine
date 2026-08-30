@@ -517,12 +517,26 @@ def _separar_args(args: list[str]) -> tuple[list[str], list[str]]:
 
 
 def _rodar_cliente(cliente: str, args: list[str]) -> int:
+    # `--canal-paseo` é consumido AQUI, não por _separar_args: naquela gramática
+    # todo token com hífen é flag do cliente, e a flag chegaria ao processo
+    # lançado. Mesmo motivo pelo qual o `--para` do `gerar` é consumido antes.
+    canal_paseo = "--canal-paseo" in args
+    if canal_paseo:
+        args = [a for a in args if a != "--canal-paseo"]
     posicionais, extras_usuario = _separar_args(args)
     # 0 posicionais: a pasta resolve o agente (é a invocação dos providers
     # remotos, que são genéricos e fixos). 1: é AGENTE, efêmero. 2: agente +
     # pasta. Regra fixa, não adivinhação — `kn-<cliente> <pasta>` sozinho cai em
     # "agente inexistente" com a lista, que é autocorretivo.
     agente = posicionais[0] if posicionais else ""
+    if canal_paseo and not agente:
+        # O provider do Paseo não tem como passar posicional: o array `command`
+        # descarta argumentos extras no spawn (medido em 29/08/2026). A variável
+        # é o único canal, e entra na MESMA posição do posicional — pedido do
+        # chamador, efêmero, que não persiste na pasta.
+        # Vazia conta como ausente: nas sondagens ela chega de forma
+        # inconsistente, e ausência é caminho normal, nunca erro.
+        agente = os.environ.get("KOINE_AGENTE", "").strip()
     try:
         pasta = pasta_mod.resolver(posicionais[1] if len(posicionais) >= 2 else "")
     except pasta_mod.ResolucaoErro as e:
