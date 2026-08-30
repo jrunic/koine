@@ -1,6 +1,7 @@
 import os
 
 from koine import cache, render, shell
+from koine import paseo as _paseo
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
 
@@ -11,6 +12,10 @@ ARQUIVO = "GEMINI.md"
 # e negado, e nao expoe chave de shell. QUAL binario ele tenta e INFERENCIA — o
 # log dele nao registra o processo filho —, mas `cmd` e `bash` rodam nessa conta.
 ACEITA_SHELL = (shell.PWSH, shell.POWERSHELL)
+
+# Sem rota pelo Paseo: medido em 26 e 29/08/2026, a versão 1.1.21 não anuncia o
+# protocolo de agente.
+PASEO = None
 
 
 def renderizar(cm: ContextoMontado) -> Lancamento:

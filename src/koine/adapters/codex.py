@@ -1,6 +1,7 @@
 import os
 
 from koine import cache, render, shell
+from koine import paseo as _paseo
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
 
@@ -11,6 +12,11 @@ EXTRA_ARGS = ["-c", "project_doc_max_bytes=1048576"]
 # Medido em 28/08/2026: usa PowerShell e SO PowerShell no Windows, e nao expoe
 # chave para trocar. Onde a politica nega o powershell.exe, nao tem shell.
 ACEITA_SHELL = (shell.PWSH, shell.POWERSHELL)
+
+# Sem rota pelo Paseo. Medido em 29/08/2026: ele é invocado como servidor longo
+# (`app-server`) a partir do cwd do DAEMON, antes de existir workspace — o
+# wrapper roda e não tem pasta com que trabalhar, e o Koine nunca monta contexto.
+PASEO = None
 
 
 def _agente_de(cm) -> str:

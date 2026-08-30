@@ -3,6 +3,7 @@ import os
 import sys
 
 from koine import cache, render, shell
+from koine import paseo as _paseo
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
 
@@ -15,6 +16,14 @@ MARCADOR = "<!-- gerado por kn-agente -->"
 # funciona e `powershell` é tentado (falha com uv_spawn onde a política nega, em
 # vez de ser ignorado). A doc do produto aceita "absolute path or a short name".
 ACEITA_SHELL = (shell.PWSH, shell.POWERSHELL, shell.BASH, shell.CMD)
+
+# Rota pelo Paseo, medida em 29/08/2026. Pelo builtin NÃO funciona: o
+# gerenciador de servidor do OpenCode é singleton, inicializado no arranque do
+# daemon com as configurações do builtin, e o `command` do provider é
+# rejeitado — o daemon registra "already initialized with different runtime
+# settings". A rota é o protocolo genérico, com o subcomando que sobe o
+# servidor.
+PASEO = _paseo.Rota(extends="acp", args=("acp",))
 
 
 def renderizar(cm: ContextoMontado) -> Lancamento:

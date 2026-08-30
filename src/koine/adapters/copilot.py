@@ -1,6 +1,7 @@
 import os
 
 from koine import cache, render, shell
+from koine import paseo as _paseo
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
 
@@ -12,6 +13,10 @@ MARCADOR = "<!-- gerado por kn-agente -->"
 # Medido em 28/08/2026: usa PowerShell e SO PowerShell no Windows, e nao expoe
 # chave para trocar. Onde a politica nega o powershell.exe, nao tem shell.
 ACEITA_SHELL = (shell.PWSH, shell.POWERSHELL)
+
+# Rota pelo Paseo, medida em 29/08/2026: mesma forma do claude — o Paseo o
+# invoca com `--acp`, do cwd do workspace.
+PASEO = _paseo.Rota(extends="copilot")
 
 
 def renderizar(cm: ContextoMontado) -> Lancamento:

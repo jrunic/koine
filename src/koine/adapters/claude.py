@@ -2,6 +2,7 @@ import os
 import sys
 
 from koine import cache, render, shell
+from koine import paseo as _paseo
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
 
@@ -11,6 +12,11 @@ ARQUIVO = "CLAUDE.md"
 # Degraus de shell que este cliente aceita, medido em 28/08/2026: bash/zsh, ou a
 # ferramenta PowerShell nativa. O `cmd` nunca foi opcao para ele.
 ACEITA_SHELL = (shell.PWSH, shell.POWERSHELL, shell.BASH)
+
+# Rota pelo Paseo, medida em 29/08/2026: o spawn de sessão passa pelo comando
+# do provider, com o cwd do workspace, e a lista de argumentos do Paseo chega
+# inteira.
+PASEO = _paseo.Rota(extends="claude")
 
 
 def renderizar(cm: ContextoMontado) -> Lancamento:
