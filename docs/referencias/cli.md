@@ -208,6 +208,12 @@ koine paseo-info          # quais clientes têm rota
 koine paseo-info --json   # a mesma coisa, para ferramenta consumir
 ```
 
+Ele devolve, por cliente: o **identificador dos dois entries** de provider, o nome do
+**wrapper** e o tipo do provider. Os identificadores são prescritos aqui, não
+escolhidos por quem configura — nome inventado diverge entre máquinas, e ferramenta
+que um dia precise ler ou consertar essa configuração encontraria dois vocabulários
+para a mesma coisa.
+
 **Nem todo cliente tem rota, e configurar um que não tem falha em silêncio:** o
 provider fica disponível, abre sessão e responde — sem contexto nenhum. É por
 isso que o wrapper só existe para quem foi medido.

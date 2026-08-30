@@ -253,6 +253,8 @@ def test_paseo_info_devolve_a_matriz_em_json(capsys):
     assert cli.main(["paseo-info", "--json"]) == 0
     dados = json.loads(capsys.readouterr().out)
     assert dados["claude"] == {"wrapper": "kn-claude-paseo",
+                               "provider": "kn-claude",
+                               "provider_hermes": "kn-claude-hermes",
                                "extends": "claude", "args": []}
     assert dados["opencode"]["extends"] == "acp"
     assert dados["opencode"]["args"] == ["acp"]
@@ -296,3 +298,21 @@ def test_add_dir_usa_a_forma_com_igual(tmp_path, monkeypatch):
         args = adapters.REGISTRY[nome].renderizar(cm).extra_args
         assert len(args) == 1, f"{nome}: {args}"
         assert args[0].startswith("--add-dir="), f"{nome}: {args}"
+
+
+def test_paseo_info_prescreve_os_identificadores_dos_entries(capsys):
+    """O identificador do provider não pode ser escolha do agente.
+
+    Decisão do Orlando, 30/08/2026: se a skill inventar o nome, dois mentorados
+    ficam com identificadores diferentes para a mesma coisa — e o dia em que
+    isso virar código (um `koine` que lê ou conserta o config do orquestrador)
+    encontra divergência sem regra. Mesma razão do wrapper: o Koine prescreve, a
+    skill lê.
+    """
+    import json
+    assert cli.main(["paseo-info", "--json"]) == 0
+    dados = json.loads(capsys.readouterr().out)
+    assert dados["claude"]["provider"] == "kn-claude"
+    assert dados["claude"]["provider_hermes"] == "kn-claude-hermes"
+    assert dados["opencode"]["provider"] == "kn-opencode"
+    assert dados["opencode"]["provider_hermes"] == "kn-opencode-hermes"

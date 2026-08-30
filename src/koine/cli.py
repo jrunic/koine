@@ -532,12 +532,15 @@ def _cmd_paseo_info(args: list[str]) -> int:
     for cliente in paseo.com_rota():
         r = paseo.rota(cliente)
         dados[cliente] = {"wrapper": paseo.wrapper_de(cliente),
+                          "provider": paseo.entry_de(cliente),
+                          "provider_hermes": paseo.entry_hermes_de(cliente),
                           "extends": r.extends, "args": list(r.args)}
     if "--json" in args:
         print(json.dumps(dados, indent=2, ensure_ascii=False))
         return 0
     for cliente, info in dados.items():
-        print(f"{cliente:10} {info['wrapper']:22} extends={info['extends']}")
+        print(f"{cliente:10} {info['provider']:14} {info['provider_hermes']:22} "
+              f"{info['wrapper']:22} extends={info['extends']}")
     return 0
 
 

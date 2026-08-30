@@ -35,3 +35,18 @@ def com_rota() -> list[str]:
 
 def wrapper_de(cliente: str) -> str:
     return f"kn-{cliente}-paseo"
+
+
+def entry_de(cliente: str) -> str:
+    """Identificador do provider genérico no config do orquestrador.
+
+    Prescrito aqui, não escolhido por quem configura: nome inventado diverge
+    entre máquinas, e o dia em que uma ferramenta precisar ler ou consertar
+    esse config encontra dois vocabulários para a mesma coisa.
+    """
+    return f"kn-{cliente}"
+
+
+def entry_hermes_de(cliente: str) -> str:
+    """Identificador do provider que força o Hermes por variável de ambiente."""
+    return f"kn-{cliente}-hermes"

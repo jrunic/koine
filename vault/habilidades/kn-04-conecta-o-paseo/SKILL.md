@@ -130,12 +130,20 @@ que isso leva alguns minutos e consome banda.
 Não existe comando para criar provider: é edição do mesmo `config.json`.
 
 Para cada cliente que passou nas duas listas, escreva **dois** entries a partir do que
-o `koine paseo-info --json` devolveu — o wrapper vai no comando, e o tipo do provider
-vem de lá:
+o `koine paseo-info --json` devolveu:
 
-- um **genérico**, sem variável de ambiente: deixa a pasta decidir o agente;
-- um **com a variável** `KOINE_AGENTE` apontando o Hermes: abre o Hermes mesmo em
-  pasta cujo padrão é outro agente.
+- um **genérico**, com o identificador do campo `provider` e sem variável de ambiente:
+  deixa a pasta decidir o agente;
+- um **com a variável** `KOINE_AGENTE` apontando o Hermes, com o identificador do
+  campo `provider_hermes`: abre o Hermes mesmo em pasta cujo padrão é outro agente.
+
+O comando ainda devolve o `wrapper`, que vai no comando do entry, e o tipo do
+provider.
+
+**Use os identificadores que o comando deu — não invente nome.** Eles são prescritos
+pelo Koine de propósito: nome escolhido na hora diverge entre máquinas, e no dia em
+que alguma ferramenta precisar ler ou consertar essa configuração ela encontraria dois
+vocabulários para a mesma coisa.
 
 **Preserve o que já estiver no arquivo.** Ele é configuração viva e pode ter coisa de
 terceiro dentro; mescle campo a campo, não sobrescreva o arquivo inteiro.
