@@ -13,7 +13,8 @@ def test_gera_um_wrapper_por_adapter_registrado(tmp_path):
     bindir = str(tmp_path / "bin")
     pyz = "/opt/koine/koine.pyz"
     criados = wrappers.gerar(bindir, pyz)
-    # wrapper admin `koine` + um kn-<cliente> por adapter registrado
+    # wrapper admin `koine` + um kn-<cliente> por adapter registrado + um
+    # kn-<cliente>-paseo para os clientes com rota pelo orquestrador
     assert set(criados) == {
         os.path.join(bindir, "koine"),
         os.path.join(bindir, "kn-claude"),
@@ -21,6 +22,9 @@ def test_gera_um_wrapper_por_adapter_registrado(tmp_path):
         os.path.join(bindir, "kn-codex"),
         os.path.join(bindir, "kn-copilot"),
         os.path.join(bindir, "kn-opencode"),
+        os.path.join(bindir, "kn-claude-paseo"),
+        os.path.join(bindir, "kn-copilot-paseo"),
+        os.path.join(bindir, "kn-opencode-paseo"),
     }
 
 
@@ -124,3 +128,33 @@ def test_conteudo_alheio_e_preservado_com_aviso(tmp_path, monkeypatch, capsys):
     assert open(script).read() == "#!/bin/sh\necho meu-script\n"      # intocado
     assert link not in criados and script not in criados
     assert capsys.readouterr().out.count("preservado") == 2
+
+
+def test_gera_wrapper_de_canal_so_para_quem_tem_rota(tmp_path):
+    from koine import paseo
+    criados = wrappers.gerar(str(tmp_path / "bin"), "/opt/koine/koine.pyz")
+    nomes = {os.path.basename(p).split(".")[0] for p in criados}
+    for cliente in paseo.com_rota():
+        assert f"kn-{cliente}-paseo" in nomes, cliente
+    # codex e agy não têm rota: wrapper de canal para eles seria um provider que
+    # fica `available`, abre sessão e responde — SEM Koine nenhum. É a família
+    # de defeito silencioso que a entrega por canal existe para matar.
+    assert "kn-codex-paseo" not in nomes
+    assert "kn-agy-paseo" not in nomes
+
+
+def test_wrapper_de_canal_leva_a_flag_e_o_separador(tmp_path):
+    bindir = str(tmp_path / "bin")
+    criados = wrappers.gerar(bindir, "/opt/koine/koine.pyz", "/usr/bin/python3.12")
+    (p,) = [c for c in criados
+            if os.path.basename(c).split(".")[0] == "kn-claude-paseo"]
+    conteudo = open(p, encoding="utf-8").read()
+    # o separador não é enfeite: sem ele o valor de `--model` vira pasta
+    assert "claude --canal-paseo --" in conteudo
+
+
+def test_wrapper_humano_nao_leva_a_flag_de_canal(tmp_path):
+    criados = wrappers.gerar(str(tmp_path / "bin"), "/opt/koine/koine.pyz")
+    (p,) = [c for c in criados
+            if os.path.basename(c).split(".")[0] == "kn-claude"]
+    assert "--canal-paseo" not in open(p, encoding="utf-8").read()

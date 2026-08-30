@@ -1,7 +1,7 @@
 import os
 import stat
 
-from koine import adapters
+from koine import adapters, paseo
 
 
 def _is_windows() -> bool:
@@ -30,9 +30,15 @@ def gerar(bindir: str, pyz_path: str, interpretador: str | None = None) -> list[
     os.makedirs(bindir, exist_ok=True)
     interp = interpretador or ("python" if _is_windows() else "python3")
     criados = []
-    nomes = [("koine", None)] + [(f"kn-{c}", c) for c in adapters.REGISTRY]
-    for nome, cliente in nomes:
-        arg = f"{cliente} " if cliente else ""
+    nomes = ([("koine", None, "")]
+             + [(f"kn-{c}", c, "") for c in adapters.REGISTRY]
+             # Wrapper de canal só para quem tem rota MEDIDA. Cliente sem rota
+             # com wrapper viraria um provider que fica `available`, abre sessão
+             # e responde — sem Koine nenhum, sem erro.
+             + [(paseo.wrapper_de(c), c, "--canal-paseo -- ")
+                for c in paseo.com_rota()])
+    for nome, cliente, canal in nomes:
+        arg = f"{cliente} {canal}" if cliente else ""
         if _is_windows():
             caminho = os.path.join(bindir, f"{nome}.bat")
             if not _liberar_caminho(caminho):
