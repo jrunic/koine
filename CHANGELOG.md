@@ -4,7 +4,7 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Não publicado]
+## [0.10.0] — 2026-08-30
 
 ### Adicionado — sessão do Koine por orquestrador, com o agente que você pedir
 
