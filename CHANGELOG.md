@@ -4,6 +4,25 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Não publicado]
+
+### Corrigido — no OpenCode, o agente que você pede vence o da pasta
+
+Abrir sessão com um agente explícito numa pasta que declara outro devolvia **o da
+pasta**. `kn-opencode hermes .` numa pasta com `agente: sheldon` subia o Sheldon,
+sem erro e sem aviso — o agente errado, em silêncio.
+
+O OpenCode era o único adapter que entregava os arquivos **crus**, por caminho
+absoluto. Os outros quatro compõem um documento que remove o frontmatter e nomeia
+cada camada. Sem isso, dois defeitos com uma causa só: a Ficha Koine da pasta ia
+junto, e o `agente:` dela — que é metadado do instalador, já consumido na abertura
+da sessão — virava a única afirmação de identidade no texto; e, sem o rótulo da
+camada de agente, o arquivo do agente chegava e mesmo assim não era adotado.
+
+Agora o OpenCode recebe o mesmo documento composto dos demais. O `CONTEXTO.md` da
+sua pasta passa a chegar por conteúdo, como já chegava no Copilot, com o aviso de
+que a fonte canônica é o arquivo na pasta. Nada muda no que você digita.
+
 ## [0.9.0] — 2026-08-29
 
 ### Adicionado — o instalador põe a pasta do Koine no seu PATH (Windows)

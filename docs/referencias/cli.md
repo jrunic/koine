@@ -183,7 +183,7 @@ o contexto por um canal próprio, a partir de um bundle em
 | `agy` | `--add-dir <bundle>` |
 | `codex` | `-c model_instructions_file=<arquivo>` |
 | `copilot` | `COPILOT_CUSTOM_INSTRUCTIONS_DIRS=<bundle>` |
-| `opencode` | `OPENCODE_CONFIG=<json>` com `instructions` de caminhos absolutos |
+| `opencode` | `OPENCODE_CONFIG=<json>` com `instructions` apontando o documento composto |
 
 O bundle é derivado: apagá-lo não perde nada, e a sessão seguinte o refaz.
 

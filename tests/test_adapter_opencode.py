@@ -35,44 +35,65 @@ def _cm(tmp_path, **kw):
     base = dict(usuario_path=w("u.md", "# U\nx"), koine_path=w("k.md", "# K\nx"),
                 agente_path=w("hermes.md", "# H\nx"), escopo_path=w("e.md", "# E\nx"),
                 indice_paths=[w("kn-indice-tecnologia.md", "# I\nx")],
-                contexto_path=w("CONTEXTO.md", "# C\nx"), pasta_abs=str(tmp_path))
+                contexto_path=w("CONTEXTO.md",
+                                "---\nescopo: fixture\nagente: sheldon\n---\n\n# C\nx"),
+                pasta_abs=str(tmp_path))
     base.update(kw)
     return ContextoMontado(**base)
 
 
+def _doc(lanc, tmp_path) -> str:
+    """O documento composto que o `instructions` aponta."""
+    return lanc.arquivos_externos[
+        cache.caminho_arquivo("opencode-configs", cache.slot_id(str(tmp_path)), "md")]
+
+
 def test_opencode_renderizar_cru(tmp_path, monkeypatch):
+    """Camada raw-unit: estrutura do documento, não comparação normalizada."""
     _isolar_home(monkeypatch, tmp_path / "home")
     cm = _cm(tmp_path)
     lanc = opencode.renderizar(cm)
-    cfg_path = cache.caminho_arquivo("opencode-configs", cache.slot_id(str(tmp_path)), "json")
+    slot = cache.slot_id(str(tmp_path))
+    cfg_path = cache.caminho_arquivo("opencode-configs", slot, "json")
+    doc_path = cache.caminho_arquivo("opencode-configs", slot, "md")
     assert isinstance(lanc, Lancamento)
     assert lanc.arquivos_working_dir == {}
-    assert set(lanc.arquivos_externos) == {cfg_path}
+    assert set(lanc.arquivos_externos) == {cfg_path, doc_path}
     cfg = json.loads(lanc.arquivos_externos[cfg_path])
     assert cfg["$schema"] == "https://opencode.ai/config.json"
-    assert cfg["instructions"] == ([cm.usuario_path, cm.koine_path, cm.agente_path,
-                                    cm.escopo_path] + cm.indice_paths + [cm.contexto_path])
+    # UM documento composto, não a lista de arquivos crus (#704)
+    assert cfg["instructions"] == [doc_path]
+    doc = lanc.arquivos_externos[doc_path]
+    # cada camada ROTULADA: é o rótulo que faz o agente ser adotado como
+    # identidade — sem ele o modelo responde o codinome da sessão
+    for secao in ("## Usuário", "## Koine", "## Agente", "## Escopo",
+                  "## Referências — tecnologia", "## Contexto da sessão"):
+        assert secao in doc, f"falta a seção {secao}"
+    # e a Ficha Koine da pasta NÃO entra
+    assert "agente: sheldon" not in doc
+    assert "escopo: fixture" not in doc
     assert lanc.env_vars == {"OPENCODE_CONFIG": cfg_path, "OPENCODE_DISABLE_CLAUDE_CODE": "1"}
-    # o CONTEXTO.md chega por REFERÊNCIA no `instructions`; o symlink na pasta
-    # do usuário some junto com todo arquivo gerado ali
     assert lanc.symlinks == {}
     assert lanc.extra_args == []
 
 
-def test_opencode_sem_usuario_omite_do_instructions(tmp_path, monkeypatch):
+def test_opencode_sem_usuario_omite_a_secao(tmp_path, monkeypatch):
     _isolar_home(monkeypatch, tmp_path / "home")
     cm = _cm(tmp_path, usuario_path="")
-    cfg = json.loads(next(iter(opencode.renderizar(cm).arquivos_externos.values())))
-    assert cfg["instructions"][0] == cm.koine_path
+    doc = _doc(opencode.renderizar(cm), tmp_path)
+    assert "## Usuário" not in doc
+    assert "## Koine" in doc
 
 
-def test_opencode_bootstrap_contexto_em_instructions(tmp_path, monkeypatch):
+def test_opencode_bootstrap_leva_contexto_e_omite_escopo_e_indices(tmp_path, monkeypatch):
     _isolar_home(monkeypatch, tmp_path / "home")
     cm = _cm(tmp_path, bootstrap=True, escopo_path="", indice_paths=[])
     lanc = opencode.renderizar(cm)
-    cfg = json.loads(next(iter(lanc.arquivos_externos.values())))
-    assert cfg["instructions"] == [cm.usuario_path, cm.koine_path, cm.agente_path,
-                                   cm.contexto_path]
+    doc = _doc(lanc, tmp_path)
+    assert "## Agente" in doc
+    assert "## Contexto da sessão" in doc
+    assert "## Escopo" not in doc
+    assert "## Referências" not in doc
     assert lanc.symlinks == {}
 
 
@@ -136,10 +157,11 @@ def test_opencode_bootstrap_windows_tambem_declara_shell(tmp_path, monkeypatch):
     monkeypatch.setattr(sys, "platform", "win32")
     _forcar_sonda(monkeypatch, {shell.PWSH: shell.EXECUTOU})
     cm = _cm(tmp_path, bootstrap=True, escopo_path="", indice_paths=[])
-    cfg = json.loads(next(iter(opencode.renderizar(cm).arquivos_externos.values())))
+    lanc = opencode.renderizar(cm)
+    cfg = json.loads(next(iter(lanc.arquivos_externos.values())))
     assert cfg["shell"] == "pwsh"
-    assert cfg["instructions"] == [cm.usuario_path, cm.koine_path, cm.agente_path,
-                                   cm.contexto_path]
+    assert cfg["instructions"] == [
+        cache.caminho_arquivo("opencode-configs", cache.slot_id(str(tmp_path)), "md")]
 
 
 def test_opencode_avisa_agents_md_global(tmp_path, monkeypatch, capsys):

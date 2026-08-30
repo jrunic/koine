@@ -33,13 +33,15 @@ CANAIS = {
     "opencode": {"env": ["OPENCODE_CONFIG"], "args": []},
 }
 
-# Como o CONTEXTO.md chega em cada canal. Os dois modos são legítimos e a
-# diferença é do canal, não do adapter: o opencode recebe uma lista de caminhos
-# absolutos que ele mesmo abre — e ali a referência é MELHOR que a cópia, porque
-# o arquivo é lido vivo. Onde o canal entrega arquivos, o conteúdo vai junto.
+# Como o CONTEXTO.md chega em cada canal. Desde 29/08/2026 é CONTEÚDO nos cinco.
+# Até então o opencode entregava por REFERÊNCIA — uma lista de caminhos absolutos
+# que ele mesmo abre — e este comentário afirmava que a referência era MELHOR,
+# "porque o arquivo é lido vivo". A medição da #704 desmentiu: ler o arquivo do
+# usuário cru é o que leva a Ficha Koine para dentro do prompt, e o `agente:`
+# dela vence o agente pedido. A leitura viva valia menos do que custava.
 ENTREGA_CONTEXTO = {
     "claude": "conteudo", "agy": "conteudo", "codex": "conteudo",
-    "copilot": "conteudo", "opencode": "referencia",
+    "copilot": "conteudo", "opencode": "conteudo",
 }
 
 
@@ -168,7 +170,36 @@ def test_extra_args_com_valor_dinamico_chegam_ao_cliente(cm_e_pasta, monkeypatch
 
 
 def test_opencode_config_continua_json_valido(cm_e_pasta):
+    """O `instructions` aponta para o documento COMPOSTO no cache, não mais para
+    os arquivos crus. A troca é a correção da #704; o que este teste guarda é o
+    contrato do canal: JSON válido, com `instructions` de caminho absoluto que
+    existe entre os arquivos que o adapter materializa."""
     cm, _ = cm_e_pasta
     lanc = adapters.REGISTRY["opencode"].renderizar(cm)
     cfg = json.loads(next(iter(lanc.arquivos_externos.values())))
-    assert cm.contexto_path in cfg["instructions"]
+    assert cm.contexto_path not in cfg["instructions"], \
+        "o CONTEXTO.md cru voltou ao instructions — a Ficha Koine vaza de novo"
+    for caminho in cfg["instructions"]:
+        assert os.path.isabs(caminho)
+        assert caminho in lanc.arquivos_externos
+
+
+@pytest.mark.parametrize("nome", sorted(CANAIS))
+def test_a_ficha_da_pasta_nao_compete_com_o_agente_pedido(cm_e_pasta, nome):
+    """A Ficha Koine é metadado do LAUNCHER, não conteúdo para o modelo.
+
+    O `agente:` dela diz qual agente a PASTA declara por default, e o launch já
+    o consumiu quando o adapter roda. Entregue ao modelo, ele vira a única
+    afirmação explícita de identidade no texto — e vence o agente que o usuário
+    PEDIU. Medido em 29/08/2026 na bancada Windows (jd-task #704): pasta com
+    `agente: sheldon`, sessão aberta com `hermes`, e os cinco clientes deveriam
+    dar Hermes. Só o opencode dava Sheldon — o único que entregava o arquivo
+    cru, sem `strip_frontmatter`.
+    """
+    cm, pasta = cm_e_pasta
+    with open(os.path.join(pasta, "CONTEXTO.md"), "w", encoding="utf-8") as f:
+        f.write("---\ntype: contexto\nescopo: fixture\nagente: sheldon\n---\n\n"
+                f"# Pasta\n{LINHAS['contexto']}\n")
+    entregue = _entregue(adapters.REGISTRY[nome].renderizar(cm), cm)
+    assert "agente: sheldon" not in entregue, (
+        f"{nome}: a Ficha Koine da pasta chega ao modelo e compete com o agente pedido")

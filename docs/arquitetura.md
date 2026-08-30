@@ -17,7 +17,7 @@ tags: [arquitetura, koine, python, cli]
 | `src/koine/adapters/claude.py` | Adapter Claude Code — bundle em cache + `--add-dir` + variável de diretórios adicionais |
 | `src/koine/adapters/antigravity.py` | Adapter Antigravity (`agy`) — bundle em cache + `--add-dir` |
 | `src/koine/adapters/copilot.py` | Adapter Copilot CLI — bundle de `*.instructions.md` + `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` |
-| `src/koine/adapters/opencode.py` | Adapter OpenCode — config JSON em cache (`instructions` de caminhos absolutos) + env vars |
+| `src/koine/adapters/opencode.py` | Adapter OpenCode — config JSON em cache, com `instructions` apontando para o documento composto + env vars |
 | `src/koine/adapters/codex.py` | Adapter Codex CLI — arquivo inline em cache + `-c model_instructions_file=` |
 | `src/koine/lancamento.py` | Dataclass `Lancamento` — contrato adapter → materialização |
 | `src/koine/contexto.py` | Resolve o contexto (`ContextoMontado`) a partir de `<pasta>/CONTEXTO.md` local (sem cascata) + config do usuário |
@@ -85,7 +85,7 @@ Todo adapter que renderiza `cm.contexto_path` renderiza também
 `cm.instrucao_path` quando ele estiver preenchido — é por esse campo que o Koine
 entrega ao agente uma instrução de sessão (hoje: pasta sem `escopo:`). Nos adapters de conteúdo embutido (claude, antigravity, codex) entra como mais
 uma seção; nos de bundle por arquivo (copilot) como mais um `.instructions.md`;
-no opencode, como mais um caminho no `instructions`. Adapter que esquecer o campo deixa o usuário sem saída na pasta
+no opencode, como mais uma seção do documento que o `instructions` aponta. Adapter que esquecer o campo deixa o usuário sem saída na pasta
 incompleta, sem erro nenhum.
 
 Desde a entrega por canal, `arquivos_working_dir` e `symlinks` ficam vazios em

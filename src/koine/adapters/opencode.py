@@ -18,14 +18,34 @@ ACEITA_SHELL = (shell.PWSH, shell.POWERSHELL, shell.BASH, shell.CMD)
 
 
 def renderizar(cm: ContextoMontado) -> Lancamento:
-    """Porta de harness.OpenCode.Renderizar (opencode.go).
+    """Documento único no cache + `instructions` apontando só para ele.
 
-    Materializa ~/.cache/koine/opencode-configs/<slot>.json com array
-    instructions (paths absolutos). Symlink <pasta>/AGENTS.md → CONTEXTO.md.
-    Env OPENCODE_CONFIG + OPENCODE_DISABLE_CLAUDE_CODE=1. Bootstrap: contexto
-    direto em instructions; sem symlink. Avisa se AGENTS.md global existe.
-    Em Windows declara o melhor shell que a máquina executa (escadinha em shell.py)."""
-    cfg_path = cache.caminho_arquivo("opencode-configs", cache.slot_id(cm.pasta_abs), "json")
+    ATÉ 29/08/2026 este adapter era o ÚNICO a entregar os arquivos CRUS, por
+    caminho absoluto: sem `strip_frontmatter` e sem rótulo de camada. Os outros
+    quatro compõem um documento com `render.documento_inline`, que remove o
+    frontmatter e nomeia cada seção. A divergência produzia dois defeitos com uma
+    causa só (jd-task #704, medida na bancada Windows):
+
+    1. A **Ficha Koine** da pasta ia junto, e o `agente:` dela — que é metadado
+       do launcher, já consumido no launch — virava a única afirmação explícita
+       de identidade no texto. Pedir `hermes` numa pasta que declara
+       `agente: sheldon` subia **Sheldon**, sem erro e sem aviso.
+    2. Sem o rótulo `## Agente`, o arquivo do agente chegava (medido: o modelo
+       confirma tê-lo lido) e mesmo assim **não era adotado como identidade** —
+       sem a ficha para copiar, o modelo respondia o codinome da sessão.
+
+    O CONTEXTO.md passa a chegar por CONTEÚDO, como no copilot. A leitura viva
+    que este adapter tinha de singular é o que carregava a ficha para dentro do
+    prompt; a `prosa_sessao` cobre o que ela dava, dizendo ao agente que o
+    arquivo da pasta é a fonte canônica e que o texto acima é snapshot.
+
+    Mantém: config em ~/.cache/koine/opencode-configs/<slot>.json, env
+    OPENCODE_CONFIG + OPENCODE_DISABLE_CLAUDE_CODE=1, aviso de AGENTS.md global,
+    e o melhor shell que a máquina executa no Windows (escadinha em shell.py).
+    """
+    slot = cache.slot_id(cm.pasta_abs)
+    cfg_path = cache.caminho_arquivo("opencode-configs", slot, "json")
+    doc_path = cache.caminho_arquivo("opencode-configs", slot, "md")
 
     # aviso: ~/.config/opencode/AGENTS.md é mesclado pelo OpenCode em toda sessão
     global_path = _global_agents_md()
@@ -33,28 +53,7 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
         print(f"aviso: {global_path} detectado — será mesclado nesta sessão Koine. "
               "Para isolar completamente, mova ou renomeie o arquivo.", file=sys.stderr)
 
-    instructions = []
-    if cm.usuario_path:
-        instructions.append(cm.usuario_path)
-    # ordem canônica dos outros três adapters: usuário, Koine, agente, escopo,
-    # índices. O KOINE.md faltava aqui desde o opencode.go.
-    if cm.koine_path:
-        instructions.append(cm.koine_path)
-    instructions.append(cm.agente_path)
-    if cm.instrucao_path:
-        instructions.append(cm.instrucao_path)
-    if not cm.bootstrap:
-        if cm.escopo_path:
-            instructions.append(cm.escopo_path)
-        instructions.extend(cm.indice_paths)
-    # O CONTEXTO.md entra por REFERÊNCIA — e aqui isso é melhor que a cópia: o
-    # canal do opencode é uma lista de caminhos absolutos que o cliente abre, e
-    # o arquivo é lido vivo, não como snapshot. Antes chegava por symlink na
-    # pasta do usuário, que sai de cena.
-    if cm.contexto_path:
-        instructions.append(cm.contexto_path)
-
-    cfg = {"$schema": "https://opencode.ai/config.json", "instructions": instructions}
+    cfg = {"$schema": "https://opencode.ai/config.json", "instructions": [doc_path]}
     if sys.platform == "win32":
         # O default do OpenCode varia por versão e, na estação que bloqueia o
         # PowerShell, derruba a ferramenta de shell com `uv_spawn`. Em vez de
@@ -66,11 +65,15 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
 
     # paridade com json.MarshalIndent(cfg, "", "  ") do Go: indent 2, UTF-8 cru
     data = json.dumps(cfg, indent=2, ensure_ascii=False)
-    lanc = Lancamento(
-        arquivos_externos={cfg_path: data},
+    return Lancamento(
+        arquivos_externos={cfg_path: data, doc_path: _render(cm)},
         env_vars={"OPENCODE_CONFIG": cfg_path, "OPENCODE_DISABLE_CLAUDE_CODE": "1"},
     )
-    return lanc
+
+
+def _render(cm: ContextoMontado) -> str:
+    doc = render.documento_inline("Sessão Koine — OpenCode", cm)
+    return MARCADOR + "\n" + doc + "\n\n" + render.prosa_sessao(cm, "kn-opencode <agente> .")
 
 
 def renderizar_para_pasta(cm: ContextoMontado) -> tuple[str, str]:
