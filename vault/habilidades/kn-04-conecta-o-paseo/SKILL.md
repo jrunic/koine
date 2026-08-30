@@ -153,6 +153,22 @@ o `koine paseo-info --json` devolveu:
 O comando ainda devolve o `wrapper`, que vai no comando do entry, e o tipo do
 provider.
 
+**Escreva o caminho ABSOLUTO do wrapper, nunca só o nome.** O serviço do Paseo roda
+com um ambiente mínimo — a pasta de programas do usuário **não** está no caminho de
+busca dele. Com o nome puro, o provider fica `Unavailable` com
+`Resolved path: not found`, e a sessão que o usuário abrir do celular não sobe.
+
+Descubra o caminho real e use o que sair:
+
+```
+command -v kn-<cliente>-paseo      # macOS e Linux
+where kn-<cliente>-paseo           # Windows
+```
+
+Medido em 30/08/2026: o serviço rodava com `/opt/homebrew/bin:/usr/bin:/bin` e os
+seis providers apareciam como não encontrados, mesmo com os wrappers instalados e
+executáveis.
+
 **Use os identificadores que o comando deu — não invente nome.** Eles são prescritos
 pelo Koine de propósito: nome escolhido na hora diverge entre máquinas, e no dia em
 que alguma ferramenta precisar ler ou consertar essa configuração ela encontraria dois
