@@ -242,3 +242,42 @@ def test_o_snapshot_do_contexto_nunca_viaja_sem_a_prosa(cm_e_pasta, nome, caminh
     cm, _ = cm_e_pasta
     assert PROSA in _corpo(nome, cm, caminho), (
         f"{nome}/{caminho}: o snapshot do CONTEXTO.md chega sem dizer que é snapshot")
+
+
+# --- dois agentes na MESMA pasta não podem dividir o mesmo cache (#708) -----
+
+def _com_agente(cm, tmp_path, nome, marca):
+    """Cópia do cm apontando para outro arquivo de agente, mesma pasta."""
+    import copy
+    p = tmp_path / f"{nome}.md"
+    p.write_text(f"# {nome}\n{marca}\n", encoding="utf-8")
+    outro = copy.copy(cm)
+    outro.agente_path = str(p)
+    return outro
+
+
+@pytest.mark.parametrize("nome", sorted(CANAIS))
+def test_dois_agentes_na_mesma_pasta_nao_se_sobrescrevem(cm_e_pasta, tmp_path, nome):
+    """A corrida que produzia o agente errado, sem erro (jd-task #708).
+
+    O `kn-<cliente>` e o `kn-<cliente>-hermes` do mesmo workspace escreviam nos
+    MESMOS arquivos de cache, porque o slot vinha só da pasta. Medido em
+    30/08/2026, dirigindo o servidor ACP do opencode: ele lê o arquivo de
+    instruções **por sessão**, com o processo de pé — então a sessão lê o que o
+    ÚLTIMO provider escreveu, não o que o provider dela escreveu.
+
+    Não é exclusividade do opencode: o que estava errado é o slot, e os quatro
+    adapters com bundle o compartilhavam. Nos outros a janela entre escrever e
+    ler é menor, o que os fazia acertar por sorte de tempo — não por desenho.
+    """
+    cm_a, _ = cm_e_pasta
+    cm_b = _com_agente(cm_a, tmp_path, "bruce", "SOU-O-BRUCE")
+    ad = adapters.REGISTRY[nome]
+
+    escrito_a = dict(ad.renderizar(cm_a).arquivos_externos)
+    escrito_b = dict(ad.renderizar(cm_b).arquivos_externos)
+
+    colididos = sorted(set(escrito_a) & set(escrito_b))
+    assert not colididos, (
+        f"{nome}: {len(colididos)} arquivo(s) de cache compartilhados entre dois "
+        f"agentes da mesma pasta — o último a rodar governa a sessão do outro")

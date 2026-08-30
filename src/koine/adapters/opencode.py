@@ -52,7 +52,7 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     OPENCODE_CONFIG + OPENCODE_DISABLE_CLAUDE_CODE=1, aviso de AGENTS.md global,
     e o melhor shell que a máquina executa no Windows (escadinha em shell.py).
     """
-    slot = cache.slot_id(cm.pasta_abs)
+    slot = cache.slot_sessao(cm.pasta_abs, render.agente_de(cm))
     cfg_path = cache.caminho_arquivo("opencode-configs", slot, "json")
     doc_path = cache.caminho_arquivo("opencode-configs", slot, "md")
 

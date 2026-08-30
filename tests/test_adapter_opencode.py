@@ -2,7 +2,7 @@ import json
 import os
 import sys
 
-from koine import cache, shell
+from koine import cache, render, shell
 from koine.adapters import opencode
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
@@ -42,10 +42,11 @@ def _cm(tmp_path, **kw):
     return ContextoMontado(**base)
 
 
-def _doc(lanc, tmp_path) -> str:
+def _doc(lanc, tmp_path, cm) -> str:
     """O documento composto que o `instructions` aponta."""
     return lanc.arquivos_externos[
-        cache.caminho_arquivo("opencode-configs", cache.slot_id(str(tmp_path)), "md")]
+        cache.caminho_arquivo("opencode-configs",
+                              cache.slot_sessao(str(tmp_path), render.agente_de(cm)), "md")]
 
 
 def test_opencode_renderizar_cru(tmp_path, monkeypatch):
@@ -53,7 +54,7 @@ def test_opencode_renderizar_cru(tmp_path, monkeypatch):
     _isolar_home(monkeypatch, tmp_path / "home")
     cm = _cm(tmp_path)
     lanc = opencode.renderizar(cm)
-    slot = cache.slot_id(str(tmp_path))
+    slot = cache.slot_sessao(str(tmp_path), render.agente_de(cm))
     cfg_path = cache.caminho_arquivo("opencode-configs", slot, "json")
     doc_path = cache.caminho_arquivo("opencode-configs", slot, "md")
     assert isinstance(lanc, Lancamento)
@@ -80,7 +81,7 @@ def test_opencode_renderizar_cru(tmp_path, monkeypatch):
 def test_opencode_sem_usuario_omite_a_secao(tmp_path, monkeypatch):
     _isolar_home(monkeypatch, tmp_path / "home")
     cm = _cm(tmp_path, usuario_path="")
-    doc = _doc(opencode.renderizar(cm), tmp_path)
+    doc = _doc(opencode.renderizar(cm), tmp_path, cm)
     assert "## Usuário" not in doc
     assert "## Koine" in doc
 
@@ -89,7 +90,7 @@ def test_opencode_bootstrap_leva_contexto_e_omite_escopo_e_indices(tmp_path, mon
     _isolar_home(monkeypatch, tmp_path / "home")
     cm = _cm(tmp_path, bootstrap=True, escopo_path="", indice_paths=[])
     lanc = opencode.renderizar(cm)
-    doc = _doc(lanc, tmp_path)
+    doc = _doc(lanc, tmp_path, cm)
     assert "## Agente" in doc
     assert "## Contexto da sessão" in doc
     assert "## Escopo" not in doc
@@ -161,7 +162,7 @@ def test_opencode_bootstrap_windows_tambem_declara_shell(tmp_path, monkeypatch):
     cfg = json.loads(next(iter(lanc.arquivos_externos.values())))
     assert cfg["shell"] == "pwsh"
     assert cfg["instructions"] == [
-        cache.caminho_arquivo("opencode-configs", cache.slot_id(str(tmp_path)), "md")]
+        cache.caminho_arquivo("opencode-configs", cache.slot_sessao(str(tmp_path), render.agente_de(cm)), "md")]
 
 
 def test_opencode_avisa_agents_md_global(tmp_path, monkeypatch, capsys):

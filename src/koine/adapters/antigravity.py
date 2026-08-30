@@ -25,7 +25,8 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     Conteúdo INLINE pelo mesmo motivo do adapter do claude: `@path` para fora da
     pasta é texto morto.
     """
-    bundle = cache.caminho_bundle("agy-bundles", cache.slot_id(cm.pasta_abs))
+    bundle = cache.caminho_bundle(
+        "agy-bundles", cache.slot_sessao(cm.pasta_abs, render.agente_de(cm)))
     return Lancamento(
         arquivos_externos={os.path.join(bundle, ARQUIVO): _render(cm)},
         # `--add-dir` é VARIÁDICO: na forma separada ele engole todo token

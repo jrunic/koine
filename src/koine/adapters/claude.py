@@ -31,7 +31,8 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     Por isso o conteúdo vai embutido, não referenciado: o `@path` continuaria
     sendo texto morto dentro do bundle.
     """
-    bundle = cache.caminho_bundle("claude-bundles", cache.slot_id(cm.pasta_abs))
+    bundle = cache.caminho_bundle(
+        "claude-bundles", cache.slot_sessao(cm.pasta_abs, render.agente_de(cm)))
     env = {"CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD": "1"}
     if sys.platform == "win32" and not shell.powershell_executa():
         # Medido em 28/08/2026: com Git Bash instalado o Claude ainda carrega a

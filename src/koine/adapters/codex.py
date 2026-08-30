@@ -20,7 +20,9 @@ PASEO = None
 
 
 def _agente_de(cm) -> str:
-    return os.path.splitext(os.path.basename(cm.agente_path))[0] if cm.agente_path else "hermes"
+    # alias do render: uma definição só do "agente efetivo", que agora também
+    # entra no slot do cache (jd-task #708)
+    return render.agente_de(cm)
 
 
 def renderizar(cm: ContextoMontado) -> Lancamento:
@@ -34,7 +36,8 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     O arquivo é o mesmo documento inline de antes; o que muda é onde ele mora.
     """
     arquivo = os.path.join(
-        cache.caminho_bundle("codex-bundles", cache.slot_id(cm.pasta_abs)), ARQUIVO)
+        cache.caminho_bundle("codex-bundles",
+                             cache.slot_sessao(cm.pasta_abs, _agente_de(cm))), ARQUIVO)
     return Lancamento(
         arquivos_externos={arquivo: _render(cm)},
         # o valor varia por pasta e por isso NÃO cabe em EXTRA_ARGS, que o repo

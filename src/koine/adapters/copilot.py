@@ -37,7 +37,8 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     `*.instructions.md` e ignora o AGENTS.md. Usuário e agente moravam nele —
     isto é, não chegavam à sessão. Arquivo que o cliente não lê só engana quem
     for depurar."""
-    bundle = cache.caminho_bundle("copilot-bundles", cache.slot_id(cm.pasta_abs))
+    bundle = cache.caminho_bundle(
+        "copilot-bundles", cache.slot_sessao(cm.pasta_abs, render.agente_de(cm)))
     instr = os.path.join(bundle, ".github", "instructions")
     lanc = Lancamento(env_vars={"COPILOT_CUSTOM_INSTRUCTIONS_DIRS": bundle})
 

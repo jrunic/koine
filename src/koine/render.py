@@ -1,3 +1,5 @@
+import os
+
 from dataclasses import dataclass
 
 
@@ -48,13 +50,24 @@ def mescar_documentos(titulo: str, partes: list) -> str:
 
 
 def dominio_de(indice_path: str) -> str:
-    import os
     base = os.path.basename(indice_path)
     if base.endswith(".md"):
         base = base[:-3]
     if base.startswith("kn-indice-"):
         base = base[len("kn-indice-"):]
     return base
+
+
+def agente_de(cm) -> str:
+    """Nome do agente que a sessão realmente vai usar, sem extensão.
+
+    Sai do path resolvido, não do nome pedido: é o que faz `kn-<cliente> hermes`
+    e o provider que força `hermes` por variável dividirem o mesmo slot — são a
+    mesma sessão, e separá-las duplicaria o cache sem motivo.
+    """
+    if not cm.agente_path:
+        return "hermes"
+    return os.path.splitext(os.path.basename(cm.agente_path))[0]
 
 
 def dado_da_instrucao(cm) -> str:

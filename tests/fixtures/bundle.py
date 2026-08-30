@@ -17,13 +17,25 @@ CATEGORIA = {
 
 
 def caminho(cliente: str, pasta: str, home: str = "") -> str:
-    """`home` explícito para os e2e: eles rodam o produto em SUBPROCESSO, com
-    outro HOME — resolver pelo ambiente do pytest apontaria para o cache errado.
+    """Bundle mais recente daquele cliente, DESCOBERTO e não recalculado.
+
+    `home` explícito para os e2e: eles rodam o produto em SUBPROCESSO, com outro
+    HOME — resolver pelo ambiente do pytest apontaria para o cache errado.
+
+    Descobrir em vez de repetir a derivação do slot é o que dá poder a estes
+    testes: um helper que recalcula `slot_id(pasta)` acompanha qualquer erro na
+    fórmula e nunca o vê. E desde a #708 a fórmula inclui o agente, então
+    "o bundle da pasta" deixou de ser um lugar só.
     """
-    if home:
-        return os.path.join(home, ".cache", "koine", CATEGORIA[cliente],
-                            cache.slot_id(pasta))
-    return cache.caminho_bundle(CATEGORIA[cliente], cache.slot_id(pasta))
+    base = (os.path.join(home, ".cache", "koine", CATEGORIA[cliente]) if home
+            else os.path.join(cache.paths.cache_dir(), CATEGORIA[cliente]))
+    try:
+        slots = [os.path.join(base, d) for d in os.listdir(base)]
+    except FileNotFoundError:
+        return os.path.join(base, "inexistente")
+    if not slots:
+        return os.path.join(base, "inexistente")
+    return max(slots, key=os.path.getmtime)
 
 
 def conteudo(cliente: str, pasta: str, home: str = "") -> str:

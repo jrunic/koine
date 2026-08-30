@@ -35,6 +35,20 @@ A frase faltava em três dos dez pares cliente × caminho: no **Copilot** dos do
 jeitos (inclusive na sessão normal, que é o caminho de todo dia dele) e no **OpenCode**
 quando o arquivo é escrito na pasta.
 
+### Corrigido — dois providers da mesma pasta não se atropelam mais
+
+Quando o mesmo workspace tinha dois providers — o comum, que usa o agente da pasta,
+e o que força o Hermes —, os dois escreviam **nos mesmos arquivos**: o contexto era
+guardado por pasta, sem o agente no endereço. A sessão lia o que o último tivesse
+escrito, e não o que o provider dela escreveu.
+
+O sintoma era abrir uma sessão pelo celular e receber **o outro agente**, sem erro
+nenhum. Intermitente, porque depende de qual provider rodou por último.
+
+Cada par pasta+agente passa a ter o seu próprio lugar. Vale para os cinco clientes:
+o endereço era compartilhado por todos, e os outros quatro só acertavam porque a
+janela entre escrever e ler era mais curta.
+
 ## [0.10.0] — 2026-08-30
 
 ### Adicionado — duas conversas que põem o Koine no seu celular
