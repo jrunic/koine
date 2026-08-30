@@ -26,8 +26,10 @@ LINHAS = {
 
 # Canais medidos em 27/08/2026 (kn-agente-integracao-clientes.md §Canais).
 CANAIS = {
-    "claude": {"env": ["CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD"], "args": ["--add-dir"]},
-    "agy": {"env": [], "args": ["--add-dir"]},
+    # `--add-dir=` com igual: a forma separada é variádica e engole o token
+    # seguinte quando ele não começa com hífen (medido em 30/08/2026).
+    "claude": {"env": ["CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD"], "args": ["--add-dir="]},
+    "agy": {"env": [], "args": ["--add-dir="]},
     "codex": {"env": [], "args": ["-c"]},
     "copilot": {"env": ["COPILOT_CUSTOM_INSTRUCTIONS_DIRS"], "args": []},
     "opencode": {"env": ["OPENCODE_CONFIG"], "args": []},
@@ -94,7 +96,8 @@ def test_cada_cliente_entrega_pelo_canal_medido(cm_e_pasta, nome):
     for var in CANAIS[nome]["env"]:
         assert var in lanc.env_vars, f"{nome}: falta {var}"
     for arg in CANAIS[nome]["args"]:
-        assert arg in lanc.extra_args, f"{nome}: falta {arg}"
+        assert any(a == arg or a.startswith(arg) for a in lanc.extra_args), \
+            f"{nome}: falta {arg}"
 
 
 @pytest.mark.parametrize("nome", sorted(CANAIS))

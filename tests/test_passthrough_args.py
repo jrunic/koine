@@ -30,9 +30,9 @@ def test_flag_usuario_repassada_ao_cliente(koine_home, monkeypatch):
     cap = {}
     _seam(monkeypatch, cap)
     assert cli.main(["claude", "hermes", koine_home["trab"], "--chrome"]) == 0
-    # a flag do usuário vem DEPOIS do canal do adapter (--add-dir <bundle>)
+    # a flag do usuário vem DEPOIS do canal do adapter (--add-dir=<bundle>)
     assert cap["args"][-1] == "--chrome"
-    assert cap["args"][:1] == ["--add-dir"]
+    assert cap["args"][0].startswith("--add-dir=")
     assert cap["pasta"] == koine_home["trab"]  # `.` — pasta não confundida com a flag
 
 
@@ -42,7 +42,7 @@ def test_sem_flag_nao_repassa_nada(koine_home, monkeypatch):
     _seam(monkeypatch, cap)
     cli.main(["claude", "hermes", koine_home["trab"]])
     # sem flag do usuário sobra só o canal do adapter — nada do usuário é inventado
-    assert cap["args"][:1] == ["--add-dir"]
+    assert cap["args"][0].startswith("--add-dir=")
     assert "--chrome" not in cap["args"]
 
 

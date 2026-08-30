@@ -24,6 +24,15 @@ conduzindo a configuração ali mesmo.
 funcionam, e configurar um que não funciona falha em silêncio** — o provider
 parece saudável, a sessão abre e responde, e o contexto simplesmente não está lá.
 
+### Corrigido — o diagnóstico do cliente volta a responder
+
+`--add-dir` é variádico no Claude Code e no Antigravity: na forma separada
+(`--add-dir <pasta>`) ele engole todo argumento seguinte que não comece com
+hífen. Numa sessão isso nunca aparecia, porque o primeiro argumento é sempre uma
+flag — mas qualquer subcomando passado adiante (`auth status`, por exemplo) era
+tratado como se fosse mais uma pasta, e o cliente subia pedindo prompt em vez de
+responder. Agora o Koine usa `--add-dir=<pasta>`, que fecha a lista.
+
 ### Corrigido — no OpenCode, o agente que você pede vence o da pasta
 
 Abrir sessão com um agente explícito numa pasta que declara outro devolvia **o da

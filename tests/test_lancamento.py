@@ -28,7 +28,7 @@ def test_claude_renderiza_lancamento(tmp_path, monkeypatch):
     assert lanc.arquivos_working_dir == {}
     (destino,) = lanc.arquivos_externos
     assert os.path.basename(destino) == "CLAUDE.md"
-    assert lanc.extra_args[:1] == ["--add-dir"]
+    assert lanc.extra_args[0].startswith("--add-dir=")
     assert lanc.env_vars["CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD"] == "1"
 
 

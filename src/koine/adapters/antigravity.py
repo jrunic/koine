@@ -28,7 +28,13 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     bundle = cache.caminho_bundle("agy-bundles", cache.slot_id(cm.pasta_abs))
     return Lancamento(
         arquivos_externos={os.path.join(bundle, ARQUIVO): _render(cm)},
-        extra_args=["--add-dir", bundle],
+        # `--add-dir` é VARIÁDICO: na forma separada ele engole todo token
+        # seguinte que não comece com hífen. Medido em 30/08/2026 —
+        # `--add-dir <b> auth status` tratou `auth`/`status` como
+        # diretórios e o cliente caiu em modo sessão pedindo prompt. A
+        # sessão do orquestrador não sofria (o 1º arg dele é flag); o
+        # diagnóstico de autenticação sofria, e ficava inútil.
+        extra_args=[f"--add-dir={bundle}"],
     )
 
 

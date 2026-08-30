@@ -265,3 +265,34 @@ def test_paseo_info_em_texto_lista_os_mesmos_clientes(capsys):
     for cliente in ("claude", "copilot", "opencode"):
         assert cliente in saida
     assert "codex" not in saida
+
+
+# --- a forma do --add-dir --------------------------------------------------
+
+def test_add_dir_usa_a_forma_com_igual(tmp_path, monkeypatch):
+    """`--add-dir` é VARIÁDICO no Claude Code: com a forma separada
+    (`--add-dir <bundle>`) ele engole todo token seguinte que não comece com
+    hífen. Medido na bancada em 30/08/2026 — `claude --add-dir <b> auth status`
+    tratou `auth` e `status` como diretórios, ficou sem subcomando e caiu em
+    modo sessão, pedindo prompt.
+
+    Sessão do orquestrador não sofria porque o primeiro argumento dele é uma
+    flag. O diagnóstico de autenticação sofria, e o campo `Auth:` do provider
+    ficava inútil. A forma `--add-dir=<bundle>` termina a lista.
+    """
+    from koine import adapters
+    from koine.contexto import ContextoMontado
+    def w(n, t):
+        p = tmp_path / n
+        p.write_text(t, encoding="utf-8")
+        return str(p)
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path / "home"))
+    cm = ContextoMontado(usuario_path=w("u.md", "# U"), koine_path=w("k.md", "# K"),
+                         agente_path=w("h.md", "# H"), escopo_path=w("e.md", "# E"),
+                         indice_paths=[], contexto_path=w("CONTEXTO.md", "# C"),
+                         pasta_abs=str(tmp_path))
+    for nome in ("claude", "agy"):
+        args = adapters.REGISTRY[nome].renderizar(cm).extra_args
+        assert len(args) == 1, f"{nome}: {args}"
+        assert args[0].startswith("--add-dir="), f"{nome}: {args}"

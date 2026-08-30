@@ -29,7 +29,7 @@ def test_launch_e2e_wrapper_lanca_claude_na_pasta(tmp_path):
     linhas = open(captura).read().splitlines()
     assert os.path.realpath(linhas[0]) == os.path.realpath(fx["trab"])  # cwd == pasta
     # os args do cliente agora carregam o canal do adapter
-    assert linhas[1] == "--add-dir"
+    assert linhas[1].startswith("--add-dir=")
 
 
 def test_launch_e2e_cliente_ausente_falha_amigavel(tmp_path):
