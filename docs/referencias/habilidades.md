@@ -43,9 +43,11 @@ Espaço entre blocos permite adicionar skills futuras sem renumeração cascata.
 | **kn-01-recebe-usuario** | `/kn-01-recebe-usuario` | 1× por usuário | Onboarding inicial — configura arquivo do usuário, primeiro escopo, primeira pasta de trabalho, primeiro agente operacional |
 | **kn-02-mantem-catalogo** | `/kn-02-mantem-catalogo` | Quando precisa criar/ajustar | Manutenção pontual da estrutura — 4 fluxos individuais (arquivo do usuário, escopo, contexto de pasta, domínio) |
 | **kn-03-cria-agente** | `/kn-03-cria-agente` | Quando emerge tipo de sessão recorrente com voz distinta | Criar agente operacional derivado especializado em um tipo de trabalho |
+| **kn-04-conecta-o-paseo** | `/kn-04-conecta-o-paseo` | 1× por máquina — opcional | Preparar o acesso de fora do computador: detecta quais clientes têm caminho, escreve os providers, deixa o ditado em português e conduz o pareamento do celular |
 | **kn-11-mantem-referencia** | `/kn-11-mantem-referencia` | Frequente — durante o trabalho real | Catalogar conhecimento (pessoa, decisão, aprendizado, evento) na pasta-referências do escopo atual |
 | **kn-12-prepara-contexto** | `/kn-12-prepara-contexto` | Quando o binário não está disponível | Gerar `CLAUDE.md` e índices de domínio no modo skills |
 | **kn-13-sabatina-plano** | `/kn-13-sabatina-plano` | Quando é preciso entender antes de decidir | Entrevista socrática que confere o que o usuário afirma contra a evidência real, afia o vocabulário no `GLOSSARIO.md` e registra a decisão que passa nos três critérios |
+| **kn-14-organiza-workspaces** | `/kn-14-organiza-workspaces` | Quando nasce pasta de trabalho | Registrar pastas no Paseo — projeto, nome e workspace — para abri-las do celular |
 | **kn-21-escreve-design** | `/kn-21-escreve-design` | 1× por marca, revisada quando a identidade muda | Escrever o `DESIGN.md` da marca na pasta-referências do escopo |
 | **kn-22-gera-imagem** | `/kn-22-gera-imagem` | Quando a sessão precisa de peça visual | Compor prompt a partir do `DESIGN.md` e gerar imagem via `imagio` |
 | **kn-23-gera-marca-prelo** | `/kn-23-gera-marca-prelo` | 1× por marca, regerada quando o `DESIGN.md` muda | Derivar `tokens.css` + `config.json` + fontes para o `prelo` |

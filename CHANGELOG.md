@@ -6,6 +6,20 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.10.0] — 2026-08-30
 
+### Adicionado — duas conversas que põem o Koine no seu celular
+
+`/kn-04-conecta-o-paseo` prepara o acesso de fora do computador: descobre quais dos
+seus clientes de IA funcionam por esse caminho, escreve a configuração, deixa o
+ditado entendendo português e conduz o pareamento do aparelho.
+
+`/kn-14-organiza-workspaces` registra as suas pastas, para elas aparecerem no celular
+com o nome que você escolheu — e não com o nome da pasta.
+
+Duas coisas ditas na cara desde a primeira linha, porque descobrir depois é pior:
+**Codex e Antigravity não têm caminho por aqui**, e **resposta falada em português
+não existe** sem serviço pago. Por isso a fala chega desligada e o ditado, ligado —
+metade de uma capacidade faz você tentar, falhar, e achar que o problema é seu.
+
 ### Adicionado — sessão do Koine por orquestrador, com o agente que você pedir
 
 A instalação passa a emitir um wrapper por cliente para uso por orquestrador de
