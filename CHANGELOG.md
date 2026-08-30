@@ -25,6 +25,16 @@ A correção é diferente conforme a origem do nome: agente errado **na pasta** 
 conserta com `koine definir-agente`; agente errado **no provider** se conserta
 reescrevendo o provider, e arrumar a pasta não adiantaria nada.
 
+### Corrigido — o agente sabia que estava lendo uma cópia, menos em dois lugares
+
+O contexto da sua pasta chega ao agente como **cópia**, acompanhada de uma frase que
+diz isso e aponta o `./CONTEXTO.md` como fonte. Sem ela, o agente edita a cópia — e o
+que você escreveu na sessão se perde no fechamento.
+
+A frase faltava em três dos dez pares cliente × caminho: no **Copilot** dos dois
+jeitos (inclusive na sessão normal, que é o caminho de todo dia dele) e no **OpenCode**
+quando o arquivo é escrito na pasta.
+
 ## [0.10.0] — 2026-08-30
 
 ### Adicionado — duas conversas que põem o Koine no seu celular

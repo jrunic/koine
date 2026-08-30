@@ -57,8 +57,15 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     # O CONTEXTO.md vai por CONTEÚDO, no bundle. Antes chegava por symlink na
     # pasta do usuário — e symlink na pasta é justamente o que sai de cena.
     if cm.contexto_path:
+        # A prosa vai DENTRO do mesmo arquivo, colada ao snapshot: ela diz "o
+        # conteúdo ACIMA é um snapshot", e num arquivo separado a palavra perde
+        # o referente. Sem ela, o agente edita a cópia e o trabalho da sessão se
+        # perde no fechamento (jd-task #706 — faltava desde sempre neste bundle,
+        # que é o caminho default deste cliente desde a v0.7.0).
         lanc.arquivos_externos[os.path.join(instr, "contexto.instructions.md")] = \
-            render.wrapar_instructions(_ler(cm.contexto_path))
+            render.wrapar_instructions(
+                _ler(cm.contexto_path) + "\n\n"
+                + render.prosa_sessao(cm, "kn-copilot <agente> ."))
     if cm.bootstrap:
         return lanc
 
@@ -80,8 +87,9 @@ def renderizar_para_pasta(cm: ContextoMontado) -> tuple[str, str]:
     COPILOT_CUSTOM_INSTRUCTIONS_DIRS para apontar o bundle, e o
     `.github/copilot-instructions.md` é a única via que sobra.
     """
-    return ARQUIVO, MARCADOR + "\n" + render.documento_inline(
-        "Sessão Koine — Copilot", cm) + "\n"
+    return ARQUIVO, (MARCADOR + "\n"
+                     + render.documento_inline("Sessão Koine — Copilot", cm)
+                     + "\n\n" + render.prosa_sessao(cm, "kn-copilot <agente> ."))
 
 
 def _ler(path: str) -> str:

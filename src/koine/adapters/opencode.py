@@ -90,9 +90,12 @@ def renderizar_para_pasta(cm: ContextoMontado) -> tuple[str, str]:
 
     INLINE: sem wrapper não há OPENCODE_CONFIG, e o `instructions` do config é
     justamente o que aponta para os arquivos. Sobra o AGENTS.md da pasta.
+
+    MESMO corpo do launch, e não uma segunda montagem: era a duplicação que
+    deixava este caminho sem a `prosa_sessao` — o launch a ganhou na #704 e a
+    cópia daqui ficou para trás (jd-task #706).
     """
-    return ARQUIVO, MARCADOR + "\n" + render.documento_inline(
-        "Sessão Koine — OpenCode", cm) + "\n"
+    return ARQUIVO, _render(cm)
 
 
 def _global_agents_md() -> str:

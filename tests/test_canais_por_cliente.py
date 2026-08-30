@@ -206,3 +206,39 @@ def test_a_ficha_da_pasta_nao_compete_com_o_agente_pedido(cm_e_pasta, nome):
     entregue = _entregue(adapters.REGISTRY[nome].renderizar(cm), cm)
     assert "agente: sheldon" not in entregue, (
         f"{nome}: a Ficha Koine da pasta chega ao modelo e compete com o agente pedido")
+
+
+# Frase da `render.prosa_sessao` na variante de pasta configurada. Asserção sobre
+# a FRASE, não sobre a chamada: o que protege o usuário é o texto chegar, e um
+# adapter que montasse a prosa de outro jeito continuaria correto.
+PROSA = "a fonte canônica é o arquivo"
+
+# Os dois caminhos pelos quais o conteúdo do CONTEXTO.md sai como SNAPSHOT.
+CAMINHOS = ["launch", "pasta"]
+
+
+def _corpo(nome, cm, caminho):
+    ad = adapters.REGISTRY[nome]
+    if caminho == "launch":
+        return "\n".join(ad.renderizar(cm).arquivos_externos.values())
+    return ad.renderizar_para_pasta(cm)[1]
+
+
+@pytest.mark.parametrize("caminho", CAMINHOS)
+@pytest.mark.parametrize("nome", sorted(CANAIS))
+def test_o_snapshot_do_contexto_nunca_viaja_sem_a_prosa(cm_e_pasta, nome, caminho):
+    """Irmão do invariante da Ficha Koine, no outro sentido.
+
+    Todo canal entrega o CONTEXTO.md por CONTEÚDO desde 29/08/2026 — o que o
+    agente lê é uma CÓPIA. Sem a prosa que diz isso, ele edita a cópia e o
+    trabalho da sessão se perde no fechamento; é o mesmo desfecho do defeito de
+    produção da v0.6.1, quando a /kn-99 comia a Ficha Koine.
+
+    Medido em 30/08/2026 (jd-task #706): faltava em três dos dez pares — o
+    copilot nos DOIS caminhos (e o launch dele é o default desde a v0.7.0) e o
+    opencode na pasta. A tarefa nomeava só o modo skills; a execução dos dois
+    caminhos é que achou o launch do copilot.
+    """
+    cm, _ = cm_e_pasta
+    assert PROSA in _corpo(nome, cm, caminho), (
+        f"{nome}/{caminho}: o snapshot do CONTEXTO.md chega sem dizer que é snapshot")
