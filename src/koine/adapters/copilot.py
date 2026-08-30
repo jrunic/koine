@@ -5,7 +5,7 @@ from koine import paseo as _paseo
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
 
-# Arquivo do Copilot na pasta do usuário — hoje só no `gerar` (modo skills). No
+# Arquivo do Copilot na pasta do usuário — hoje só no `koine gerar`. No
 # launch a pasta não recebe nada: o bundle entrega tudo.
 ARQUIVO = os.path.join(".github", "copilot-instructions.md")
 MARCADOR = "<!-- gerado por kn-agente -->"
@@ -81,7 +81,12 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
 
 
 def renderizar_para_pasta(cm: ContextoMontado) -> tuple[str, str]:
-    """Materialização a pedido (`koine gerar`, modo skills).
+    """Materialização a pedido, pelo `koine gerar`.
+
+    Chega aqui só pelo `koine gerar`. O **modo skills** — o pacote sem
+    Python — nunca alcança este código: quem escreve na pasta lá é a
+    `/kn-12-prepara-contexto`, por `@path` e não por snapshot. Medido em
+    30/08/2026; o docstring afirmava os dois desde o porte (jd-task #706).
 
     Aqui o conteúdo vai INLINE: sem wrapper não há
     COPILOT_CUSTOM_INSTRUCTIONS_DIRS para apontar o bundle, e o

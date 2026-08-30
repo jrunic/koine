@@ -47,7 +47,7 @@ def e_nosso(p: str) -> bool:
 
 
 def tem_marca_a_pedido(p: str) -> bool:
-    """O arquivo foi materializado a pedido (`koine gerar`, modo skills)?"""
+    """O arquivo foi materializado a pedido, pelo `koine gerar`?"""
     try:
         with open(p, encoding="utf-8") as f:
             linhas = f.read().split("\n", 2)

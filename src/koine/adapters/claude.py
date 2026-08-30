@@ -54,11 +54,16 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
 
 
 def renderizar_para_pasta(cm: ContextoMontado) -> tuple[str, str]:
-    """Materialização a pedido (`koine gerar`, modo skills).
+    """Materialização a pedido, pelo `koine gerar`.
 
-    Mesmo conteúdo do bundle, de propósito: no modo skills a pasta é a única via
-    de entrega, e um formato que depende de aprovação interativa por pasta seria
-    justamente o que esta mudança existe para tirar do caminho.
+    Chega aqui só pelo `koine gerar`. O **modo skills** — o pacote sem
+    Python — nunca alcança este código: quem escreve na pasta lá é a
+    `/kn-12-prepara-contexto`, por `@path` e não por snapshot. Medido em
+    30/08/2026; o docstring afirmava os dois desde o porte (jd-task #706).
+
+    Mesmo conteúdo do bundle, de propósito: quem pede `gerar` quer o que a
+    sessão veria, e um formato que dependesse de aprovação interativa por pasta
+    seria justamente o que a entrega por canal existe para tirar do caminho.
     """
     return ARQUIVO, _render(cm)
 

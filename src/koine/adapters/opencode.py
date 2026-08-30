@@ -7,7 +7,7 @@ from koine import paseo as _paseo
 from koine.contexto import ContextoMontado
 from koine.lancamento import Lancamento
 
-# Arquivo do OpenCode na pasta do usuário — hoje só no `gerar` (modo skills). No
+# Arquivo do OpenCode na pasta do usuário — hoje só no `koine gerar`. No
 # launch a pasta não recebe nada: o config do bundle entrega tudo.
 ARQUIVO = "AGENTS.md"
 MARCADOR = "<!-- gerado por kn-agente -->"
@@ -86,7 +86,12 @@ def _render(cm: ContextoMontado) -> str:
 
 
 def renderizar_para_pasta(cm: ContextoMontado) -> tuple[str, str]:
-    """Materialização a pedido (`koine gerar`, modo skills).
+    """Materialização a pedido, pelo `koine gerar`.
+
+    Chega aqui só pelo `koine gerar`. O **modo skills** — o pacote sem
+    Python — nunca alcança este código: quem escreve na pasta lá é a
+    `/kn-12-prepara-contexto`, por `@path` e não por snapshot. Medido em
+    30/08/2026; o docstring afirmava os dois desde o porte (jd-task #706).
 
     INLINE: sem wrapper não há OPENCODE_CONFIG, e o `instructions` do config é
     justamente o que aponta para os arquivos. Sobra o AGENTS.md da pasta.

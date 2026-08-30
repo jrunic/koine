@@ -22,7 +22,7 @@ def removivel(p: str) -> bool:
     Três respostas, e só a primeira remove:
 
     - nosso, sem a marca de "a pedido" → estoque; sai;
-    - nosso, com a marca → o usuário mandou gerar, e no modo skills a pasta é a
+    - nosso, com a marca → o usuário mandou gerar, e a pasta é a
       **única** via de entrega. Fica;
     - do usuário → nunca sai.
     """

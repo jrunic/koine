@@ -92,10 +92,9 @@ def add_instrucao(partes: list, cm) -> None:
 def documento_inline(titulo: str, cm) -> str:
     """Todas as camadas do `cm` embutidas num documento só.
 
-    Para o **modo skills**: sem wrapper não há env nem argumento para apontar
-    bundle, então a pasta é a única via de entrega e o conteúdo tem que estar
-    dentro do arquivo. É o mesmo princípio do adapter do codex, que já embute
-    por não seguir `@path`.
+    Para quem entrega por CONTEÚDO: o conteúdo tem que estar dentro do arquivo,
+    porque não há env nem argumento apontando um bundle. É o mesmo princípio do
+    adapter do codex, que já embute por não seguir `@path`.
     """
     partes = []
 
@@ -130,6 +129,20 @@ def prosa_sessao(cm, comando: str) -> str:
     regen = (f"Este contexto é regenerado a cada sessão por `{comando}`. "
              "**Não o edite.**")
     if cm.bootstrap and not cm.contexto_path:
+        # Ramo canal-only: no `resolver`, o único retorno de bootstrap SEM
+        # `contexto_path` é o `sem_contexto`, e o chamador único dele é o launch
+        # por canal de máquina. Ali a instrução do vault manda EXPLICITAMENTE não
+        # escrever `CONTEXTO.md` — materializar configuração numa pasta que
+        # ninguém escolheu é o defeito que o canal existe para não repetir. A
+        # prosa mandava o contrário, no mesmo documento (jd-task #706).
+        if cm.instrucao_path:
+            return ("## Instruções desta sessão\n\n"
+                    "Esta pasta ainda não tem contexto Koine, e **nada foi escrito "
+                    "nela**. Siga a instrução do Koine acima: não crie o "
+                    "`./CONTEXTO.md` por conta própria nem chute escopo e domínio. "
+                    + regen + "\n")
+        # Sem instrução não há a quem deferir — `ContextoMontado` montado à mão,
+        # por teste ou por chamador futuro. Orienta sem contradizer ninguém.
         return ("## Instruções desta sessão\n\n"
                 "Esta pasta ainda não tem contexto Koine. Crie o `./CONTEXTO.md` desta "
                 "pasta com `/kn-02-mantem-catalogo` (Fluxo 3) antes de iniciar o "

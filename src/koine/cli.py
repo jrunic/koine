@@ -396,8 +396,8 @@ def _cmd_gerar(args: list[str]) -> int:
         print(mensagens.escopo_nao_encontrado(e.escopo, e.disponiveis), file=sys.stderr)
         return 1
     arquivo, conteudo = adapters.get(cliente).renderizar_para_pasta(cm)
-    # marca de INTENÇÃO: no modo skills a pasta é a única via de entrega, e um
-    # launch na mesma pasta não pode apagar o que o usuário mandou gerar
+    # marca de INTENÇÃO: o usuário PEDIU este arquivo, e um launch na mesma
+    # pasta não pode apagar o que ele mandou gerar
     conteudo = escrita.marcar_a_pedido(conteudo)
     destino = os.path.join(pasta, arquivo)
     try:

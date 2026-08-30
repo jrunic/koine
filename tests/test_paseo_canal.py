@@ -311,6 +311,30 @@ def test_fora_do_canal_o_agente_declarado_sem_tty_continua_derrubando(tmp_path,
     assert cli.main(["claude"]) == 1
 
 
+@pytest.mark.parametrize("cliente", ["claude", "opencode"])
+def test_a_prosa_nao_contradiz_a_instrucao_do_canal(sem_launch, espiar_lancamento,
+                                                    tmp_path, monkeypatch, cliente):
+    """Duas vozes no mesmo documento, mandando o contrário uma da outra.
+
+    A instrução `pasta-fora-do-koine.md` diz, com todas as letras, que nada foi
+    escrito aqui e que o agente NÃO deve escrever `CONTEXTO.md` por conta
+    própria — porque as sondagens do orquestrador rodam do cwd do serviço. A
+    `prosa_sessao`, no mesmo arquivo, mandava criá-lo "desta pasta".
+
+    Esse ramo da prosa é canal-only: no `resolver`, o único retorno de bootstrap
+    SEM `contexto_path` é o `sem_contexto`, cujo chamador único é o launch do
+    canal. Ou seja, ele contradizia sempre.
+
+    As DUAS asserções importam: só a ausência passaria com a prosa inteira
+    removida, e aí o agente perderia o aviso de snapshot junto.
+    """
+    _pasta_no_estado(tmp_path, monkeypatch, "ausente")
+    assert cli.main([cliente, "--canal-paseo", "--"]) == 0
+    entregue = _entregue(espiar_lancamento)
+    assert "Crie o `./CONTEXTO.md`" not in entregue, "a prosa manda o contrário da instrução"
+    assert "não crie o `./CONTEXTO.md` por conta própria" in entregue
+
+
 # --- o prefixo de subcomando da rota ---------------------------------------
 
 def test_a_rota_do_opencode_injeta_o_subcomando_antes_de_tudo(sem_launch, tmp_path,
