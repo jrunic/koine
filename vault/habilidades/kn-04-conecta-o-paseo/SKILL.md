@@ -158,6 +158,31 @@ paseo provider ls
 Os entries têm que aparecer na listagem. Se não aparecerem, o arquivo tem erro de
 sintaxe — releia antes de seguir.
 
+### Se houver mais de uma pessoa usando o Paseo nesta máquina
+
+Só nesse caso — se o usuário for o único, pule.
+
+O Paseo escuta numa porta, e duas pessoas na mesma máquina não podem usar a mesma.
+Quem chegar depois precisa escolher outra, **no arquivo de configuração**
+(`daemon.listen`) — não por argumento de linha de comando nem por variável de
+ambiente: os dois deixam a tela do aplicativo mostrando um valor que não tem efeito,
+em silêncio, do mesmo jeito que acontece com a voz.
+
+**E há uma armadilha que não perdoa.** A ajuda do comando diz, na descrição do
+`--host`: *"default: local socket/pipe, then localhost:6767"*. Quer dizer que, se o
+serviço do usuário estiver parado, o comando **cai na porta padrão** — que é a da
+outra pessoa. Um comando de listar acerta a sessão alheia; um de parar, também.
+
+Por isso, quando a porta não for a padrão, deixe a escolha fixa no ambiente do
+usuário:
+
+```
+export PASEO_HOST=127.0.0.1:<porta escolhida>
+```
+
+no `~/.zshrc` ou equivalente. Isso força candidato único e tira a porta padrão do
+caminho.
+
 ---
 
 ## 5. O celular

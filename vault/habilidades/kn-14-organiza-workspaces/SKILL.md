@@ -21,6 +21,12 @@ paseo status
 
 Se não responder, é a `/kn-04` que falta.
 
+**Se houver mais de uma pessoa usando o Paseo nesta máquina**, confirme que você está
+falando com o serviço certo antes de criar qualquer coisa: `paseo status` mostra o
+campo `Home`, que precisa ser o do usuário atual. O comando **cai na porta padrão**
+quando não acha o serviço configurado — e criaria projeto no registro de outra
+pessoa, sem avisar.
+
 **Diga também o que ele NÃO precisa fazer:** não é preciso rodar esta skill antes de
 cada sessão. Se ele abrir uma pasta que não está registrada, o Paseo se vira e cria o
 registro sozinho — só que com o nome da pasta e sem escolher onde agrupar. Esta skill

@@ -99,6 +99,29 @@ porque existe uma pasta de configuração: ela pode existir completa, com histó
 tudo, e a sessão falhar por falta de autenticação. O jeito de saber é abrir uma
 sessão.
 
+## Duas pessoas usando o Paseo na mesma máquina
+
+Se cada pessoa tem a sua conta e as duas vão usar o Paseo, há um detalhe que não
+perdoa.
+
+O serviço escuta numa porta, e as duas não podem usar a mesma. Quem configurar depois
+escolhe outra, **no arquivo de configuração** — e não por argumento de linha de
+comando nem por variável de ambiente, que deixam a tela do aplicativo mostrando um
+valor sem efeito, em silêncio.
+
+**A armadilha:** a linha de comando do Paseo, quando não encontra o serviço
+configurado, **cai na porta padrão** — a da outra pessoa. Está escrito na ajuda do
+próprio comando. Na prática, com o seu serviço parado, um comando seu de listar ou de
+parar acerta a sessão de quem está do outro lado.
+
+Se a sua porta não for a padrão, fixe a escolha no seu shell:
+
+```bash
+export PASEO_HOST=127.0.0.1:<sua porta>
+```
+
+Isso força um candidato único e tira a porta padrão do caminho.
+
 ## Trocar de computador
 
 A configuração do Koine é **portável, sem tradução**. Os caminhos que ela guarda são
