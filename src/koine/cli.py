@@ -516,6 +516,23 @@ def _separar_args(args: list[str]) -> tuple[list[str], list[str]]:
     return posicionais, flags + passa
 
 
+def _lancar_avisando_sem_contexto(cliente: str, pasta: str,
+                                  extras_usuario: list[str]) -> int:
+    """Sobe a sessão com a instrução do vault, sem tocar na pasta.
+
+    Não escrever não pode virar silêncio: sessão que sobe sem contexto e sem
+    aviso é indistinguível de uma sessão normal, e o usuário só descobre quando
+    as respostas saem genéricas.
+    """
+    cm = contexto.resolver("", pasta, sem_contexto=True)
+    cm.pasta_abs = pasta
+    lanc = adapters.get(cliente).renderizar(cm)
+    _materializar(lanc, pasta)
+    args_cliente = (lanc.extra_args or []) + extras_usuario
+    launch.lancar(cliente, pasta, env=lanc.env_vars or None, args=args_cliente or None)
+    return 0
+
+
 def _rodar_cliente(cliente: str, args: list[str]) -> int:
     # `--canal-paseo` é consumido AQUI, não por _separar_args: naquela gramática
     # todo token com hífen é flag do cliente, e a flag chegaria ao processo
@@ -544,6 +561,15 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
         return 1
     # auto-guiar: pasta de sessão sem CONTEXTO.md válido (só o launch trata).
     estado = _bootstrap.classificar(pasta)
+    if canal_paseo and estado in (_bootstrap.AUSENTE, _bootstrap.VAZIO,
+                                  _bootstrap.INCOMPLETO, _bootstrap.MALFORMADO):
+        # Nada é escrito, e nada aborta. Escrever: as sondagens do orquestrador
+        # rodam com o cwd de onde ele subiu, e o auto-guiar materializaria
+        # bootstrap em pasta que ninguém escolheu (medido em 29/08/2026).
+        # Abortar: provider que sai com código não-zero é beco sem saída, e como
+        # o orquestrador apresenta isso NÃO foi medido — a escolha conservadora
+        # é subir avisando.
+        return _lancar_avisando_sem_contexto(cliente, pasta, extras_usuario)
     if estado in (_bootstrap.AUSENTE, _bootstrap.VAZIO):
         if not _bootstrap.usuario_onboarded(paths.config_dir()):
             print(mensagens.pasta_sem_contexto_nao_onboarded(cliente), file=sys.stderr)

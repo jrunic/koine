@@ -123,6 +123,18 @@ def instrucao_pasta_incompleta(vault: str) -> str:
     return os.path.join(vault, *INSTRUCAO_PASTA_INCOMPLETA)
 
 
+def instrucao_pasta_fora_do_koine(vault: str) -> str:
+    """Instrução para sessão aberta por canal de máquina numa pasta sem contexto.
+
+    O auto-guiar da v0.4.5 materializa um CONTEXTO.md de bootstrap, e isso é
+    certo no terminal: lá o usuário fez `cd` de propósito. Por um orquestrador
+    não vale o mesmo — as sondagens rodam com o cwd de onde o serviço subiu, e
+    materializar escreveria na pasta de downloads de quem nunca pediu nada
+    (medido em 29/08/2026). Aqui o Koine avisa e não toca em nada.
+    """
+    return os.path.join(vault, "bootstrap", "pasta-fora-do-koine.md")
+
+
 def instrucao_agente_inexistente(data: str) -> str:
     """Instrução lida pelo agente quando a pasta (ou o default do usuário)
     declara um agente que não existe. Mesmo canal da pasta incompleta: o Koine

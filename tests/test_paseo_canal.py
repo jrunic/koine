@@ -146,3 +146,62 @@ def test_a_variavel_e_ignorada_fora_do_canal(sem_launch, tmp_path, monkeypatch):
     monkeypatch.setenv("KOINE_AGENTE", "hermes")
     cli.main(["claude"])
     assert capturado["agente"] == ""
+
+
+# --- pasta não configurada: avisa, não escreve -----------------------------
+
+ESTADOS_NAO_CONFIGURADOS = ["ausente", "vazio", "incompleto", "malformado"]
+
+
+def _pasta_no_estado(tmp_path, monkeypatch, estado):
+    trab = _preparar_pasta_valida(tmp_path, monkeypatch)
+    ctx = trab / "CONTEXTO.md"
+    if estado == "ausente":
+        ctx.unlink()
+    elif estado == "vazio":
+        ctx.write_text("", encoding="utf-8")
+    elif estado == "incompleto":
+        ctx.write_text("---\ntype: contexto\n---\n\n# T\n", encoding="utf-8")
+    elif estado == "malformado":
+        ctx.write_text("---\n[: : :\n---\n\n# T\n", encoding="utf-8")
+    return trab
+
+
+@pytest.mark.parametrize("estado", ESTADOS_NAO_CONFIGURADOS)
+def test_no_canal_nada_e_escrito_na_pasta(sem_launch, tmp_path, monkeypatch, estado):
+    """O defeito medido em 29/08/2026: as sondagens do Paseo rodam com o cwd do
+    DAEMON, e o Koine materializou um CONTEXTO.md de bootstrap dentro da pasta
+    de downloads do usuário. 930 bytes, na primeira sondagem."""
+    trab = _pasta_no_estado(tmp_path, monkeypatch, estado)
+    # conteúdo, não só nome: em três dos quatro estados o CONTEXTO.md JÁ existe,
+    # e o auto-guiar o sobrescreve sem mudar a listagem. Um teste por nome
+    # passaria em `vazio`, `incompleto` e `malformado` com e sem a correção.
+    antes = {p.name: p.read_bytes() for p in trab.iterdir()}
+    cli.main(["claude", "--canal-paseo", "--", "--version"])
+    assert {p.name: p.read_bytes() for p in trab.iterdir()} == antes
+
+
+@pytest.mark.parametrize("estado", ESTADOS_NAO_CONFIGURADOS)
+def test_no_canal_a_pasta_nao_configurada_recebe_instrucao(sem_launch, tmp_path,
+                                                           monkeypatch, estado):
+    """Não escrever não pode virar silêncio: sessão que sobe sem contexto e sem
+    erro é o defeito que a entrega por canal existe para matar."""
+    capturado = {}
+    monkeypatch.setattr(cli, "_materializar",
+                        lambda lanc, pasta: capturado.update(lanc=lanc))
+    _pasta_no_estado(tmp_path, monkeypatch, estado)
+    assert cli.main(["claude", "--canal-paseo", "--"]) == 0
+    entregue = "\n".join(capturado["lanc"].arquivos_externos.values())
+    assert "pasta ainda não é uma pasta de trabalho Koine" in entregue
+
+
+@pytest.mark.parametrize("estado", ESTADOS_NAO_CONFIGURADOS)
+def test_fora_do_canal_o_comportamento_do_terminal_nao_muda(tmp_path, monkeypatch,
+                                                            estado, capsys):
+    """A política é POR CANAL. No terminal o usuário fez `cd` de propósito, e o
+    auto-guiar da v0.4.5 continua valendo — inclusive o erro do malformado."""
+    monkeypatch.setattr(cli.launch, "lancar", lambda c, p, env=None, args=None: None)
+    trab = _pasta_no_estado(tmp_path, monkeypatch, estado)
+    cli.main(["claude"])
+    if estado in ("ausente", "vazio"):
+        assert (trab / "CONTEXTO.md").exists(), "o terminal ainda auto-guia"

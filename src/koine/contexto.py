@@ -100,9 +100,21 @@ def _achar_agente(cfg: str, data: str, agente: str) -> str:
     raise AgenteNaoEncontrado(agente, sorted(set(disponiveis)))
 
 
-def resolver(agente: str, pasta: str) -> ContextoMontado:
+def resolver(agente: str, pasta: str, sem_contexto: bool = False) -> ContextoMontado:
     cfg, data = paths.config_dir(), paths.vault_dir()
     ctx_path = os.path.join(pasta, "CONTEXTO.md")
+    if sem_contexto:
+        # Canal de máquina: a pasta não tem contexto e NÃO será escrita. Mesma
+        # forma do ramo de pasta incompleta — bootstrap com instrução do vault —
+        # sem `contexto_path`, porque não há arquivo do usuário para mostrar (e
+        # nos estados vazio/malformado o que há não ajudaria o agente).
+        return ContextoMontado(
+            bootstrap=True,
+            usuario_path=_achar_usuario_opcional(cfg),
+            koine_path=os.path.join(data, "KOINE.md"),
+            agente_path=os.path.join(data, "agentes", "hermes.md"),
+            instrucao_path=_bootstrap.instrucao_pasta_fora_do_koine(data),
+        )
     fm, _ = frontmatter.ler_arquivo(ctx_path, normalizar_disco=True)
 
     if fm.get("bootstrap"):
