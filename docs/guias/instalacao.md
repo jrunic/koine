@@ -1,5 +1,5 @@
 ---
-descricao: Guia de instalação do Koine v0.4.x — macOS, Linux e Windows; upgrade da v0.3.x (Go); passo a passo manual com explicação de cada comando (o que os installers automatizam); variantes, verificação e solução de problemas
+descricao: Guia de instalação do Koine — macOS, Linux e Windows; upgrade da v0.3.x (Go); passo a passo manual com explicação de cada comando (o que os installers automatizam); variantes, verificação e solução de problemas
 id: 202607090130
 tipo: guia
 status: ativo

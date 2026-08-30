@@ -142,6 +142,37 @@ Duas situações em que insistir não resolve, e o caminho é pedir liberação:
   contexto chega — o agente lê e escreve arquivos —, mas rodar comando não funciona.
   O `koine instalar` diz quais dos seus clientes estão nessa situação.
 
+## Se a sessão abre mas vem sem o seu contexto
+
+Você abre pelo celular, o agente responde — mas responde como um assistente qualquer,
+sem saber quem você é nem em que pasta está.
+
+Duas causas, e as duas são silenciosas por natureza:
+
+**O provider aponta para um cliente sem caminho.** Configurar Codex ou Antigravity aqui
+não dá erro: o provider fica com cara de saudável e a sessão sobe sem o Koine no meio.
+Confira com `koine paseo-info` quais clientes têm caminho, e remova os outros.
+
+**A pasta não está configurada.** Se ela não tem contexto Koine, o agente deve dizer
+isso na primeira mensagem e orientar o caminho. Se ele não disse nada e respondeu
+genérico, é o caso anterior.
+
+## Se o provider aparece como indisponível
+
+A lista de providers mostra o seu como não disponível, ou "caminho não resolvido", e a
+sessão nem abre.
+
+A causa quase sempre é o **caminho do wrapper escrito sem ser absoluto**. O serviço do
+Paseo roda com um ambiente mínimo, e a pasta de programas do seu usuário não está no
+caminho de busca dele — então o nome puro não resolve.
+
+Descubra o caminho real e use ele na configuração do provider:
+
+```bash
+command -v kn-claude-paseo      # macOS e Linux
+where kn-claude-paseo           # Windows
+```
+
 ## Se o celular parar de encontrar o computador
 
 O sintoma é tempo esgotado no aparelho, sem mensagem de erro.

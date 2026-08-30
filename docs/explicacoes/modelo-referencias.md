@@ -1,12 +1,12 @@
 ---
-descricao: Por que o CLAUDE.md gerado pelo kn-agente usa @/ para referenciar arquivos em vez de copiar o conteúdo — fonte canônica, ciclo de atualização e o papel dos skills de catálogo
+descricao: Por que o contexto da sessão é montado das fontes canônicas a cada vez, em vez de copiado para dentro da pasta de trabalho — e por que o mecanismo de entrega mudou sem a arquitetura mudar
 id: 202606202010
 tipo: explicacao
 status: ativo
 tags: [explicacao, koine, modelo-b, claude-md, referencias, harness]
 ---
 
-# Por que o CLAUDE.md usa referências e não cópias
+# Por que o contexto é montado, e não copiado
 
 ## O problema do contexto hierárquico
 
@@ -41,10 +41,19 @@ elas estiverem naquele momento.
 seus próprios arquivos; o contexto é sempre uma visão fresca delas; e o usuário não tem
 nenhum arquivo espalhado para regenerar, porque não há arquivo espalhado.
 
-Onde o canal do cliente aceita **caminhos** em vez de conteúdo — é o caso do OpenCode —
-o Koine passa o caminho, e o arquivo é lido vivo pelo cliente. Onde só aceita conteúdo,
-o conteúdo vai embutido no pacote da sessão, com o aviso de que o `CONTEXTO.md` ali é um
-retrato e a fonte canônica é o arquivo da pasta.
+Hoje **todos os cinco clientes recebem conteúdo**, não caminho — com o aviso, dentro do
+próprio pacote, de que o `CONTEXTO.md` ali é um retrato e a fonte canônica é o arquivo da
+pasta.
+
+Nem sempre foi assim: um dos canais aceitava lista de caminhos, e passá-los parecia
+estritamente melhor — o cliente leria os arquivos vivos. Isso caiu por uma razão medida.
+Entregue por caminho, o `CONTEXTO.md` chega **cru**, com a ficha de metadados que o Koine
+usa para resolver a sessão; e o campo de agente dessa ficha passava a competir com o
+agente que o usuário havia pedido — e vencia. Pedir um agente numa pasta que declara
+outro subia o **errado, em silêncio**.
+
+A lição vale além do caso: entregar por referência transporta junto tudo o que o arquivo
+carrega, inclusive o que era para ser lido só pela ferramenta.
 
 ## Quem garante que os arquivos existam
 

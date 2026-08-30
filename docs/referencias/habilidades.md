@@ -1,5 +1,5 @@
 ---
-descricao: Referência das 11 skills kn-* distribuídas no vault — propósito, trigger, quando invocar, o que produz
+descricao: Referência das skills kn-* distribuídas no vault — propósito, trigger, quando invocar, o que produz
 id: 202606280002
 tipo: referencia
 status: ativo
