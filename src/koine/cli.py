@@ -37,7 +37,7 @@ from koine import (
 from koine._version import __version__
 
 SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades", "gerar", "mostrar",
-               "validar", "atualizar", "definir-agente"}
+               "validar", "atualizar", "definir-agente", "paseo-info"}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -48,7 +48,7 @@ def main(argv: list[str] | None = None) -> int:
     if not argv:
         print("uso: koine <cliente|subcomando> ...\n"
               "subcomandos: instalar, instalar-habilidades, gerar, mostrar, "
-              "validar, atualizar, versao", file=sys.stderr)
+              "validar, atualizar, paseo-info, versao", file=sys.stderr)
         return 2
 
     primeiro = argv[0]
@@ -70,6 +70,8 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_atualizar(argv[1:])
         if primeiro == "definir-agente":
             return _cmd_definir_agente(argv[1:])
+        if primeiro == "paseo-info":
+            return _cmd_paseo_info(argv[1:])
     if primeiro in adapters.REGISTRY:
         return _rodar_cliente(primeiro, argv[1:])
 
@@ -515,6 +517,28 @@ def _separar_args(args: list[str]) -> tuple[list[str], list[str]]:
     posicionais = [a for a in antes if not a.startswith("-")]
     flags = [a for a in antes if a.startswith("-")]
     return posicionais, flags + passa
+
+
+def _cmd_paseo_info(args: list[str]) -> int:
+    """Matriz de rotas pelo orquestrador, em formato de máquina.
+
+    É o contrato com a skill que escreve os providers: ela lê daqui o nome do
+    wrapper e o `extends` do entry, em vez de carregar uma cópia da tabela —
+    que envelheceria sozinha quando entrasse cliente novo, e cujo sintoma seria
+    um provider que abre sessão sem contexto e sem erro.
+    """
+    import json
+    dados = {}
+    for cliente in paseo.com_rota():
+        r = paseo.rota(cliente)
+        dados[cliente] = {"wrapper": paseo.wrapper_de(cliente),
+                          "extends": r.extends, "args": list(r.args)}
+    if "--json" in args:
+        print(json.dumps(dados, indent=2, ensure_ascii=False))
+        return 0
+    for cliente, info in dados.items():
+        print(f"{cliente:10} {info['wrapper']:22} extends={info['extends']}")
+    return 0
 
 
 def _lancar_avisando_sem_contexto(cliente: str, pasta: str,

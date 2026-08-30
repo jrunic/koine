@@ -241,3 +241,27 @@ def test_fora_do_canal_o_opencode_nao_ganha_o_subcomando(sem_launch, tmp_path,
     _preparar_pasta_valida(tmp_path, monkeypatch)
     cli.main(["opencode"])
     assert "acp" not in sem_launch["args"]
+
+
+# --- a matriz legível por comando ------------------------------------------
+
+def test_paseo_info_devolve_a_matriz_em_json(capsys):
+    """É o contrato com a skill que escreve os providers: ela lê o nome do
+    wrapper e o `extends` daqui, em vez de carregar uma cópia da tabela que
+    envelheceria sozinha quando entrasse cliente novo."""
+    import json
+    assert cli.main(["paseo-info", "--json"]) == 0
+    dados = json.loads(capsys.readouterr().out)
+    assert dados["claude"] == {"wrapper": "kn-claude-paseo",
+                               "extends": "claude", "args": []}
+    assert dados["opencode"]["extends"] == "acp"
+    assert dados["opencode"]["args"] == ["acp"]
+    assert "codex" not in dados and "agy" not in dados
+
+
+def test_paseo_info_em_texto_lista_os_mesmos_clientes(capsys):
+    assert cli.main(["paseo-info"]) == 0
+    saida = capsys.readouterr().out
+    for cliente in ("claude", "copilot", "opencode"):
+        assert cliente in saida
+    assert "codex" not in saida
