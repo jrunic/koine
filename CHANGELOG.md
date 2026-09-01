@@ -4,7 +4,11 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Não publicado]
+## [0.11.0] — 2026-09-01
+
+### Adicionado — `koine instalar-wrappers`
+
+Refaz só os atalhos, sem mexer em mais nada. Irmão do `koine instalar-habilidades`.
 
 ### Corrigido — o provider não fecha mais a porta na sua cara
 
@@ -49,10 +53,6 @@ Agora quem cria os atalhos é a versão que está entrando.
 uma vez para criar o que ficou faltando. E o `koine paseo-info` passou a **avisar** quando
 o atalho que ele indica não existe na sua máquina — antes ele indicava o nome assim mesmo,
 e quem estivesse configurando o acesso remoto improvisava um comando que não funciona.
-
-### Adicionado — `koine instalar-wrappers`
-
-Refaz só os atalhos, sem mexer em mais nada. Irmão do `koine instalar-habilidades`.
 
 ### Corrigido — dois providers da mesma pasta não se atropelam mais
 
