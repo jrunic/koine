@@ -61,6 +61,21 @@ install.bat
 No Unix: `KOINE_VERSAO=v0.7.0-rc1 bash install.sh`. O nome do asset é montado a
 partir da tag (`koine-0.7.0-rc1.zip`), e é assim que o CI o publica.
 
+**Numa execução sem alguém na frente do teclado, o `instalar` precisa das flags.**
+Rodado por tarefa agendada, por CI ou por script, ele para no prompt da pasta canônica
+e a execução fica pendurada **sem erro** — o `< NUL` não resolve, porque no Windows
+`NUL` é char device e o `isatty()` devolve verdadeiro. As flags é que decidem:
+
+```cmd
+set KOINE_INSTALAR_ARGS=--nao-interativo --para todos
+call install.bat
+```
+
+**No Windows, `koine atualizar` aplica em segundo plano.** O comando devolve `0` assim
+que dispara, e o que você listar na linha seguinte é o disco **de antes**. O sinal é o
+`%USERPROFILE%\.cache\koine\atualizar.log`, lido numa segunda passada — não o código
+de saída.
+
 ### 4. Conferir que `latest` não se moveu
 
 ```bash
