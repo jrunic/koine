@@ -380,13 +380,49 @@ def test_paseo_info_devolve_a_matriz_em_json(capsys):
     import json
     assert cli.main(["paseo-info", "--json"]) == 0
     dados = json.loads(capsys.readouterr().out)
-    assert dados["claude"] == {"wrapper": "kn-claude-paseo",
-                               "provider": "kn-claude",
-                               "provider_hermes": "kn-claude-hermes",
-                               "extends": "claude", "args": []}
+    claude = dados["claude"]
+    # `existe`/`caminho` dependem do PATH da máquina e são medidos no teste
+    # próprio, abaixo; o resto é contrato fixo e se compara inteiro.
+    assert {k: v for k, v in claude.items() if k not in ("existe", "caminho")} == {
+        "wrapper": "kn-claude-paseo", "provider": "kn-claude",
+        "provider_hermes": "kn-claude-hermes", "extends": "claude", "args": []}
+    assert set(claude) >= {"existe", "caminho"}
     assert dados["opencode"]["extends"] == "acp"
     assert dados["opencode"]["args"] == ["acp"]
     assert "codex" not in dados and "agy" not in dados
+
+
+def test_paseo_info_avisa_quando_prescreve_wrapper_que_nao_existe(tmp_path, monkeypatch,
+                                                                  capsys):
+    """A parte que socorre quem JÁ está quebrado (jd-task #749).
+
+    Máquina que chegou nesta versão por `koine atualizar` de uma anterior não
+    tem os wrappers introduzidos depois. O `paseo-info` prescrevia o nome assim
+    mesmo, e o agente que o lê improvisa o comando do provider — que é o que a
+    /kn-04 manda não fazer.
+
+    O aviso vai para stderr de propósito: o `--json` é consumido por ferramenta.
+    """
+    import json
+    monkeypatch.setenv("PATH", str(tmp_path))          # PATH sem wrapper nenhum
+    assert cli.main(["paseo-info", "--json"]) == 0
+    saida = capsys.readouterr()
+    dados = json.loads(saida.out)                       # stdout continua parseável
+    assert all(not i["existe"] and i["caminho"] is None for i in dados.values())
+    assert "kn-claude-paseo" in saida.err and "koine instalar" in saida.err
+
+
+def test_paseo_info_acha_o_wrapper_quando_ele_existe(tmp_path, monkeypatch, capsys):
+    """Metade que dá poder à anterior: sem ela, `existe: False` sempre passaria."""
+    import json
+    (tmp_path / "kn-claude-paseo").write_text("#!/bin/sh\n")
+    (tmp_path / "kn-claude-paseo").chmod(0o755)
+    monkeypatch.setenv("PATH", str(tmp_path))
+    assert cli.main(["paseo-info", "--json"]) == 0
+    saida = capsys.readouterr()
+    claude = json.loads(saida.out)["claude"]
+    assert claude["existe"] and claude["caminho"] == str(tmp_path / "kn-claude-paseo")
+    assert "kn-claude-paseo" not in saida.err, "não avisa sobre o que existe"
 
 
 def test_paseo_info_em_texto_lista_os_mesmos_clientes(capsys):

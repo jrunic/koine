@@ -162,16 +162,33 @@ genérico, é o caso anterior.
 A lista de providers mostra o seu como não disponível, ou "caminho não resolvido", e a
 sessão nem abre.
 
-A causa quase sempre é o **caminho do wrapper escrito sem ser absoluto**. O serviço do
-Paseo roda com um ambiente mínimo, e a pasta de programas do seu usuário não está no
-caminho de busca dele — então o nome puro não resolve.
+São duas causas, e a ordem de verificação importa: a segunda só faz sentido depois de
+descartar a primeira.
 
-Descubra o caminho real e use ele na configuração do provider:
+**1. O wrapper não existe.** Antes de olhar o caminho, confira que ele existe:
+
+```bash
+koine paseo-info
+```
+
+Ele lista o wrapper de cada cliente e **avisa quando algum não está no seu PATH**. Se
+avisar, rode `koine instalar` e refaça os providers — não improvise um comando.
+
+Como uma instalação fica sem o wrapper: até a 0.11, o `koine atualizar` montava a lista
+com o código da versão que estava saindo, então wrapper introduzido pela versão entrante
+não nascia. A instalação fica na versão nova, `koine versao` responde certo, e o wrapper
+não está lá.
+
+**2. O caminho foi escrito sem ser absoluto.** O serviço do Paseo roda com um ambiente
+mínimo, e a pasta de programas do seu usuário não está no caminho de busca dele — então o
+nome puro não resolve.
 
 ```bash
 command -v kn-claude-paseo      # macOS e Linux
 where kn-claude-paseo           # Windows
 ```
+
+O `koine paseo-info --json` já traz esse caminho resolvido, no campo `caminho`.
 
 ## Se o celular parar de encontrar o computador
 

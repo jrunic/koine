@@ -74,12 +74,19 @@ Com o Koine já instalado, atualize com um comando:
 koine atualizar
 ```
 
-Resolve a última release, baixa `koine-<versao>.zip` + `SHA256SUMS`, valida o hash e reaproveita o caminho de instalação: refresca o vault shipped (preservando seus `dominios`), regenera os wrappers `kn-*` e reinstala skills nos harnesses detectados. É no-op quando você já está na última versão; `--force` reinstala mesmo assim. Roda 100% em Python — sem `.bat`/`.ps1`/powershell.
+Resolve a última release, baixa `koine-<versao>.zip` + `SHA256SUMS`, valida o hash e reaproveita o caminho de instalação: refresca o vault shipped (preservando seus `dominios`), regenera os wrappers `kn-*` — inclusive os que a versão nova introduziu — e reinstala skills nos harnesses detectados. É no-op quando você já está na última versão; `--force` reinstala mesmo assim. Roda 100% em Python — sem `.bat`/`.ps1`/powershell.
 
 Variantes:
 
 - `KOINE_VERSAO=vX.Y.Z koine atualizar` — vai (ou volta) para uma versão específica.
 - `KOINE_BASE_URL=<url> koine atualizar` — baixa de um espelho interno (github bloqueado).
+
+> **Vindo de uma versão anterior à 0.11?** Até ela, o `atualizar` montava a lista de
+> wrappers com o código da versão que estava **saindo** — então wrapper introduzido pela
+> versão que entrava não nascia, sem erro nenhum. Se você chegou na sua versão atual por
+> `koine atualizar` a partir de uma dessas, rode **`koine instalar`** uma vez: ele cria os
+> que faltam. A partir da 0.11 o próprio `atualizar` resolve, e o `koine paseo-info` avisa
+> quando prescreve um wrapper que não está no seu PATH.
 
 No Windows, se o download direto do github falhar por cadeia de certificado incompleta, o comando cai automaticamente para o `curl.exe` do sistema; persistindo a falha, a mensagem orienta rodar Windows Update ou usar `KOINE_BASE_URL`. Referência completa do subcomando: [referencias/cli.md](../referencias/cli.md#koine-atualizar---force).
 

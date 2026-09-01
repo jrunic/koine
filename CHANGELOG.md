@@ -35,6 +35,25 @@ A frase faltava em três dos dez pares cliente × caminho: no **Copilot** dos do
 jeitos (inclusive na sessão normal, que é o caminho de todo dia dele) e no **OpenCode**
 quando o arquivo é escrito na pasta.
 
+### Corrigido — `koine atualizar` cria os atalhos que a versão nova trouxe
+
+O `atualizar` montava a lista de atalhos `kn-*` com o código da versão que estava
+**saindo**. Atalho introduzido pela versão que entrava simplesmente não nascia — e sem
+erro: a atualização terminava bem, `koine versao` respondia certo, e o atalho não estava
+lá. Aconteceu de verdade numa atualização de 0.5.2 para 0.10.0, que ficou sem os três
+atalhos do acesso remoto.
+
+Agora quem cria os atalhos é a versão que está entrando.
+
+**Se a sua instalação chegou na versão atual por `koine atualizar`**, rode `koine instalar`
+uma vez para criar o que ficou faltando. E o `koine paseo-info` passou a **avisar** quando
+o atalho que ele indica não existe na sua máquina — antes ele indicava o nome assim mesmo,
+e quem estivesse configurando o acesso remoto improvisava um comando que não funciona.
+
+### Adicionado — `koine instalar-wrappers`
+
+Refaz só os atalhos, sem mexer em mais nada. Irmão do `koine instalar-habilidades`.
+
 ### Corrigido — dois providers da mesma pasta não se atropelam mais
 
 Quando o mesmo workspace tinha dois providers — o comum, que usa o agente da pasta,

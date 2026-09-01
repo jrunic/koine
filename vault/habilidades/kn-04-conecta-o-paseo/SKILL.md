@@ -42,6 +42,13 @@ configuração precisa dizer. **Use o que sair daí.** Não decore lista nem esc
 aqui: ela muda quando o Koine ganha cliente novo, e uma cópia desatualizada produz
 provider que abre sessão sem contexto e sem erro.
 
+**Se ele avisar que algum wrapper não existe no PATH, pare aqui.** Rode `koine instalar`
+e repita o comando antes de seguir. Máquina que chegou nesta versão por `koine atualizar`
+a partir de uma anterior à 0.11 pode estar sem os wrappers introduzidos depois — e o nome
+que este comando prescreve não existiria no disco. **Nunca improvise o comando do provider
+para contornar isso**: provider apontado para um comando que não é o wrapper abre sessão e
+responde, sem contexto nenhum e sem erro.
+
 Depois:
 
 ```
@@ -158,7 +165,10 @@ com um ambiente mínimo — a pasta de programas do usuário **não** está no c
 busca dele. Com o nome puro, o provider fica `Unavailable` com
 `Resolved path: not found`, e a sessão que o usuário abrir do celular não sobe.
 
-Descubra o caminho real e use o que sair:
+O próprio `koine paseo-info --json` já devolve esse caminho resolvido, no campo
+`caminho` — use ele. Se estiver `null`, o wrapper não existe: volte ao passo 1.
+
+Para conferir à mão:
 
 ```
 command -v kn-<cliente>-paseo      # macOS e Linux

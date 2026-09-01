@@ -155,6 +155,40 @@ def _refresh_skills(versao: str) -> None:
             print(f"    aviso: skills de {h}: {e}", file=sys.stderr)
 
 
+def _gerar_wrappers_pelo_novo(alvo_pyz: str, bindir: str) -> None:
+    """Delega a geração dos wrappers ao artefato que ACABOU de ser instalado.
+
+    A lista de wrappers é do código que a monta, e este módulo executa dentro do
+    pyz ANTIGO — `wrappers.gerar()` aqui produz a lista da versão que está
+    saindo. Wrapper introduzido pela versão entrante nunca nasceria, e em
+    silêncio: exit 0, `koine versao` correta, wrapper ausente (jd-task #749).
+
+    Medido em 01/09/2026 na máquina de um usuário: 0.5.2 → 0.10.0 por
+    `atualizar` ficou sem os três `kn-*-paseo`, e o `paseo-info` da versão nova
+    prescreve nomes que não existiam no disco.
+
+    O fallback existe para o dia em que este comando mudar de nome numa versão
+    futura: sem ele, o `atualizar` de hoje deixaria a instalação SEM wrapper
+    nenhum, que é pior que a lista velha. Mas ele reproduz o defeito, então
+    **fala** — fallback mudo troca falha visível por falha intermitente.
+    """
+    try:
+        r = subprocess.run([sys.executable, alvo_pyz, "instalar-wrappers",
+                            "--bin", bindir, "--pyz", alvo_pyz],
+                           capture_output=True, text=True, timeout=120)
+        if r.returncode == 0:
+            print(r.stdout, end="")
+            return
+        detalhe = (r.stderr or r.stdout or "").strip().splitlines()
+    except (OSError, subprocess.SubprocessError) as e:
+        detalhe = [str(e)]
+    wrappers.gerar(bindir, alvo_pyz, sys.executable)
+    print("aviso: a versão nova não gerou os próprios wrappers "
+          f"({detalhe[-1] if detalhe else 'sem detalhe'}); usei a lista da versão "
+          "anterior. Wrapper novo desta release pode não existir — rode "
+          "`koine instalar` para completar.", file=sys.stderr)
+
+
 def aplicar(staging: str, alvo_pyz: str, bindir: str, versao: str, force: bool) -> None:
     """Fase de aplicação (não-transacional; recuperável re-rodando). Extrai o
     vault (shipped atualizado com backup no cache, domínios do usuário
@@ -165,7 +199,7 @@ def aplicar(staging: str, alvo_pyz: str, bindir: str, versao: str, force: bool) 
     for dest, bak in trocas:
         print(f"    ~ {os.path.basename(dest)} — sua versão anterior em {bak}")
     _substituir_pyz(os.path.join(staging, "koine.pyz"), alvo_pyz)
-    wrappers.gerar(bindir, alvo_pyz, sys.executable)
+    _gerar_wrappers_pelo_novo(alvo_pyz, bindir)
     print("Skills:")
     _refresh_skills(versao)
     print(f"Koine atualizado para {versao}.")

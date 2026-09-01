@@ -36,8 +36,9 @@ from koine import (
 )
 from koine._version import __version__
 
-SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades", "gerar", "mostrar",
-               "validar", "atualizar", "definir-agente", "paseo-info"}
+SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades", "instalar-wrappers",
+               "gerar", "mostrar", "validar", "atualizar", "definir-agente",
+               "paseo-info"}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -60,6 +61,8 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_instalar(argv[1:])
         if primeiro == "instalar-habilidades":
             return _cmd_instalar_habilidades(argv[1:])
+        if primeiro == "instalar-wrappers":
+            return _cmd_instalar_wrappers(argv[1:])
         if primeiro == "gerar":
             return _cmd_gerar(argv[1:])
         if primeiro == "mostrar":
@@ -237,6 +240,29 @@ def _cmd_definir_agente(args: list[str]) -> int:
           "tem ficha (o bloco `---` no topo), ou está somente-leitura.",
           file=sys.stderr)
     return 1
+
+
+def _cmd_instalar_wrappers(args: list[str]) -> int:
+    """Só os wrappers, nada mais — irmão do `instalar-habilidades`.
+
+    Existe para o `atualizar` poder DELEGAR a geração ao artefato que está
+    entrando. A lista de wrappers é a do código que a monta, e o `aplicar` roda
+    no processo do pyz ANTIGO: sem esta porta, wrapper introduzido por uma
+    release nunca nasce num upgrade (jd-task #749).
+
+    Chamar `instalar` inteiro no lugar seria errado: ele aplica a política
+    não-destrutiva sobre o vault que o `atualizar` acabou de escrever com a
+    política dele, e faria perguntas.
+    """
+    p = argparse.ArgumentParser(prog="koine instalar-wrappers")
+    p.add_argument("--bin", default=None)
+    p.add_argument("--pyz", default=None)
+    ns = p.parse_args(args)
+    criados = wrappers.gerar(ns.bin or _bin_padrao(), ns.pyz or _pyz_padrao(),
+                             sys.executable)
+    for c in criados:
+        print(f"  + {os.path.basename(c)}")
+    return 0
 
 
 def _cmd_instalar_habilidades(args: list[str]) -> int:
@@ -539,19 +565,42 @@ def _cmd_paseo_info(args: list[str]) -> int:
     um provider que abre sessão sem contexto e sem erro.
     """
     import json
+    import shutil
     dados = {}
     for cliente in paseo.com_rota():
         r = paseo.rota(cliente)
+        # O caminho ABSOLUTO resolvido, e não só o nome: o serviço do
+        # orquestrador roda com ambiente mínimo, e provider com nome puro fica
+        # indisponível. Quem prescreve o nome é quem tem como resolvê-lo — a
+        # alternativa é cada consumidor rodar o seu `command -v` e divergir.
+        caminho = shutil.which(paseo.wrapper_de(cliente))
         dados[cliente] = {"wrapper": paseo.wrapper_de(cliente),
                           "provider": paseo.entry_de(cliente),
                           "provider_hermes": paseo.entry_hermes_de(cliente),
-                          "extends": r.extends, "args": list(r.args)}
+                          "extends": r.extends, "args": list(r.args),
+                          # Prescrever um nome que não existe no disco é o que
+                          # faz o agente improvisar o comando do provider —
+                          # exatamente o que a /kn-04 manda não fazer. Acontece
+                          # de verdade: `koine atualizar` de uma versão anterior
+                          # não cria wrapper introduzido depois (jd-task #749).
+                          "existe": caminho is not None,
+                          "caminho": caminho}
+    ausentes = [i["wrapper"] for i in dados.values() if not i["existe"]]
+    if ausentes:
+        # stderr, nunca stdout: o `--json` é consumido por ferramenta, e sujar a
+        # saída seria corrigir um defeito criando outro.
+        print(f"aviso: {len(ausentes)} wrapper(s) que este comando prescreve não "
+              f"existem no PATH — {', '.join(ausentes)}.\n"
+              "       Rode `koine instalar` antes de escrever os providers: "
+              "quem chegou nesta versão por `koine atualizar` a partir de uma\n"
+              "       anterior à 0.11 pode não tê-los.", file=sys.stderr)
     if "--json" in args:
         print(json.dumps(dados, indent=2, ensure_ascii=False))
         return 0
     for cliente, info in dados.items():
+        marca = "" if info["existe"] else "  ← AUSENTE no PATH"
         print(f"{cliente:10} {info['provider']:14} {info['provider_hermes']:22} "
-              f"{info['wrapper']:22} extends={info['extends']}")
+              f"{info['wrapper']:22} extends={info['extends']}{marca}")
     return 0
 
 

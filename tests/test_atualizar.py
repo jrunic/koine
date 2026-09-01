@@ -181,3 +181,64 @@ def test_resolver_versao_sem_curl_levanta(monkeypatch):
     with pytest.raises(atualizar.AtualizarErro) as ei:
         atualizar.resolver_versao()
     assert "KOINE_VERSAO" in str(ei.value)
+
+
+# --- os wrappers saem da lista da versao ENTRANTE (jd-task #749) -------------
+
+def _staging_com_pyz(tmp_path, corpo: str):
+    """Staging minimo cujo `koine.pyz` e um script Python de verdade.
+
+    Script e nao zipapp de proposito: o que se mede e que o `atualizar` INVOCA o
+    artefato novo, e o interpretador roda `.py` e `.pyz` pela mesma porta.
+    """
+    staging = tmp_path / "staging"
+    (staging / "vault").mkdir(parents=True)
+    (staging / "koine.pyz").write_text(corpo, encoding="utf-8")
+    return staging
+
+
+def _aplicar(tmp_path, monkeypatch, corpo):
+    monkeypatch.setattr(atualizar._instalar, "extrair", lambda *a, **k: ([], []))
+    monkeypatch.setattr(atualizar.skills, "detectar_harnesses", lambda: [])
+    staging = _staging_com_pyz(tmp_path, corpo)
+    alvo = tmp_path / "koine.pyz"; alvo.write_text("pyz velho", encoding="utf-8")
+    bindir = tmp_path / "bin"; bindir.mkdir()
+    atualizar.aplicar(str(staging), str(alvo), str(bindir), "9.9.9", force=False)
+    return bindir
+
+
+SENTINELA = '''import sys, os, pathlib
+# o "wrapper que so a versao nova conhece"
+i = sys.argv.index("--bin")
+pathlib.Path(sys.argv[i+1], "kn-do-futuro").write_text("koine.pyz")
+'''
+
+
+def test_wrapper_novo_nasce_no_upgrade(tmp_path, monkeypatch):
+    """O defeito: `aplicar` roda no processo do pyz VELHO, entao a lista de
+    wrappers e a dele — e wrapper introduzido pela versao nova nunca nasce.
+    Silencioso: exit 0 e `koine versao` correta.
+
+    Medido em 01/09/2026 na maquina de um usuario: upgrade 0.5.2 -> 0.10.0 por
+    `koine atualizar` deixou a instalacao sem os tres `kn-*-paseo`, e o
+    `paseo-info` da versao nova PRESCREVE um nome que nao existe no disco.
+
+    O discriminador e um wrapper que SO o artefato novo sabe criar: se a
+    geracao continuar acontecendo no processo antigo, ele nao aparece.
+    """
+    bindir = _aplicar(tmp_path, monkeypatch, SENTINELA)
+    assert (bindir / "kn-do-futuro").exists(), \
+        "a lista de wrappers ainda vem do pyz que esta executando"
+
+
+def test_upgrade_que_nao_consegue_delegar_avisa_e_nao_fica_sem_wrapper(
+        tmp_path, monkeypatch, capsys):
+    """Se o artefato novo nao souber gerar wrappers — comando renomeado numa
+    versao futura —, o `atualizar` volta a gerar pela lista antiga. Isso
+    REPRODUZ o defeito, entao nao pode ser silencioso: fallback mudo troca uma
+    falha visivel por uma intermitente.
+    """
+    bindir = _aplicar(tmp_path, monkeypatch, 'import sys; sys.exit(2)')
+    assert (bindir / "koine").exists(), "ficou sem wrapper nenhum"
+    err = capsys.readouterr().err
+    assert "koine instalar" in err, "o fallback precisa dizer como completar"
