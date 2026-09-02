@@ -170,12 +170,10 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
   máquina (a doc do produto diz o contrário); o CLI cai na porta padrão e acerta o
   serviço de outro usuário da máquina; e a pasta de configuração é **identidade e
   registro** — movê-la custa o pareamento de todos os aparelhos, sem mensagem de erro.
-- **Pendências abertas do acesso remoto** — jd-tasks **#708** (o entry `-hermes` do
-  opencode não converge no macOS; as bancadas têm versões diferentes do cliente, e
-  igualá-las é o primeiro passo), **#709** (escopo ou agente inexistente ainda derruba
-  o provider no canal, contra a decisão de que estado de pasta nunca derruba ali) e
-  **#710** (login do copilot na bancada de macOS). Conferir se ainda valem antes de
-  assumir que sim.
+- **Pendências abertas do acesso remoto** — jd-task **#710** (login do copilot na
+  bancada de macOS; é do mantenedor, OAuth por browser). As #708 e #709 fecharam em
+  30/08 e saíram na v0.11.0. **Conferir a lista contra o rastreador antes de assumir
+  que ela vale** — esta linha já ficou dois dias descrevendo tarefas fechadas.
 
 ## Família `kn-2N` espelha o `jd-cria-design` do brain
 

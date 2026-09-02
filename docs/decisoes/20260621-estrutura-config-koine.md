@@ -93,6 +93,17 @@ Campos que apontam para pasta no filesystem (ex: `pasta-referencias:` do escopo)
 
 Sem prefixo = erro de validação. Sem DWIM silencioso.
 
+**No Windows, o `home:` consulta a known folder quando o primeiro segmento é uma
+delas** — `Documents`, `Desktop` ou `Pictures`. Com Known Folder Move, que é o padrão
+de tenant corporativo, essas três são redirecionadas para dentro do OneDrive e o
+caminho no perfil vira casca vazia; concatenar apontaria para o lugar errado sem
+avisar. Onde não há redirecionamento a consulta devolve o mesmo caminho de sempre —
+é no-op onde funciona. Quando o resultado diverge da concatenação, a sessão diz em
+uma linha qual caminho passou a valer.
+
+Fora do Windows, e para qualquer outro primeiro segmento, `home:` continua sendo
+concatenação pura. O `abs:` nunca é tocado.
+
 Razões: portabilidade Mac↔Mac (backup, migração de máquina), cross-platform Mac↔Windows, suporte explícito a referência compartilhada em equipe.
 
 ### 4 — Plural "referências" + campo `pasta-referencias:`

@@ -6,6 +6,18 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Não publicado]
 
+### Corrigido — escopo apontando para `Documentos` encontra a pasta certa no Windows
+
+Em computador de empresa, `Documentos`, `Área de Trabalho` e `Imagens` costumam estar
+dentro do OneDrive, mesmo que o Explorer mostre no lugar de sempre. O Koine passou a
+perguntar ao Windows onde a pasta realmente está.
+
+Onde não há esse redirecionamento **nada muda**. Onde há, o Koine diz uma vez qual
+caminho passou a usar — resolver calado consertaria você sem que soubesse por quê.
+
+A conversa que cria e ajusta escopo (`/kn-02`) também passou a conferir a pasta pelo
+próprio Koine antes de dar o escopo por gravado.
+
 ### Corrigido — pasta de referências na nuvem não derruba mais a sessão
 
 Quando as referências do seu escopo ficam numa pasta que o Koine não consegue alcançar
