@@ -7,11 +7,14 @@ prova viva, com chamada real de LLM, fora da suíte.
 """
 import json
 import os
+import shutil
 
 import pytest
 
-from koine import adapters
+from koine import adapters, cli
 from koine.contexto import ContextoMontado
+
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Uma linha única por camada: asserção sobre cabeçalho que o próprio adapter
 # escreve passaria com o arquivo de origem vazio.
@@ -281,3 +284,64 @@ def test_dois_agentes_na_mesma_pasta_nao_se_sobrescrevem(cm_e_pasta, tmp_path, n
     assert not colididos, (
         f"{nome}: {len(colididos)} arquivo(s) de cache compartilhados entre dois "
         f"agentes da mesma pasta — o último a rodar governa a sessão do outro")
+
+
+# --- pasta-referências inacessível não derruba a sessão (jd-task #761) ------
+
+def _cenario_refs(tmp_path, monkeypatch, refs_path, dominios="[tecnologia]"):
+    """HOME isolado com um escopo apontando para `refs_path` e domínio declarado.
+
+    O domínio é obrigatório para o teste ter poder: sem ele o `indice.gerar` não
+    escreve arquivo nenhum, a guarda nunca é exercida e o teste passa em falso —
+    é a quinta forma de teste sem poder.
+    """
+    home = tmp_path / "home"
+    cfg, data = home / ".config" / "koine", home / ".local" / "share" / "koine"
+    (cfg / "escopos").mkdir(parents=True)
+    (cfg / "agentes").mkdir()
+    (data / "agentes").mkdir(parents=True)
+    (data / "bootstrap").mkdir()
+    shutil.copy(os.path.join(REPO, "vault", "KOINE.md"), data / "KOINE.md")
+    shutil.copy(os.path.join(REPO, "vault", "agentes", "hermes.md"),
+                data / "agentes" / "hermes.md")
+    (cfg / "teste.md").write_text("---\ntype: usuario\nnome: T\n---\n\n# T\n",
+                                  encoding="utf-8")
+    (cfg / "escopos" / "fixture.md").write_text(
+        "---\ntype: escopo\nnome: fixture\n"
+        f"pasta-referencias: abs:{refs_path}\n---\n\n# fixture\n", encoding="utf-8")
+    trab = tmp_path / "trabalho"
+    trab.mkdir()
+    (trab / "CONTEXTO.md").write_text(
+        f"---\ntype: contexto\nescopo: fixture\ndominios: {dominios}\n---\n\n# T\n",
+        encoding="utf-8")
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("USERPROFILE", str(home))
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    monkeypatch.delenv("XDG_CACHE_HOME", raising=False)
+    monkeypatch.chdir(trab)
+    return trab
+
+
+@pytest.fixture
+def _sem_launch(monkeypatch):
+    cap = {}
+    monkeypatch.setattr("koine.launch.lancar",
+                        lambda c, p, env=None, args=None: cap.update(cwd=p))
+    return cap
+
+
+@pytest.mark.parametrize("canal", [[], ["--canal-paseo", "--"]])
+def test_pasta_referencias_inacessivel_nao_derruba_a_sessao(tmp_path, monkeypatch,
+                                                            capsys, _sem_launch, canal):
+    """O defeito de produção: `indice.gerar` ESCREVE na pasta-referências a cada
+    launch, e `_escrever` abre o arquivo sem tratar `OSError`. Pasta em nuvem que
+    o processo não alcança derrubava a sessão com traceback de Python.
+
+    Degrada nos DOIS canais, de propósito: no terminal há um humano, e ele
+    também prefere sessão sem índice a traceback.
+    """
+    _cenario_refs(tmp_path, monkeypatch, str(tmp_path / "OneDrive-que-sumiu"))
+    assert cli.main(["claude"] + canal) == 0
+    assert "cwd" in _sem_launch, "a sessão precisa ter subido"
+    err = capsys.readouterr().err
+    assert "OneDrive-que-sumiu" in err, "o aviso tem que dizer QUAL caminho falhou"

@@ -326,7 +326,24 @@ def _montar_cm(agente: str, pasta: str,
         else:
             refs = paths.resolver_tagged(
                 schema.Escopo.from_fm(escopo_fm).pasta_referencias)
-            indice.gerar(refs, fm.get("dominios", []))
+            try:
+                indice.gerar(refs, fm.get("dominios", []))
+            except OSError as e:
+                # `indice.gerar` ESCREVE na pasta-referências a cada launch, e
+                # ela pode estar num lugar que este processo não alcança:
+                # OneDrive com Known Folder Move, unidade virtual por sessão,
+                # arquivo em nuvem sem hidratar. Antes isso subia como traceback
+                # e a sessão não abria (jd-task #761, medido em produção).
+                #
+                # Degrada: perder o índice atrapalha, traceback impede de
+                # trabalhar. E vale nos DOIS canais — no terminal também há
+                # alguém que prefere sessão sem índice a um stack trace.
+                #
+                # Os `indice_paths` do `cm` seguem apontando para o disco: se
+                # houver índice de uma sessão anterior, ele é usado, VELHO. É
+                # deliberado — existente-mas-velho é melhor que nada, e o aviso
+                # abaixo é o que impede que passe despercebido.
+                print(mensagens.indice_nao_gerado(refs, e), file=sys.stderr)
     cm = contexto.resolver(agente, pasta, canal=canal)
     cm.pasta_abs = pasta
     return cm
@@ -369,8 +386,15 @@ def _cmd_validar(args: list[str]) -> int:
     alvos = [a for a in args if not a.startswith("-")] or [os.getcwd()]
     # a pasta-referências do escopo mora fora da config e é onde vivem as
     # referências da /kn-11 — varrer só a config deixaria de fora justo elas
-    refs = [r for r in (_validar.refs_do_escopo(a, cfg) for a in alvos) if r]
+    resolvidas = [(a, ) + _validar.refs_do_escopo(a, cfg) for a in alvos]
+    refs = [r for _, r, existe in resolvidas if r and existe]
     achados = _validar.varrer([cfg] + alvos + refs)
+    # Pasta-referências que resolve e não existe é achado, não silêncio: é o
+    # estado que faz o launch abrir sem índice, e o que ele mostra — o caminho
+    # resolvido — é o diagnóstico inteiro num Windows com pasta redirecionada.
+    achados += [_validar.Achado(os.path.join(alvo, "CONTEXTO.md"),
+                                _validar.REFS_AUSENTE, motivo=r)
+                for alvo, r, existe in resolvidas if r and not existe]
     if "--corrigir" not in args:
         print(_validar.relatorio(achados), end="")
         return 1 if achados else 0

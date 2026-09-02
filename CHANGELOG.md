@@ -4,6 +4,27 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Não publicado]
+
+### Corrigido — pasta de referências na nuvem não derruba mais a sessão
+
+Quando as referências do seu escopo ficam numa pasta que o Koine não consegue alcançar
+— o caso medido foi o **OneDrive corporativo**, com `Documentos` redirecionado —, a
+sessão morria com um erro técnico de Python e não abria.
+
+Acontece porque o Koine **escreve** o índice das referências dentro dessa pasta a cada
+sessão. Se a escrita falha, agora a sessão **abre assim mesmo**, com um aviso dizendo
+qual caminho falhou e apontando o suspeito. Perder o índice atrapalha; não conseguir
+trabalhar é pior.
+
+### Adicionado — `koine validar` enxerga a pasta de referências que sumiu
+
+Ele era cego justamente para o estado acima: a pasta que não existe virava silêncio, e
+o relatório dizia "nenhum problema encontrado". Agora aponta o **caminho exato** e
+explica a causa mais comum no Windows — `Documentos`, `Área de Trabalho` e `Imagens`
+redirecionados para o OneDrive fazem o Explorer mostrar a pasta num lugar e o caminho
+real ser outro.
+
 ## [0.11.0] — 2026-09-01
 
 ### Adicionado — `koine instalar-wrappers`

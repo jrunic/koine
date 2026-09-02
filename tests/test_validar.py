@@ -230,3 +230,44 @@ def test_cmd_validar_sai_1_com_ficha_faltando(tmp_path, monkeypatch, capsys):
     _escrever(tmp_path, "trab/CONTEXTO.md", SEM_BLOCO)
     assert cli.main(["validar", os.path.join(str(tmp_path), "trab")]) == 1
     assert "escopo:" in capsys.readouterr().out
+
+
+# ---- a pasta-referências que não existe (jd-task #761) ---------------------
+
+def _apontar_refs(koine_home, destino):
+    """Reaponta o escopo da fixture para `destino`, sem criá-lo."""
+    esc = os.path.join(koine_home["home"], ".config", "koine", "escopos", "fixture.md")
+    with open(esc, "w", encoding="utf-8") as f:
+        f.write("---\ntype: escopo\nnome: fixture\n"
+                f"pasta-referencias: abs:{destino}\n---\n\n# fixture\n")
+    return destino
+
+
+def test_validar_enxerga_a_pasta_referencias_que_nao_existe(koine_home, monkeypatch,
+                                                            capsys):
+    """O estado que derrubou uma estação em produção, e que o validador não via.
+
+    Known Folder Move: o `Documents` do perfil é redirecionado para o OneDrive
+    corporativo e o caminho físico vira casca vazia. O escopo apontava para
+    `home:Documents/...`, o `home:` do Koine só concatena, e a sessão morria com
+    traceback (jd-task #761, 02/09/2026).
+
+    O validador era cego: `refs_do_escopo` devolvia `None` quando a pasta não
+    existia, e o relatório não dizia nada. Mesma forma do gap `SEM_FICHA` que a
+    v0.6.1 fechou — o validador não enxergando o estado que fecha a sessão.
+    """
+    monkeypatch.setenv("HOME", koine_home["home"])
+    sumida = _apontar_refs(koine_home,
+                           os.path.join(koine_home["home"], "Documents", "CURSO IA"))
+    assert cli.main(["validar", koine_home["trab"]]) == 1
+    out = capsys.readouterr().out
+    assert sumida in out, "o relatório precisa dizer QUAL caminho não existe"
+    assert "OneDrive" in out, "sem a pista do redirecionamento, o diagnóstico não fecha"
+
+
+def test_validar_nao_reclama_da_pasta_referencias_que_existe(koine_home, monkeypatch,
+                                                             capsys):
+    """Metade que dá poder à anterior: sem ela, um achado incondicional passaria."""
+    monkeypatch.setenv("HOME", koine_home["home"])
+    assert cli.main(["validar", koine_home["trab"]]) == 0
+    assert "não existe" not in capsys.readouterr().out

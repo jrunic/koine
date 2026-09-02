@@ -18,6 +18,7 @@ from koine import bootstrap, frontmatter, paths, schema
 REPARAVEL = "reparavel"  # YAML inválido que o Koine leu reparando o valor
 INVALIDO = "invalido"    # nem o reparo salva: TAB, indentação, bloco não-mapa
 SEM_FICHA = "sem-ficha"  # CONTEXTO.md sem `escopo:` — a sessão não abre nessa pasta
+REFS_AUSENTE = "refs-ausente"  # o escopo aponta para pasta que não existe no disco
 
 
 @dataclass
@@ -42,11 +43,17 @@ def varrer(caminhos: list[str]) -> list[Achado]:
     return sorted(achados, key=lambda a: a.arquivo)
 
 
-def refs_do_escopo(pasta: str, cfg: str) -> str | None:
-    """Pasta-referências do escopo declarado no CONTEXTO.md de `pasta`, se der
-    para resolver. É lá que moram as referências da /kn-11 — a população onde a
-    v0.4.6 quebrou —, e ela vive fora da config. Qualquer tropeço devolve None:
-    varredura não aborta por causa de uma pasta mal configurada."""
+def refs_do_escopo(pasta: str, cfg: str) -> tuple[str | None, bool]:
+    """Pasta-referências do escopo declarado no CONTEXTO.md de `pasta`.
+
+    Devolve `(caminho, existe)`. Os dois estados eram colapsados num `None` só —
+    "não deu para resolver" e "resolveu e não existe" —, e o segundo é
+    exatamente o que derruba a sessão: `indice.gerar` escreve ali a cada launch.
+    Quem colapsa não consegue reportar (jd-task #761).
+
+    Tropeço de leitura continua devolvendo `(None, False)`: varredura não aborta
+    por causa de uma pasta mal configurada.
+    """
     try:
         fm, _, _ = frontmatter.analisar(
             open(os.path.join(pasta, "CONTEXTO.md"), encoding="utf-8").read())
@@ -55,8 +62,8 @@ def refs_do_escopo(pasta: str, cfg: str) -> str | None:
         refs = paths.resolver_tagged(schema.Escopo.from_fm(efm).pasta_referencias)
     except (OSError, UnicodeDecodeError, KeyError, ValueError,
             frontmatter.FrontmatterInvalido):
-        return None
-    return refs if os.path.isdir(refs) else None
+        return None, False
+    return refs, os.path.isdir(refs)
 
 
 def _arquivos(alvo: str):
@@ -96,7 +103,18 @@ def relatorio(achados: list[Achado]) -> str:
         return "Frontmatter: nenhum problema encontrado.\n"
     linhas = [f"Frontmatter: {len(achados)} arquivo(s) para corrigir.\n"]
     for a in achados:
-        if a.estado == SEM_FICHA:
+        if a.estado == REFS_AUSENTE:
+            linhas.append(f"  ✗ {a.arquivo}")
+            linhas.append("      o escopo desta pasta aponta para uma pasta-referências")
+            linhas.append("      que não existe no disco:")
+            linhas.append(f"        {a.motivo}")
+            linhas.append("      A sessão abre, mas sem o índice das referências.")
+            linhas.append("      Causa mais comum no Windows: `Documentos`, `Área de")
+            linhas.append("      Trabalho` ou `Imagens` redirecionados para o OneDrive")
+            linhas.append("      corporativo. O Explorer mostra a pasta no lugar antigo,")
+            linhas.append("      e o caminho físico do perfil fica vazio — o escopo")
+            linhas.append("      precisa apontar para o caminho real, dentro do OneDrive.")
+        elif a.estado == SEM_FICHA:
             linhas.append(f"  ✗ {a.arquivo}")
             linhas.append("      sem `escopo:` no frontmatter — a Ficha Koine está")
             linhas.append("      faltando. A sessão não abre nesta pasta enquanto isso.")

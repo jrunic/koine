@@ -247,6 +247,28 @@ def contexto_ilegivel(pasta: str) -> str:
     )
 
 
+def indice_nao_gerado(refs: str, erro: OSError) -> str:
+    """A pasta-referências não aceitou a escrita do índice — a sessão segue.
+
+    A pista do OneDrive vai junto porque é a causa de produção: com Known Folder
+    Move, `Documentos` aponta para o OneDrive no Explorer e o caminho físico do
+    perfil vira casca vazia. Quem lê este aviso na máquina onde isso acontece
+    precisa do palpite, não só do fato.
+    """
+    return (
+        f"  ! índice do escopo não atualizado — {type(erro).__name__} em\n"
+        f"    {refs}\n"
+        "\n"
+        "    A sessão abriu assim mesmo, com o índice que já estivesse lá (pode\n"
+        "    estar desatualizado). As referências continuam no lugar; o que\n"
+        "    falhou foi escrever o catálogo delas.\n"
+        "\n"
+        "    Se esta pasta está no OneDrive ou no Google Drive, confira o\n"
+        "    caminho com `koine validar` — pasta redirecionada é a causa mais\n"
+        "    comum, e o caminho real costuma ser outro.\n"
+    )
+
+
 def escopo_nao_encontrado(escopo: str, disponiveis: list[str]) -> str:
     """CONTEXTO.md aponta para um escopo que não existe em config/escopos.
     Erra-se o slug com facilidade; listar os cadastrados resolve na hora."""
