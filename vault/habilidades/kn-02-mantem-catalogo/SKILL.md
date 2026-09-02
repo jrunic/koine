@@ -88,7 +88,9 @@ Perguntas (uma por vez):
 **Materialização:**
 
 - `~/.config/koine/escopos/<slug>.md` com frontmatter (Ficha Koine, `pasta-referencias` tagged, `proprietario`, `escopo-pai: null`) + corpo narrativo.
-- Cria a pasta-referências resolvendo o tagged path. Planta os contratos OKF na raiz:
+- Cria a pasta-referências **no caminho que o `koine validar` reportar** — não
+  resolva o `home:` você mesmo. Materialize o escopo primeiro, rode o validar na
+  pasta de trabalho, e use o caminho que ele imprimir. Planta os contratos OKF na raiz:
   - `index.md` — directory listing inicial (vazio, com header indicando o escopo).
   - `log.md` — entrada inicial `AAAAMMDD — escopo criado via /kn-02 (fluxo escopo)`.
 
@@ -103,6 +105,25 @@ Liste os escopos atuais (lendo `~/.config/koine/escopos/*.md`). Pergunte qual aj
 > "Que parte ajustar? (descrição, pasta-referências, dinâmica, ou outro campo)"
 
 **Cuidado especial com `pasta-referencias`.** Mudar o tagged path **não move o conteúdo**. Se o usuário quer relocar a pasta no filesystem, oriente a mover manualmente (Ação Documentada — gerar script) e só depois ajustar o tagged path no escopo.
+
+**Confira a pasta antes de dar o escopo por gravado, e confira pelo produto.** Depois de
+materializar, rode na pasta de trabalho:
+
+```
+koine validar <pasta>
+```
+
+Se ele reportar que a pasta-referências não existe, **leia o caminho que ele imprime** —
+é o caminho real que a sessão vai usar — e volte ao usuário com ele.
+
+**Não resolva o caminho por conta própria** e não conclua que está certo porque a pasta
+"parece existir": o `home:` resolve de um jeito nesta máquina e de outro na do vizinho, e
+quem sabe a diferença é o Koine, não você.
+
+Em máquina Windows, `Documentos`, `Área de Trabalho` e `Imagens` costumam estar dentro do
+OneDrive corporativo, e o Explorer mostra a pasta no lugar antigo. E se o usuário ditar o
+nome em português (`home:Documentos/...`), isso **não** vai funcionar: a pasta no disco
+chama `Documents` mesmo em Windows em português.
 
 Materialize com diff resumido. Adicione entrada no `log.md` da pasta-referências: `AAAAMMDD — escopo atualizado via /kn-02 — <campos>`.
 

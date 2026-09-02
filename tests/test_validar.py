@@ -271,3 +271,26 @@ def test_validar_nao_reclama_da_pasta_referencias_que_existe(koine_home, monkeyp
     monkeypatch.setenv("HOME", koine_home["home"])
     assert cli.main(["validar", koine_home["trab"]]) == 0
     assert "não existe" not in capsys.readouterr().out
+
+
+def test_validar_reporta_o_mesmo_caminho_que_a_sessao_usa(koine_home, monkeypatch,
+                                                          capsys):
+    """A ferramenta que avisa antes não pode discordar da que abre a sessão — é a
+    mesma exigência que já vale para `bootstrap.estado_do_fm`.
+
+    Aqui a concordância é por construção: as duas passam por `resolver_tagged`.
+    O teste existe para que uma refatoração que as separe seja barulhenta.
+    """
+    monkeypatch.setenv("HOME", koine_home["home"])
+    esc = os.path.join(koine_home["home"], ".config", "koine", "escopos", "fixture.md")
+    with open(esc, "w", encoding="utf-8") as f:
+        f.write("---\ntype: escopo\nnome: fixture\n"
+                "pasta-referencias: home:Documents/CURSO IA\n---\n\n# fixture\n")
+    destino = os.path.join(koine_home["home"], "OneDrive - ACME", "Documents")
+    monkeypatch.setattr("koine.winfolders.resolver",
+                        lambda seg, **kw: destino if seg.lower() == "documents" else None)
+
+    from koine import paths as _p
+    da_sessao = _p.resolver_tagged("home:Documents/CURSO IA")
+    assert cli.main(["validar", koine_home["trab"]]) == 1
+    assert da_sessao in capsys.readouterr().out

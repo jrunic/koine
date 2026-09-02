@@ -52,3 +52,18 @@ def test_skill_tem_description_dentro_do_limite(skill):
     fm, _ = frontmatter.ler_arquivo(os.path.join(HABILIDADES, skill, "SKILL.md"))
     desc = fm.get("description") or ""
     assert 1 <= len(desc) <= 1024, f"{skill}: description com {len(desc)} caracteres"
+
+
+def test_kn02_confere_a_pasta_pela_resolucao_do_produto():
+    """Conferir concatenando à mão erraria justamente na máquina com Known Folder
+    Move — e reintroduziria a classe "quem avisa e quem barra leem funções
+    diferentes" (jd-task #763)."""
+    import os
+    raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    texto = open(os.path.join(raiz, "vault", "habilidades",
+                              "kn-02-mantem-catalogo", "SKILL.md"),
+                 encoding="utf-8").read()
+    assert "koine validar" in texto, "a conferência tem que passar pelo produto"
+    # normaliza os dois lados: a prosa começa a frase com maiúscula, e substring
+    # é sensível a caixa
+    assert "não resolva o caminho por conta própria" in texto.lower()
