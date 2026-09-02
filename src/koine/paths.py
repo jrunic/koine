@@ -24,6 +24,18 @@ def cache_dir() -> str:
     return _xdg("XDG_CACHE_HOME", ".cache")
 
 
+def _normal(caminho: str) -> str:
+    """Forma comparável de um caminho — separador unificado e caixa normalizada.
+
+    Comparar a string crua acusava divergência onde não havia: no Windows a
+    concatenação preservava a `/` que o usuário escreveu no tagged path e o
+    caminho resolvido saía com `\\`, duas grafias da MESMA pasta. O gate de
+    bancada pegou (02/09/2026); em POSIX não reproduz, porque os dois lados usam
+    `/`.
+    """
+    return os.path.normcase(os.path.normpath(caminho.replace("\\", "/")))
+
+
 @dataclass(frozen=True)
 class Resolucao:
     """O caminho, mais o que a concatenação teria dado.
@@ -38,7 +50,7 @@ class Resolucao:
 
     @property
     def divergiu(self) -> bool:
-        return bool(self.concatenado) and self.concatenado != self.caminho
+        return bool(self.concatenado) and _normal(self.concatenado) != _normal(self.caminho)
 
 
 def resolver_tagged_detalhado(tagged: str, *, resolver_known=None) -> Resolucao:
@@ -60,8 +72,11 @@ def resolver_tagged_detalhado(tagged: str, *, resolver_known=None) -> Resolucao:
     real = (resolver_known or winfolders.resolver)(primeiro)
     if real is None:
         return Resolucao(concatenado)
+    # o concatenado do par comparado nasce da MESMA montagem do resolvido, para
+    # a mensagem sair com separador nativo nos dois lados
     return Resolucao(os.path.join(real, cauda) if cauda else real,
-                     concatenado=concatenado)
+                     concatenado=os.path.join(str(Path.home()), primeiro, cauda)
+                     if cauda else os.path.join(str(Path.home()), primeiro))
 
 
 def resolver_tagged(tagged: str) -> str:

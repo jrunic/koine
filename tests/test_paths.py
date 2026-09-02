@@ -84,3 +84,26 @@ def test_resolver_tagged_continua_devolvendo_string(monkeypatch, tmp_path):
     """A assinatura antiga não muda: três chamadores dependem dela."""
     monkeypatch.setenv("HOME", str(tmp_path))
     assert isinstance(paths.resolver_tagged("abs:/x/y"), str)
+
+
+def test_mesmo_caminho_com_separadores_diferentes_nao_e_divergencia():
+    """Defeito achado pelo gate de bancada em 02/09/2026, e invisível no macOS.
+
+    No Windows a concatenação preservava a `/` que o usuário escreveu no tagged
+    path (`Documents/CURSO IA`) enquanto o caminho resolvido saía com `\\` — as
+    duas strings diferentes apontando para a MESMA pasta. O aviso de
+    redirecionamento disparava numa máquina sem redirecionamento nenhum.
+
+    Em POSIX isso não reproduz: `os.path.join` usa `/` nos dois lados. Por isso a
+    comparação é sobre separador unificado, e não sobre a string crua.
+    """
+    r = paths.Resolucao(caminho="C:\\u\\Documents\\CURSO IA",
+                        concatenado="C:\\u\\Documents/CURSO IA")
+    assert not r.divergiu
+
+
+def test_caminho_realmente_diferente_continua_divergindo():
+    """Metade de poder: sem ela, um `divergiu` que devolvesse sempre False passaria."""
+    r = paths.Resolucao(caminho="C:\\u\\OneDrive\\Documents",
+                        concatenado="C:\\u\\Documents")
+    assert r.divergiu
