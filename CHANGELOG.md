@@ -4,7 +4,7 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Não publicado]
+## [0.12.0] — 2026-09-02
 
 ### Corrigido — escopo apontando para `Documentos` encontra a pasta certa no Windows
 
