@@ -247,6 +247,17 @@ def contexto_ilegivel(pasta: str) -> str:
     )
 
 
+def known_folder_redirecionada(concatenado: str, real: str) -> str:
+    """O caminho mudou porque o Windows diz que a pasta está em outro lugar.
+
+    Uma linha, no stderr, uma vez por sessão. Sem isso o Koine conserta o usuário
+    sem que ele saiba por quê — e quem for diagnosticar depois começa sem a
+    informação que mais importa.
+    """
+    return (f"  ! esta máquina redireciona a pasta: usando {real}\n"
+            f"    em vez de {concatenado} (Known Folder Move do Windows)")
+
+
 def indice_nao_gerado(refs: str, erro: OSError) -> str:
     """A pasta-referências não aceitou a escrita do índice — a sessão segue.
 

@@ -324,8 +324,14 @@ def _montar_cm(agente: str, pasta: str,
             if not canal:
                 raise
         else:
-            refs = paths.resolver_tagged(
+            _res = paths.resolver_tagged_detalhado(
                 schema.Escopo.from_fm(escopo_fm).pasta_referencias)
+            refs = _res.caminho
+            if _res.divergiu:
+                # Ponto único de aviso: `contexto.resolver` também resolve, e
+                # avisar nos dois daria a linha em dobro na mesma sessão.
+                print(mensagens.known_folder_redirecionada(_res.concatenado, refs),
+                      file=sys.stderr)
             try:
                 indice.gerar(refs, fm.get("dominios", []))
             except OSError as e:

@@ -345,3 +345,40 @@ def test_pasta_referencias_inacessivel_nao_derruba_a_sessao(tmp_path, monkeypatc
     assert "cwd" in _sem_launch, "a sessão precisa ter subido"
     err = capsys.readouterr().err
     assert "OneDrive-que-sumiu" in err, "o aviso tem que dizer QUAL caminho falhou"
+
+
+# --- o aviso quando a known folder muda o caminho (jd-task #762) ------------
+
+def test_launch_avisa_quando_a_known_folder_muda_o_caminho(tmp_path, monkeypatch,
+                                                           capsys, _sem_launch):
+    """Resolver em silêncio consertaria o usuário sem ele saber por quê — e o
+    próximo diagnóstico começaria sem essa informação (spec, critério 3)."""
+    refs = tmp_path / "OneDrive - ACME" / "Documents" / "CURSO IA"
+    refs.mkdir(parents=True)
+    _cenario_refs(tmp_path, monkeypatch, "SUBSTITUIDO-PELO-TAGGED")
+    esc = tmp_path / "home" / ".config" / "koine" / "escopos" / "fixture.md"
+    esc.write_text("---\ntype: escopo\nnome: fixture\n"
+                   "pasta-referencias: home:Documents/CURSO IA\n---\n\n# fixture\n",
+                   encoding="utf-8")
+    monkeypatch.setattr("koine.winfolders.resolver",
+                        lambda seg, **kw: str(refs.parent)
+                        if seg.lower() == "documents" else None)
+
+    assert cli.main(["claude"]) == 0
+    err = capsys.readouterr().err
+    assert "OneDrive - ACME" in err, "o aviso precisa nomear o caminho que passou a valer"
+    assert str(tmp_path / "home" / "Documents") in err, "e o que valia antes"
+    # o critério 2 da spec — o índice foi escrito no caminho RESOLVIDO. Sem esta
+    # linha ele dependeria inteiramente do gate de bancada.
+    assert (refs / "kn-indice-tecnologia.md").exists()
+
+
+def test_launch_calado_quando_nao_ha_divergencia(tmp_path, monkeypatch, capsys,
+                                                 _sem_launch):
+    """Metade de poder: sem ela, um aviso incondicional passaria."""
+    refs = tmp_path / "refs"
+    refs.mkdir()
+    _cenario_refs(tmp_path, monkeypatch, str(refs))
+    monkeypatch.setattr("koine.winfolders.resolver", lambda seg, **kw: None)
+    assert cli.main(["claude"]) == 0
+    assert "redireciona a pasta" not in capsys.readouterr().err
