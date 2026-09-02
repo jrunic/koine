@@ -36,3 +36,51 @@ def test_ambiente_de_teste_sem_xdg():
     # os.environ vaza para subprocessos ({**os.environ, "HOME": ...}) e
     # quebra o isolamento por HOME dos fixtures. conftest._isola_xdg limpa.
     assert not [k for k in os.environ if k.startswith("XDG_")]
+
+
+# --- known folder do Windows na resolução do tagged (jd-task #762) ----------
+
+def _sem_kfm(_segmento, **kw):
+    return None
+
+
+def _com_kfm(segmento, **kw):
+    return "C:\\u\\OneDrive - ACME\\Documents" if segmento.lower() == "documents" else None
+
+
+def test_sem_redirecionamento_o_caminho_e_o_de_sempre(monkeypatch, tmp_path):
+    """Critério 1 da spec: no-op onde funciona. É o teste que dá poder ao par —
+    sem ele, uma implementação que resolvesse SEMPRE passaria."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
+    r = paths.resolver_tagged_detalhado("home:Documents/CURSO IA",
+                                        resolver_known=_sem_kfm)
+    assert r.caminho == os.path.join(str(tmp_path), "Documents/CURSO IA")
+    assert not r.divergiu
+
+
+def test_com_redirecionamento_o_caminho_vai_para_a_known_folder(monkeypatch, tmp_path):
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
+    r = paths.resolver_tagged_detalhado("home:Documents/CURSO IA",
+                                        resolver_known=_com_kfm)
+    assert r.caminho == os.path.join("C:\\u\\OneDrive - ACME\\Documents", "CURSO IA")
+    assert r.divergiu
+    assert r.concatenado == os.path.join(str(tmp_path), "Documents/CURSO IA")
+
+
+def test_primeiro_segmento_que_nao_casa_fica_intocado(monkeypatch, tmp_path):
+    """Critério 7: é o estado da máquina de produção DEPOIS do conserto manual —
+    o escopo aponta para dentro do OneDrive por caminho literal. Não pode mudar."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
+    r = paths.resolver_tagged_detalhado("home:OneDrive - ACME/Documents/CURSO IA",
+                                        resolver_known=_com_kfm)
+    assert r.caminho == os.path.join(str(tmp_path), "OneDrive - ACME/Documents/CURSO IA")
+    assert not r.divergiu
+
+
+def test_resolver_tagged_continua_devolvendo_string(monkeypatch, tmp_path):
+    """A assinatura antiga não muda: três chamadores dependem dela."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    assert isinstance(paths.resolver_tagged("abs:/x/y"), str)
