@@ -13,12 +13,13 @@ referências do usuário passa por aqui, onde ele pediu e vê a lista.
 import os
 from dataclasses import dataclass, field
 
-from koine import bootstrap, frontmatter, paths, schema
+from koine import bootstrap, frontmatter, indice, paths, schema
 
 REPARAVEL = "reparavel"  # YAML inválido que o Koine leu reparando o valor
 INVALIDO = "invalido"    # nem o reparo salva: TAB, indentação, bloco não-mapa
 SEM_FICHA = "sem-ficha"  # CONTEXTO.md sem `escopo:` — a sessão não abre nessa pasta
 REFS_AUSENTE = "refs-ausente"  # o escopo aponta para pasta que não existe no disco
+DESCRICAO_LONGA = "descricao-longa"  # cabe na referência, não cabe no índice
 
 
 @dataclass
@@ -31,13 +32,17 @@ class Achado:
     coluna: int | None = None
 
 
-def varrer(caminhos: list[str]) -> list[Achado]:
+def varrer(caminhos: list[str], refs_indexadas: tuple = ()) -> list[Achado]:
     """Achados de todo `.md` sob `caminhos` (arquivo ou pasta). Arquivo válido
-    não vira achado. Pasta oculta é ignorada (paridade com o walk do índice)."""
+    não vira achado. Pasta oculta é ignorada (paridade com o walk do índice).
+
+    `refs_indexadas` são as pastas-referências desta varredura — e só dentro
+    delas a `description` alimenta um `kn-indice-<dom>.md`. Fora, ela não custa
+    contexto nenhum, e acusá-la seria pedir trabalho por nada."""
     achados = []
     for alvo in caminhos:
         for arq in _arquivos(alvo):
-            a = _analisar(arq)
+            a = _analisar(arq, refs_indexadas)
             if a:
                 achados.append(a)
     return sorted(achados, key=lambda a: a.arquivo)
@@ -78,7 +83,21 @@ def _arquivos(alvo: str):
                 yield os.path.join(raiz, a)
 
 
-def _analisar(arq: str) -> Achado | None:
+def _entra_em_indice(arq: str, refs_indexadas: tuple) -> bool:
+    """Este arquivo vira linha de algum `kn-indice-<dom>.md`?
+
+    Só a pasta-referências do escopo alimenta índice. Fora dela — config, pasta
+    de trabalho, referência de alcance de pasta — a `description` não custa
+    contexto, e acusá-la seria o falso positivo que a rc1 da v0.12.0 reprovou.
+    """
+    base = os.path.basename(arq)
+    if base in indice.CONTRATOS_RAIZ or base.startswith("kn-indice-"):
+        return False
+    return any(os.path.commonpath([os.path.abspath(arq), os.path.abspath(r)])
+               == os.path.abspath(r) for r in refs_indexadas)
+
+
+def _analisar(arq: str, refs_indexadas: tuple = ()) -> Achado | None:
     try:
         with open(arq, encoding="utf-8") as f:
             texto = f.read()
@@ -93,7 +112,16 @@ def _analisar(arq: str) -> Achado | None:
     if (os.path.basename(arq) == "CONTEXTO.md"
             and bootstrap.estado_do_fm(fm) == bootstrap.INCOMPLETO):
         return Achado(arq, SEM_FICHA)
-    return Achado(arq, REPARAVEL, chaves=reparos) if reparos else None
+    # Precedência: o que impede a sessão vem antes do que só encurta o índice.
+    # Um achado por arquivo — quem tem aspas faltando E description longa ouve
+    # sobre a primeira, e sobre a segunda na rodada seguinte. Limitação
+    # declarada, não esquecimento.
+    if reparos:
+        return Achado(arq, REPARAVEL, chaves=reparos)
+    desc = fm.get("description", "") or ""
+    if len(desc) > indice.LIMITE_DESCRICAO and _entra_em_indice(arq, refs_indexadas):
+        return Achado(arq, DESCRICAO_LONGA, motivo=str(len(desc)))
+    return None
 
 
 def relatorio(achados: list[Achado]) -> str:
@@ -120,6 +148,13 @@ def relatorio(achados: list[Achado]) -> str:
             linhas.append("      faltando. A sessão não abre nesta pasta enquanto isso.")
             linhas.append("      Abra uma sessão aqui (`kn-<cliente> hermes <pasta>`) que o")
             linhas.append("      Hermes repõe a ficha preservando o que já está escrito.")
+        elif a.estado == DESCRICAO_LONGA:
+            linhas.append(f"  ⚠ {a.arquivo}")
+            linhas.append(f"      a `description` tem {a.motivo} caracteres, e o")
+            linhas.append(f"      índice mostra os primeiros {indice.LIMITE_DESCRICAO}.")
+            linhas.append("      Nada foi alterado: o arquivo está inteiro, e a")
+            linhas.append("      sessão continua funcionando. Encurte quando quiser")
+            linhas.append("      que a linha do catálogo diga tudo por si.")
         elif a.estado == REPARAVEL:
             campos = ", ".join(f"`{c}`" for c in a.chaves)
             linhas.append(f"  ⚠ {a.arquivo}")

@@ -394,7 +394,8 @@ def _cmd_validar(args: list[str]) -> int:
     # referências da /kn-11 — varrer só a config deixaria de fora justo elas
     resolvidas = [(a, ) + _validar.refs_do_escopo(a, cfg) for a in alvos]
     refs = [r for _, r, existe in resolvidas if r and existe]
-    achados = _validar.varrer([cfg] + alvos + refs)
+    achados = _validar.varrer([cfg] + alvos + refs,
+                              refs_indexadas=tuple(refs))
     # Pasta-referências que resolve e não existe é achado, não silêncio: é o
     # estado que faz o launch abrir sem índice, e o que ele mostra — o caminho
     # resolvido — é o diagnóstico inteiro num Windows com pasta redirecionada.

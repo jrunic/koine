@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from koine import frontmatter, paths, schema
 
 # Contratos OKF ignorados apenas na raiz da pasta-referências.
-_CONTRATOS_RAIZ = ("index.md", "log.md")
+CONTRATOS_RAIZ = ("index.md", "log.md")
 
 # Teto da `description` na linha do índice, em CARACTERES.
 #
@@ -47,7 +47,7 @@ def gerar(pasta_refs: str, dominios: list[str]) -> None:
             full = os.path.join(raiz, a)
             rel = os.path.relpath(full, pasta_refs).replace(os.sep, "/")
             # contratos OKF só são ignorados na raiz
-            if "/" not in rel and (a in _CONTRATOS_RAIZ or a.startswith("kn-indice-")):
+            if "/" not in rel and (a in CONTRATOS_RAIZ or a.startswith("kn-indice-")):
                 continue
             try:
                 fm, _ = frontmatter.ler_arquivo(full)

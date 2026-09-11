@@ -6,7 +6,7 @@ que já escreveram YAML ruim (bug reportado em produção).
 """
 import os
 
-from koine import cli, validar
+from koine import cli, indice, validar
 
 BOM = "---\nescopo: fixture\ndescricao: Tudo certo aqui\n---\n\n# ok\n"
 REPARAVEL = "---\nescopo: fixture\ndescricao: Vendas B2B: acompanhamento\n---\n\n# ok\n"
@@ -294,3 +294,75 @@ def test_validar_reporta_o_mesmo_caminho_que_a_sessao_usa(koine_home, monkeypatc
     da_sessao = _p.resolver_tagged("home:Documents/CURSO IA")
     assert cli.main(["validar", koine_home["trab"]]) == 1
     assert da_sessao in capsys.readouterr().out
+
+
+REF_LONGA_VAL = """---
+title: Ref
+description: "{desc}"
+dominios: [tecnologia]
+---
+
+# Corpo
+"""
+
+
+def test_description_acima_do_limite_vira_achado(tmp_path):
+    ref = tmp_path / "longa.md"
+    ref.write_text(REF_LONGA_VAL.format(desc="a" * 500), encoding="utf-8")
+
+    achados = validar.varrer([str(tmp_path)], refs_indexadas=(str(tmp_path),))
+
+    assert [a.estado for a in achados] == [validar.DESCRICAO_LONGA]
+
+
+def test_description_no_limite_nao_vira_achado(tmp_path):
+    ref = tmp_path / "curta.md"
+    ref.write_text(REF_LONGA_VAL.format(desc="a" * indice.LIMITE_DESCRICAO),
+                   encoding="utf-8")
+
+    assert validar.varrer([str(tmp_path)], refs_indexadas=(str(tmp_path),)) == []
+
+
+def test_description_longa_fora_da_pasta_referencias_nao_vira_achado(tmp_path):
+    """Config, pasta de trabalho e referência de alcance de pasta não alimentam
+    índice nenhum — a description ali não custa contexto, e acusá-la seria pedir
+    trabalho por nada."""
+    refs = tmp_path / "refs"; refs.mkdir()
+    trab = tmp_path / "trab"; trab.mkdir()
+    (trab / "nota-local.md").write_text(REF_LONGA_VAL.format(desc="a" * 500),
+                                        encoding="utf-8")
+
+    assert validar.varrer([str(trab)], refs_indexadas=(str(refs),)) == []
+
+
+def test_contratos_okf_da_raiz_nao_viram_achado(tmp_path):
+    for nome in ("index.md", "log.md"):
+        (tmp_path / nome).write_text(REF_LONGA_VAL.format(desc="a" * 500),
+                                     encoding="utf-8")
+
+    assert validar.varrer([str(tmp_path)], refs_indexadas=(str(tmp_path),)) == []
+
+
+def test_corrigir_nao_reescreve_description(tmp_path):
+    ref = tmp_path / "longa.md"
+    original = REF_LONGA_VAL.format(desc="a" * 500)
+    ref.write_text(original, encoding="utf-8")
+
+    achados = validar.varrer([str(tmp_path)], refs_indexadas=(str(tmp_path),))
+    corrigidos, pendentes = validar.corrigir(achados)
+
+    assert corrigidos == []
+    assert [a.estado for a in pendentes] == [validar.DESCRICAO_LONGA]
+    assert ref.read_text(encoding="utf-8") == original
+    assert not (tmp_path / "longa.md.bak").exists()
+
+
+def test_relatorio_nomeia_o_arquivo_e_o_limite(tmp_path):
+    ref = tmp_path / "longa.md"
+    ref.write_text(REF_LONGA_VAL.format(desc="a" * 500), encoding="utf-8")
+
+    texto = validar.relatorio(
+        validar.varrer([str(tmp_path)], refs_indexadas=(str(tmp_path),)))
+
+    assert "longa.md" in texto
+    assert str(indice.LIMITE_DESCRICAO) in texto
