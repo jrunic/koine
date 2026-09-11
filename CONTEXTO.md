@@ -174,6 +174,12 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
   bancada de macOS; é do mantenedor, OAuth por browser). As #708 e #709 fecharam em
   30/08 e saíram na v0.11.0. **Conferir a lista contra o rastreador antes de assumir
   que ela vale** — esta linha já ficou dois dias descrevendo tarefas fechadas.
+- **Resíduo declarado (#874):** quem já tinha o vault instalado fica com um
+  `habilidades/kn-13-sabatina-plano/FORMATO-GLOSSARIO.md` **órfão** — o `extrair`
+  copia e não remove o que saiu do pacote. Medido em 11/09/2026 num HOME isolado.
+  Nada aponta mais para ele, e varrer o disco do usuário para apagar um `.md`
+  morto é desproporcional. **Se aparecer um segundo caso de arquivo shipped
+  removido, a limpeza de estoque vira tarefa própria** — hoje é um arquivo.
 - **Em `main` e ainda NÃO publicado (#863/#871):** o teto de 200 caracteres na
   `description` do índice, a dedup de entrada entre domínios, o aviso de carga
   dupla no launch e o achado `DESCRICAO_LONGA` do `validar`. **A release exige

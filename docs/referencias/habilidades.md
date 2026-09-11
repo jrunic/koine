@@ -48,6 +48,7 @@ Espaço entre blocos permite adicionar skills futuras sem renumeração cascata.
 | **kn-12-prepara-contexto** | `/kn-12-prepara-contexto` | Quando o binário não está disponível | Gerar `CLAUDE.md` e índices de domínio no modo skills |
 | **kn-13-sabatina-plano** | `/kn-13-sabatina-plano` | Quando é preciso entender antes de decidir | Entrevista socrática que confere o que o usuário afirma contra a evidência real, afia o vocabulário no `GLOSSARIO.md` e registra a decisão que passa nos três critérios |
 | **kn-14-organiza-workspaces** | `/kn-14-organiza-workspaces` | Quando nasce pasta de trabalho | Registrar pastas no Paseo — projeto, nome e workspace — para abri-las do celular |
+| **kn-15-mantem-glossario** | `/kn-15-mantem-glossario` | Quando a mesma coisa é chamada de dois jeitos | Criar ou atualizar o `GLOSSARIO.md` do trabalho — cada termo com um sentido só, os sinônimos que ficam de fora e as fronteiras entre conceitos |
 | **kn-21-escreve-design** | `/kn-21-escreve-design` | 1× por marca, revisada quando a identidade muda | Escrever o `DESIGN.md` da marca na pasta-referências do escopo |
 | **kn-22-gera-imagem** | `/kn-22-gera-imagem` | Quando a sessão precisa de peça visual | Compor prompt a partir do `DESIGN.md` e gerar imagem via `imagio` |
 | **kn-23-gera-marca-prelo** | `/kn-23-gera-marca-prelo` | 1× por marca, regerada quando o `DESIGN.md` muda | Derivar `tokens.css` + `config.json` + fontes para o `prelo` |
@@ -256,6 +257,44 @@ Enquanto a conversa acontece, o vocabulário resolvido é gravado no `GLOSSARIO.
 
 ---
 
+## `kn-15-mantem-glossario`
+
+**Roda quando o vocabulário precisa ser acertado, e só isso.** É a porta curta
+para o glossário: afia os termos e grava, sem a árvore de decisões e sem exigir
+fonte de evidência.
+
+**A fronteira com a `/kn-13`** é o objetivo da conversa, não o assunto. Para
+**entender um processo** antes de decidir, é a sabatina — ela afia o vocabulário
+no caminho, pelo mesmo comportamento, e vai muito além dele. Para **registrar um
+termo** que já foi resolvido, ou para sentar e fazer o glossário do escopo, é
+esta. As duas carregam o mesmo `conceitos/glossario.md`, então o resultado não
+depende de por qual porta o usuário entrou.
+
+**Quando invocar:**
+- Um termo acabou de ser resolvido na conversa e precisa ficar gravado
+- A mesma coisa está sendo chamada de dois jeitos entre sessões
+- Você quer fazer o glossário de um escopo do zero
+- A `/kn-99-encerra-sessao` percebeu que o vocabulário oscilou e ofereceu
+
+**Não use para:** entrevistar processo (`/kn-13-sabatina-plano`), catalogar
+conhecimento formado (`/kn-11-mantem-referencia`) nem fechar a sessão
+(`/kn-99-encerra-sessao`).
+
+**Inputs:** nenhum obrigatório — roda em qualquer pasta.
+
+**Outputs (conforme o alcance escolhido pelo usuário):**
+- Alcance de pasta — `GLOSSARIO.md` na pasta de trabalho, sem frontmatter
+- Alcance de escopo — `GLOSSARIO.md` na pasta-referências, **com frontmatter**
+  (`dominios: [universal]`), apontado por uma seção no arquivo do escopo
+
+**Skills relacionadas:**
+- `/kn-13-sabatina-plano` — mesmo comportamento, dentro da entrevista
+- `/kn-12-prepara-contexto` — regenera os índices depois de gravar no escopo
+
+**SKILL.md:** `~/.local/share/koine/habilidades/kn-15-mantem-glossario/SKILL.md`
+
+---
+
 ## `kn-21-escreve-design`
 
 > As quatro skills da família `kn-2N` formam uma sequência. Para pré-requisitos, ordem de uso e solução de problemas ponta a ponta, ver o guia [A marca do escopo](../guias/marca-do-escopo.md).
@@ -365,7 +404,10 @@ Após `koine instalar`:
 ├── kn-03-cria-agente/SKILL.md
 ├── kn-11-mantem-referencia/SKILL.md
 ├── kn-12-prepara-contexto/SKILL.md
+├── kn-04-conecta-o-paseo/SKILL.md
 ├── kn-13-sabatina-plano/SKILL.md
+├── kn-14-organiza-workspaces/SKILL.md
+├── kn-15-mantem-glossario/SKILL.md
 ├── kn-21-escreve-design/SKILL.md
 ├── kn-22-gera-imagem/SKILL.md
 ├── kn-23-gera-marca-prelo/SKILL.md

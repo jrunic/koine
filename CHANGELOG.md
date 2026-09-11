@@ -6,6 +6,27 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Não publicado]
 
+### Adicionado — o glossário deixou de depender da sabatina
+
+- **`/kn-15-mantem-glossario`** — conversa curta que cria ou atualiza o glossário
+  do seu trabalho: cada termo com um sentido só, os sinônimos que ficam de fora e
+  as fronteiras entre conceitos que se confundem. Antes, gravar um termo exigia a
+  entrevista completa da sabatina.
+- O **fechamento de sessão** (`/kn-99`) passou a perguntar pelo vocabulário quando
+  ele oscilou na conversa — termo que você corrigiu em voz alta não morre mais com
+  a sessão. Pergunta só quando houve sinal; e oferece, nunca cria sozinho.
+- `koine validar` aponta glossário que está na pasta de referências e não aparece
+  no índice.
+
+### Mudado
+
+- O glossário ganhou **conceito próprio**, com o comportamento e o formato juntos:
+  a sabatina e a skill nova usam exatamente as mesmas regras, e o resultado não
+  depende de por qual porta você entrou.
+- O glossário de escopo passou a ser **catalogado** como qualquer conhecimento de
+  escopo, sem perder o atalho que já existia no arquivo do escopo.
+
+
 ### Corrigido — o contexto de cada sessão parou de crescer sem teto
 
 Num catálogo maduro, o índice de referências virava a maior parte do que a sessão
