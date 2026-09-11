@@ -58,6 +58,58 @@ def dominio_de(indice_path: str) -> str:
     return base
 
 
+_PREFIXO_ENTRADA = "- `"
+
+
+def _caminho_da_entrada(linha: str) -> str:
+    """O path relativo dentro da linha do índice, ou vazio se não for entrada."""
+    if not linha.startswith(_PREFIXO_ENTRADA):
+        return ""
+    resto = linha[len(_PREFIXO_ENTRADA):]
+    fim = resto.find("`")
+    return resto[:fim] if fim > 0 else ""
+
+
+def secoes_de_indice(indice_paths: list) -> list:
+    """As seções de referências de UMA sessão, com a repetição resolvida.
+
+    Cada `kn-indice-<dom>.md` está certo sozinho — e continua: o arquivo em
+    disco lista tudo que é daquele domínio, porque quem o abre espera o catálogo
+    completo dele. O custo aparece quando dois índices entram no MESMO documento:
+    medido em 10/09/2026, 20 entradas declaravam dois domínios e viajavam
+    duplicadas, 16.253 bytes por sessão.
+
+    A entrada é descrita no PRIMEIRO índice em que aparece — ordem do `dominios:`
+    da pasta, que já é a ordem em que eles entram no documento. Nas seguintes ela
+    vira referência cruzada: não some, porque sumir esconderia do agente que a
+    referência pertence àquele domínio, que é informação de método.
+
+    Ponto único de propósito. São TRÊS os caminhos de montagem (o documento
+    inline comum, o do codex e o copilot, que emite um arquivo por índice), e
+    corrigir só onde se olhou foi o defeito que a jd-task #706 achou.
+    """
+    partes, vistos = [], {}
+    for ip in indice_paths:
+        dom = dominio_de(ip)
+        try:
+            with open(ip, encoding="utf-8") as f:
+                texto = f.read()
+        except OSError:
+            continue
+        saida = []
+        for linha in texto.split("\n"):
+            rel = _caminho_da_entrada(linha)
+            if rel and rel in vistos:
+                saida.append(f"- `{rel}` — descrita em *Referências — "
+                             f"{vistos[rel]}*")
+                continue
+            if rel:
+                vistos[rel] = dom
+            saida.append(linha)
+        partes.append(Parte("Referências — " + dom, "\n".join(saida)))
+    return partes
+
+
 def agente_de(cm) -> str:
     """Nome do agente que a sessão realmente vai usar, sem extensão.
 
@@ -125,8 +177,7 @@ def documento_inline(titulo: str, cm) -> str:
     add("Agente", cm.agente_path)
     if not cm.bootstrap:
         add("Escopo", cm.escopo_path)
-        for ip in cm.indice_paths:
-            add("Referências — " + dominio_de(ip), ip)
+        partes.extend(secoes_de_indice(cm.indice_paths))
     add_instrucao(partes, cm)
     add("Contexto da sessão (snapshot de ./CONTEXTO.md)", cm.contexto_path)
     return mescar_documentos(titulo, partes)
