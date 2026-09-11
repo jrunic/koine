@@ -91,3 +91,45 @@ def test_indice_gerado_tem_frontmatter_valido_com_dominio_exotico(
     assert reparos == []          # o Koine não escreve YAML que precise de reparo
     assert fm["dominio"] == "vendas: b2b"
     assert fm["entradas"] == 0
+
+
+REF_LONGA = """---
+title: Ref longa
+description: "{desc}"
+dominios: [tecnologia]
+---
+
+# Corpo
+"""
+
+
+def test_description_longa_e_cortada_no_indice(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    refs = tmp_path / "refs"
+    refs.mkdir()
+    longa = "a" * 500
+    (refs / "longa.md").write_text(REF_LONGA.format(desc=longa), encoding="utf-8")
+
+    indice.gerar(str(refs), ["tecnologia"])
+
+    idx = (refs / "kn-indice-tecnologia.md").read_text(encoding="utf-8")
+    linha = [l for l in idx.split("\n") if l.startswith("- `longa.md`")][0]
+    assert "a" * indice.LIMITE_DESCRICAO in linha
+    assert "a" * (indice.LIMITE_DESCRICAO + 1) not in linha
+    assert linha.endswith("…")
+    # a referência em disco continua inteira
+    assert longa in (refs / "longa.md").read_text(encoding="utf-8")
+
+
+def test_description_curta_nao_e_tocada(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    refs = tmp_path / "refs"
+    refs.mkdir()
+    (refs / "curta.md").write_text(REF_LONGA.format(desc="uma nota curta"),
+                                   encoding="utf-8")
+
+    indice.gerar(str(refs), ["tecnologia"])
+
+    idx = (refs / "kn-indice-tecnologia.md").read_text(encoding="utf-8")
+    assert "- `curta.md` — uma nota curta" in idx
+    assert "…" not in idx

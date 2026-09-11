@@ -7,6 +7,28 @@ from koine import frontmatter, paths, schema
 # Contratos OKF ignorados apenas na raiz da pasta-referências.
 _CONTRATOS_RAIZ = ("index.md", "log.md")
 
+# Teto da `description` na linha do índice, em CARACTERES.
+#
+# A `description` é copiada verbatim da referência — contrato da `kn-11` e da
+# `kn-12`, que proíbem parafrasear. O que ela não tinha era teto: medido em
+# 10/09/2026 num catálogo real, a mediana da linha era de 741 a 830 bytes, e os
+# dois índices de uma pasta somavam 122 KB carregados em TODA sessão.
+#
+# O corte é visível e a referência em disco continua inteira: o que o agente
+# perde aqui ele recupera abrindo o arquivo, que é o que o método já manda fazer.
+# Este é o MESMO número que o `koine validar` usa para acusar `description`
+# longa (jd-task #871) — dois limites diferentes produziriam referência que passa
+# na escrita e mesmo assim aparece cortada aqui.
+LIMITE_DESCRICAO = 200
+MARCA_DE_CORTE = "…"
+
+
+def cortar_descricao(desc: str) -> str:
+    """A `description` como ela entra na linha do índice."""
+    if len(desc) <= LIMITE_DESCRICAO:
+        return desc
+    return desc[:LIMITE_DESCRICAO] + MARCA_DE_CORTE
+
 
 def gerar(pasta_refs: str, dominios: list[str]) -> None:
     """Materializa kn-indice-<dom>.md para cada domínio declarado.
@@ -86,6 +108,7 @@ def _escrever(path, dom, sinopse, itens):
         linhas.append("_Nenhuma referência catalogada neste domínio._")
     else:
         for rel, desc in itens:
+            desc = cortar_descricao(desc)
             linhas.append(f"- `{rel}` — {desc}" if desc else f"- `{rel}`")
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(linhas) + "\n")
