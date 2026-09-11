@@ -69,6 +69,7 @@ Aguarde correções. Não economize aqui — síntese mal feita prejudica todas 
   - **Sim — outras pastas usam** → `/kn-11-mantem-referencia` (alcance de escopo; vai para pasta-referências).
   - **Não — só esta pasta**, e cabe em 1-2 frases → **edita `CONTEXTO.md` direto**: linha em seção "Referências locais" (cria a seção se ainda não existe) com nome do conceito + 1 linha de descrição.
   - **Não — só esta pasta**, material denso (checklist, várias seções, lista longa) → cria `<slug>.md` na **raiz da pasta de trabalho** + linha em CONTEXTO.md apontando + descrição. Sem `index.md`, `log.md`, `kn-indice` — pasta de trabalho não tem contrato OKF (soberania do usuário).
+- **O vocabulário oscilou?** (você chamou a mesma coisa de dois jeitos; o usuário corrigiu um termo — *"não é balcão, é recepção"*; apareceu palavra do negócio dele que você não sabia) → `/kn-15-mantem-glossario`, que segue o `conceitos/glossario.md`. **O gatilho é a conversa, não o disco**: sem sinal na sessão, não pergunte. Havendo glossário, o termo entra nele; não havendo, a `/kn-15` conduz a criação — **ofereça, nunca crie por conta própria.**
 - **Preferência ou restrição do usuário emergiu?** (jeito de falar, calibragem que ele corrigiu) → `/kn-02-mantem-catalogo` Fluxo 1 (arquivo do usuário). Anote o delta exato (o que o usuário disse) antes de invocar.
 - **Calibragem do agente operacional desafinou?** (algo no tom/calibragem do agente em sessão incomodou e o usuário sinalizou) → editar `~/.config/koine/agentes/<nome>.md` diretamente (Onda 1 não tem skill de edição). Mostrar diff ao usuário.
 - **Dinâmica do escopo mudou?** (stakeholder central novo, foco operacional do escopo se redefiniu) → `/kn-02-mantem-catalogo` Fluxo 2b (atualizar escopo).
@@ -87,6 +88,7 @@ Decisões de distribuição que exigem invocar outra skill: pergunte se o usuár
 | Referência catalogável, **alcance de escopo** (outras pastas usam) | `/kn-11-mantem-referencia` |
 | Referência catalogável, **alcance de pasta**, cabe em frase | linha em `<pasta>/CONTEXTO.md` (edita direto) |
 | Referência catalogável, **alcance de pasta**, material denso | `<slug>.md` na raiz da pasta + linha em CONTEXTO.md |
+| Termo corrigido, ou a mesma coisa chamada de dois jeitos | `/kn-15-mantem-glossario` |
 | Preferência/restrição do usuário (jeito de comunicar) | `/kn-02-mantem-catalogo` Fluxo 1 |
 | Calibragem/tom do agente operacional | edição manual de `~/.config/koine/agentes/<nome>.md` |
 | Dinâmica/stakeholder central do escopo | `/kn-02-mantem-catalogo` Fluxo 2b |
