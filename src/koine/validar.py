@@ -20,6 +20,7 @@ INVALIDO = "invalido"    # nem o reparo salva: TAB, indentação, bloco não-map
 SEM_FICHA = "sem-ficha"  # CONTEXTO.md sem `escopo:` — a sessão não abre nessa pasta
 REFS_AUSENTE = "refs-ausente"  # o escopo aponta para pasta que não existe no disco
 DESCRICAO_LONGA = "descricao-longa"  # cabe na referência, não cabe no índice
+GLOSSARIO_SOLTO = "glossario-solto"    # na pasta-referências e fora do catálogo
 
 # A partir de quantas `description` longas o relatório resume em vez de listar.
 # Medido na instalação de uma usuária em 10/09/2026: 156 das 167 referências
@@ -127,6 +128,14 @@ def _analisar(arq: str, refs_indexadas: tuple = ()) -> Achado | None:
     # declarada, não esquecimento.
     if reparos:
         return Achado(arq, REPARAVEL, chaves=reparos)
+    # Antes da `description`: não entrar no índice é mais grave que entrar com a
+    # linha cortada. O discriminante é `dominios:` e não a existência do bloco —
+    # medido em 11/09/2026, arquivo sem frontmatter devolve `fm` VAZIO sem
+    # levantar, e frontmatter sem `dominios:` fica igualmente fora do catálogo.
+    if (os.path.basename(arq) == "GLOSSARIO.md"
+            and not fm.get("dominios")
+            and _entra_em_indice(arq, refs_indexadas)):
+        return Achado(arq, GLOSSARIO_SOLTO)
     desc = fm.get("description", "") or ""
     if len(desc) > indice.LIMITE_DESCRICAO and _entra_em_indice(arq, refs_indexadas):
         return Achado(arq, DESCRICAO_LONGA, motivo=str(len(desc)))
@@ -163,6 +172,13 @@ def relatorio(achados: list[Achado], todas: bool = False) -> str:
             linhas.append("      faltando. A sessão não abre nesta pasta enquanto isso.")
             linhas.append("      Abra uma sessão aqui (`kn-<cliente> hermes <pasta>`) que o")
             linhas.append("      Hermes repõe a ficha preservando o que já está escrito.")
+        elif a.estado == GLOSSARIO_SOLTO:
+            linhas.append(f"  ⚠ {a.arquivo}")
+            linhas.append("      este glossário está na pasta-referências mas não")
+            linhas.append("      aparece no índice: falta o `dominios:` que o")
+            linhas.append("      cataloga. Nada foi alterado, e a sessão continua")
+            linhas.append("      funcionando — mas só quem souber que ele existe")
+            linhas.append("      vai abri-lo. `/kn-15-mantem-glossario` regulariza.")
         elif a.estado == DESCRICAO_LONGA:
             linhas.append(f"  ⚠ {a.arquivo}")
             linhas.append(f"      a `description` tem {a.motivo} caracteres, e o")

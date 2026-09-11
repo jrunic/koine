@@ -427,3 +427,60 @@ def test_cli_todas_desliga_o_resumo(tmp_path, monkeypatch, capsys):
 
     assert "ref00.md" in saida
     assert "referências com `description`" not in saida
+
+
+GLOSSARIO_SEM_FM = "# Contratações\n\n## Vocabulário\n\n**Solicitação**:\nPedido.\n"
+GLOSSARIO_FM_SEM_DOMINIOS = (
+    '---\ntype: Reference\ntitle: Glossário\n---\n\n# Contratações\n')
+GLOSSARIO_COM_FM = (
+    '---\ntype: Reference\ntitle: Glossário\n'
+    'description: "Vocabulário deste escopo"\ndominios: [universal]\n---\n\n'
+    "# Contratações\n")
+
+
+def test_glossario_sem_frontmatter_na_pasta_referencias_vira_achado(tmp_path):
+    (tmp_path / "GLOSSARIO.md").write_text(GLOSSARIO_SEM_FM, encoding="utf-8")
+
+    achados = validar.varrer([str(tmp_path)], refs_indexadas=(str(tmp_path),))
+
+    assert [a.estado for a in achados] == [validar.GLOSSARIO_SOLTO]
+
+
+def test_glossario_com_frontmatter_nao_vira_achado(tmp_path):
+    (tmp_path / "GLOSSARIO.md").write_text(GLOSSARIO_COM_FM, encoding="utf-8")
+
+    assert validar.varrer([str(tmp_path)], refs_indexadas=(str(tmp_path),)) == []
+
+
+def test_glossario_com_frontmatter_mas_sem_dominios_vira_achado(tmp_path):
+    """O que cataloga não é ter frontmatter: é o `dominios:` casando. Frontmatter
+    sem ele deixa o arquivo igualmente fora do índice."""
+    (tmp_path / "GLOSSARIO.md").write_text(GLOSSARIO_FM_SEM_DOMINIOS,
+                                           encoding="utf-8")
+
+    achados = validar.varrer([str(tmp_path)], refs_indexadas=(str(tmp_path),))
+
+    assert [a.estado for a in achados] == [validar.GLOSSARIO_SOLTO]
+
+
+def test_glossario_na_pasta_de_trabalho_nao_vira_achado(tmp_path):
+    """Alcance de pasta é legítimo sem frontmatter: pasta de trabalho não tem
+    contrato OKF, por soberania do usuário. Acusar ali é o falso positivo que a
+    #863 escopou com refs_indexadas."""
+    refs = tmp_path / "refs"; refs.mkdir()
+    trab = tmp_path / "trab"; trab.mkdir()
+    (trab / "GLOSSARIO.md").write_text(GLOSSARIO_SEM_FM, encoding="utf-8")
+
+    assert validar.varrer([str(trab)], refs_indexadas=(str(refs),)) == []
+
+
+def test_corrigir_nao_escreve_no_glossario(tmp_path):
+    g = tmp_path / "GLOSSARIO.md"
+    g.write_text(GLOSSARIO_SEM_FM, encoding="utf-8")
+
+    achados = validar.varrer([str(tmp_path)], refs_indexadas=(str(tmp_path),))
+    corrigidos, pendentes = validar.corrigir(achados)
+
+    assert corrigidos == []
+    assert g.read_text(encoding="utf-8") == GLOSSARIO_SEM_FM
+    assert not (tmp_path / "GLOSSARIO.md.bak").exists()
