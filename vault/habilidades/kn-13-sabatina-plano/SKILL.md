@@ -38,6 +38,7 @@ Carregue **antes** de gravar qualquer coisa — não são necessários para cond
 
 - `~/.local/share/koine/conceitos/referencias.md` — alcance de escopo vs. alcance de pasta, tipos canônicos, Ficha Koine, contratos `index.md` e `log.md`.
 - `~/.local/share/koine/conceitos/dominios.md` — necessário para classificar `dominios:` quando uma decisão for registrada com alcance de escopo.
+- `~/.local/share/koine/conceitos/glossario.md` — comportamento e formato do glossário; necessário antes de gravar o primeiro termo.
 
 ---
 
@@ -68,6 +69,14 @@ Quatro regras. Valem sempre, independentemente do estado da pasta.
 3. **Toda pergunta vem com a sua recomendação.** Isto não é questionário neutro. Pergunte e diga o que você faria, com o motivo. O usuário concorda, discorda ou traz o que você não sabia — os três avançam a conversa; a pergunta pelada não avança nenhum.
 4. **Se dá para descobrir, descubra — não pergunte.** O que estiver na fonte de evidência, nos arquivos da pasta ou nas referências do escopo você lê. Perguntar o que está ao seu alcance gasta o usuário no que ele não precisava gastar.
 
+**Cruzar com a evidência.** Quando o usuário afirmar como algo funciona, confira contra a fonte declarada na abertura e exponha a contradição:
+
+> "Você disse que toda contratação acima de um certo valor passa pelo comitê. Na planilha, das últimas doze acima desse valor, quatro não têm registro de comitê. O que acontece nesses casos?"
+
+Este é o comportamento que dá dente à sabatina. Se você não estiver conferindo nada, a sessão não está sabatinando — está anotando.
+
+Este é o comportamento que dá dente à sabatina. Se você não estiver conferindo nada, a sessão não está sabatinando — está anotando.
+
 **Critério de encerramento.** A sabatina termina quando as quatro coisas valem: toda decisão da árvore tem resposta, cada recomendação sua foi validada ou recusada explicitamente, as dependências entre decisões estão resolvidas e os riscos estão enumerados. Se o usuário quiser encerrar antes, diga qual dos quatro ainda falta — e encerre se ele mantiver.
 
 ---
@@ -76,57 +85,15 @@ Quatro regras. Valem sempre, independentemente do estado da pasta.
 
 Liga quando um termo precisa ser resolvido. O gatilho é a conversa, não o disco.
 
-**Antes da primeira pergunta**, procure um glossário e leia se existir:
+Como se mantém um termo — confrontar, afiar, testar a fronteira, perguntar o
+alcance, gravar na hora — está em `~/.local/share/koine/conceitos/glossario.md`,
+junto com o formato do arquivo. **Carregue o conceito antes de gravar o primeiro
+termo.** A sabatina não tem regra própria de glossário: usa a mesma que a
+`/kn-15-mantem-glossario` usa, para que o vocabulário não dependa de por qual
+porta o usuário entrou.
 
-- `GLOSSARIO.md` na própria pasta de trabalho.
-- `GLOSSARIO.md` na pasta-referências do escopo, quando a pasta declara escopo. A pasta-referências vem de `pasta-referencias:` no arquivo do escopo, em `~/.config/koine/escopos/<slug>.md`.
-
-Os dois podem existir ao mesmo tempo. O da pasta é o mais específico e vence em caso de divergência — mas divergência entre os dois é ela mesma um achado, e você sinaliza.
-
-### Comportamentos
-
-**Confrontar.** Quando o usuário usar um termo de um jeito que contradiz o glossário, sinalize no mesmo turno, antes de seguir:
-
-> "O glossário define 'pendência' como o que já venceu e não foi pago. Você acabou de usar para o que ainda vai vencer. São a mesma coisa ou são duas?"
-
-**Afiar.** Quando o termo for vago ou estiver carregando dois sentidos, proponha o preciso:
-
-> "Você falou 'solicitação' duas vezes. Uma era o pedido que a área faz, a outra era o documento que vai para o jurídico. Qual dos dois fica com o nome?"
-
-**Testar a fronteira com cenário concreto.** Quando a relação entre dois conceitos estiver sendo discutida, invente um caso específico que force a decisão:
-
-> "Chega um pedido de renovação de um contrato que vence em 40 dias, e a área pede urgência. Isso entra na fila normal ou abre exceção? Quem decide, e o que muda no prazo?"
-
-**Cruzar com a evidência.** Quando o usuário afirmar como algo funciona, confira contra a fonte declarada na abertura e exponha a contradição:
-
-> "Você disse que toda contratação acima de um certo valor passa pelo comitê. Na planilha, das últimas doze acima desse valor, quatro não têm registro de comitê. O que acontece nesses casos?"
-
-Este é o comportamento que dá dente à sabatina. Se você não estiver conferindo nada, a sessão não está sabatinando — está anotando.
-
-**Gravar na hora.** Termo resolvido é termo gravado no mesmo turno. Não acumule para o fim: o que se acumula se perde, e o glossário meio-escrito na sua cabeça não sobrevive ao fim da sessão.
-
-### Checkpoint de alcance — uma vez por sessão
-
-Na primeira vez que um termo for resolvido, pergunte onde o glossário mora:
-
-> "Vou gravar isso. Esse vocabulário vale só para este trabalho, ou vale para tudo que você faz neste escopo? (a) só aqui; (b) para o escopo todo."
-
-A resposta vale para os termos seguintes da mesma sessão — não repita a pergunta a cada termo. Na dúvida, **alcance de pasta**: promover depois é trivial, e despoluir o escopo é caro.
-
-- **Alcance de pasta** → `GLOSSARIO.md` na própria pasta de trabalho, criado sob demanda no primeiro termo.
-- **Alcance de escopo** → `GLOSSARIO.md` na raiz da pasta-referências do escopo, criado sob demanda. Não é uma referência catalogada: não leva Ficha Koine e não entra em `index.md` nem nos índices de domínio.
-
-Formato dos dois em [FORMATO-GLOSSARIO.md](FORMATO-GLOSSARIO.md).
-
-**Ao criar o glossário de escopo pela primeira vez**, acrescente ao arquivo do escopo (`~/.config/koine/escopos/<slug>.md`) uma seção apontando o caminho:
-
-```md
-## Glossário
-
-Vocabulário deste escopo em `<pasta-referencias>/GLOSSARIO.md`. Consulte quando um termo do trabalho parecer ambíguo.
-```
-
-O arquivo do escopo é carregado em toda sessão, então isso faz o glossário existir para quem não invocou a sabatina — sem que o conteúdo inteiro seja pago em todo prompt. Se a seção já existir, não duplique.
+O que é da sabatina e não do glossário está na Camada 1: **cruzar com a
+evidência** declarada na abertura.
 
 ---
 

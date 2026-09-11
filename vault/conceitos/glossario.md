@@ -1,12 +1,18 @@
 ---
-type: Reference
-title: Formato de GLOSSARIO.md
-description: Estrutura e regras do GLOSSARIO.md escrito pela sabatina — vocabulário de trabalho com definições enxutas, sinônimos a evitar, relações e ambiguidades resolvidas
+type: Concept
+title: Glossário
+description: Doutrina do glossário no Koine — o que é, os dois alcances, como se mantém um termo e o formato do arquivo
+origem: koine-canonico
 dominios: [metodologia]
-tags: [glossario, sabatina, kn-13, formato, vocabulario]
+tags: [conceito, glossario, vocabulario, metodologia]
 ---
 
-# Formato de `GLOSSARIO.md`
+# Conceito: Glossário
+
+Doutrina sobre o glossário no Koine, lida pelas skills que o mantêm — a
+`/kn-15-mantem-glossario` (porta própria), a `/kn-13-sabatina-plano` (que afia o
+vocabulário enquanto entrevista) e a `/kn-99-encerra-sessao` (que pergunta por ele
+no fechamento). Carregada sob demanda — não vai em runtime universal.
 
 Vocabulário de um trabalho: os termos que as pessoas envolvidas usam, com um sentido só cada.
 
@@ -69,6 +75,58 @@ _Evitar_: prorrogação, aditivo — aditivo é outra coisa e muda valor.
 - **Escreva o diálogo.** Uma troca curta e real entre quem pergunta e quem sabe. Demonstra a fronteira entre dois conceitos melhor que qualquer definição.
 - **Só o que é próprio deste trabalho.** Palavra que significa a mesma coisa em qualquer lugar não entra, mesmo que apareça o tempo todo. O glossário guarda o que é específico.
 - **Agrupe sob subtítulos** quando agrupamentos naturais aparecerem. Se todos os termos pertencem à mesma área, lista plana basta.
+
+---
+
+## Como se mantém um termo
+
+Liga quando um termo precisa ser resolvido. O gatilho é a conversa, não o disco.
+
+**Antes da primeira pergunta**, procure um glossário e leia se existir:
+
+- `GLOSSARIO.md` na própria pasta de trabalho.
+- `GLOSSARIO.md` na pasta-referências do escopo, quando a pasta declara escopo. A pasta-referências vem de `pasta-referencias:` no arquivo do escopo, em `~/.config/koine/escopos/<slug>.md`.
+
+Os dois podem existir ao mesmo tempo. O da pasta é o mais específico e vence em caso de divergência — mas divergência entre os dois é ela mesma um achado, e você sinaliza.
+
+### Comportamentos
+
+**Confrontar.** Quando o usuário usar um termo de um jeito que contradiz o glossário, sinalize no mesmo turno, antes de seguir:
+
+> "O glossário define 'pendência' como o que já venceu e não foi pago. Você acabou de usar para o que ainda vai vencer. São a mesma coisa ou são duas?"
+
+**Afiar.** Quando o termo for vago ou estiver carregando dois sentidos, proponha o preciso:
+
+> "Você falou 'solicitação' duas vezes. Uma era o pedido que a área faz, a outra era o documento que vai para o jurídico. Qual dos dois fica com o nome?"
+
+**Testar a fronteira com cenário concreto.** Quando a relação entre dois conceitos estiver sendo discutida, invente um caso específico que force a decisão:
+
+> "Chega um pedido de renovação de um contrato que vence em 40 dias, e a área pede urgência. Isso entra na fila normal ou abre exceção? Quem decide, e o que muda no prazo?"
+
+**Gravar na hora.** Termo resolvido é termo gravado no mesmo turno. Não acumule para o fim: o que se acumula se perde, e o glossário meio-escrito na sua cabeça não sobrevive ao fim da sessão.
+
+### Checkpoint de alcance
+
+Na primeira vez que um termo for resolvido, pergunte onde o glossário mora:
+
+> "Vou gravar isso. Esse vocabulário vale só para este trabalho, ou vale para tudo que você faz neste escopo? (a) só aqui; (b) para o escopo todo."
+
+A resposta vale para os termos seguintes da mesma sessão — não repita a pergunta a cada termo. Na dúvida, **alcance de pasta**: promover depois é trivial, e despoluir o escopo é caro.
+
+- **Alcance de pasta** → `GLOSSARIO.md` na própria pasta de trabalho, criado sob demanda no primeiro termo.
+- **Alcance de escopo** → `GLOSSARIO.md` na raiz da pasta-referências do escopo, criado sob demanda. Não é uma referência catalogada: não leva Ficha Koine e não entra em `index.md` nem nos índices de domínio.
+
+Formato dos dois nas seções abaixo, a partir de `## Estrutura`.
+
+**Ao criar o glossário de escopo pela primeira vez**, acrescente ao arquivo do escopo (`~/.config/koine/escopos/<slug>.md`) uma seção apontando o caminho:
+
+```md
+## Glossário
+
+Vocabulário deste escopo em `<pasta-referencias>/GLOSSARIO.md`. Consulte quando um termo do trabalho parecer ambíguo.
+```
+
+O arquivo do escopo é carregado em toda sessão, então isso faz o glossário existir para quem não invocou a sabatina — sem que o conteúdo inteiro seja pago em todo prompt. Se a seção já existir, não duplique.
 
 ---
 
