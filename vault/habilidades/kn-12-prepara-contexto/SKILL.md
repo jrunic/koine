@@ -75,6 +75,7 @@ entradas: <N>
 ```
 
 - Se `description` for vazia: `- \`<path>\`` (sem o `— `).
+- **`description` acima de 200 caracteres entra cortada:** os primeiros 200 caracteres seguidos de `…`. O arquivo da referência **não** é alterado — o corte existe só na linha do índice. É o mesmo teto que o gerador binário aplica; divergir aqui faria os dois modos produzirem índices diferentes para o mesmo catálogo.
 - Se não houver entradas: em vez da lista, escreva `_Nenhuma referência catalogada neste domínio._`.
 - Fallback de sinopse ausente: `_Domínio \`<dominio>\` não plantado. Rode \`kn-agente instalar\` ou \`/kn-02-mantem-catalogo\` (fluxo dominio)._`
 
@@ -105,14 +106,14 @@ primeiras linhas são marcas**, seguidas do corpo:
 
 ## Determinismo (obrigatório)
 
-- **`description` é copiada verbatim** do frontmatter da referência. Proibido parafrasear, resumir, traduzir ou reescrever.
+- **`description` é copiada verbatim** do frontmatter da referência, até o teto de 200 caracteres. Proibido parafrasear, resumir, traduzir ou reescrever — cortar no teto não é resumir: são os primeiros 200 caracteres, literais, mais `…`.
 - **Ordenação estável:** entradas por `path` ascendente; domínios na ordem em que o escopo os declara.
 - Não invente entradas, domínios nem descrições.
 
 ## Auto-auditoria (rode ao final e reporte)
 
 1. **Cobertura:** conte os `.md` elegíveis na `pasta-referencias`. Confirme que cada um foi **indexado** (entrou em ≥1 índice) **ou** **reportado** (sem frontmatter, ou `dominios` não casou com nenhum domínio declarado). A soma tem que bater. Liste os não-casados.
-2. **Verbatim:** confirme que cada `description` no índice é idêntica à do frontmatter de origem.
+2. **Verbatim:** confirme que cada `description` no índice é idêntica à do frontmatter de origem, ou é o prefixo exato de 200 caracteres dela seguido de `…`.
 3. **Resolução de `@path`:** confirme que cada `@path` escrito no `CLAUDE.md` aponta para um arquivo que existe em disco.
 
 Reporte o resultado das três checagens ao usuário. Qualquer falha é explicitada — nunca silenciada.
