@@ -114,7 +114,7 @@ Na primeira vez que um termo for resolvido, pergunte onde o glossário mora:
 A resposta vale para os termos seguintes da mesma sessão — não repita a pergunta a cada termo. Na dúvida, **alcance de pasta**: promover depois é trivial, e despoluir o escopo é caro.
 
 - **Alcance de pasta** → `GLOSSARIO.md` na própria pasta de trabalho, criado sob demanda no primeiro termo.
-- **Alcance de escopo** → `GLOSSARIO.md` na raiz da pasta-referências do escopo, criado sob demanda. Não é uma referência catalogada: não leva Ficha Koine e não entra em `index.md` nem nos índices de domínio.
+- **Alcance de escopo** → `GLOSSARIO.md` na raiz da pasta-referências do escopo, criado sob demanda. **É uma referência catalogada:** leva frontmatter e entra nos índices de domínio, como qualquer conhecimento de alcance de escopo.
 
 Formato dos dois nas seções abaixo, a partir de `## Estrutura`.
 
@@ -128,6 +128,8 @@ Vocabulário deste escopo em `<pasta-referencias>/GLOSSARIO.md`. Consulte quando
 
 O arquivo do escopo é carregado em toda sessão, então isso faz o glossário existir para quem não invocou a sabatina — sem que o conteúdo inteiro seja pago em todo prompt. Se a seção já existir, não duplique.
 
+**Isso continua valendo mesmo com o glossário catalogado**, e não é redundância: o índice chega só a quem declara aquele domínio, e nada obriga uma pasta a declarar `universal`. O arquivo do escopo é carregado em **toda** sessão; o índice, não.
+
 ---
 
 ## Onde mora
@@ -136,6 +138,28 @@ Dois lugares, conforme o alcance decidido na sabatina:
 
 - **Alcance de pasta** — `GLOSSARIO.md` na própria pasta de trabalho. Vale para este trabalho.
 - **Alcance de escopo** — `GLOSSARIO.md` na raiz da pasta-referências do escopo, apontado por uma seção no arquivo do escopo. Vale para tudo que o usuário faz naquele escopo.
+
+**O glossário de escopo leva frontmatter; o de pasta, não.** Na pasta-referências
+ele é conhecimento catalogado como qualquer outro, e é o `dominios:` que o põe no
+`kn-indice-<dom>.md` — sem ele o arquivo existe e ninguém sabe. Na pasta de
+trabalho não há contrato OKF: o glossário é um `.md` solto, como os demais
+arquivos que o usuário mantém ali.
+
+Frontmatter do glossário de escopo:
+
+```yaml
+---
+type: Reference
+title: Glossário — <nome do escopo>
+description: "<o que este vocabulário cobre, em até 200 caracteres>"
+dominios: [universal]
+tags: [glossario, vocabulario]
+---
+```
+
+`dominios: [universal]` porque vocabulário é útil em toda sessão, seja qual for a
+natureza dela. A `description` **cabe em 200 caracteres** — acima disso o índice
+corta, e ela diz o que o glossário cobre, não o que ele contém.
 
 Os dois podem coexistir. O da pasta é o mais específico e vence em caso de divergência — mas a divergência em si merece ser sinalizada ao usuário.
 
