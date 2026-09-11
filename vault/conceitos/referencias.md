@@ -79,7 +79,7 @@ Toda referência declara no frontmatter, no mínimo:
 ---
 type: <Pessoa | Organizacao | Decisao | Aprendizado | Evento | ...>
 title: <Nome legível>
-description: <1 linha — aparece no kn-indice>
+description: <1 linha, até 200 caracteres — aparece no kn-indice>
 dominios: [<um ou mais slugs de domínio>]
 tags: [<keywords livres>]
 ---
@@ -87,7 +87,7 @@ tags: [<keywords livres>]
 
 - **`type`** — natureza interna da referência (capitalizado, singular). Define a Ficha Koine esperada para o conteúdo.
 - **`title`** — nome legível.
-- **`description`** — 1 linha — extraída pelo `kn-agente` e injetada no `kn-indice-<slug-dominio>.md` correspondente.
+- **`description`** — 1 linha, **até 200 caracteres** — extraída pelo `kn-agente` e injetada no `kn-indice-<slug-dominio>.md` correspondente. Acima disso o índice mostra os primeiros 200 seguidos de `…`; o arquivo continua inteiro.
 - **`dominios`** — lista de domínios em que a referência aparece. Múltiplos é primeira-classe.
 - **`tags`** — keywords adicionais para busca.
 
@@ -127,11 +127,11 @@ Os dois contratos são **mantidos pela skill `/kn-11`** — não escrever à mã
 Para cada domínio declarado no `CONTEXTO.md` da pasta de trabalho, o `kn-agente` gera um arquivo `kn-indice-<slug-dominio>.md` na pasta-referências. Estrutura:
 
 - **`## Framework do domínio`** — sinopse extraída do `<slug-dominio>.md` correspondente.
-- **`## Entradas catalogadas no escopo`** — lista `* path/relativo.md — description` em ordem alfabética por slug.
+- **`## Entradas catalogadas no escopo`** — lista `* path/relativo.md — description` em ordem alfabética por slug, com a `description` cortada em 200 caracteres. Entrada que declara mais de um domínio é descrita uma vez por sessão e referenciada nos demais índices do documento — cada arquivo de índice, porém, continua listando tudo que é do domínio dele.
 
 Esse arquivo é o que o CLAUDE.md gerado carrega via `@/` — não o `<slug-dominio>.md` cru, não cada referência. O agente vê título + descrição de cada referência catalogada e lê o arquivo completo apenas quando precisa.
 
-Implicação: a `description` da Ficha Koine é o que decide se o agente vai puxar a referência ou não. Investir em descrições densas paga dividendos.
+Implicação: a `description` da Ficha Koine é o que decide se o agente vai puxar a referência ou não — e ela é paga em **toda** sessão do escopo, porque o índice inteiro entra no contexto. Por isso o teto de 200 caracteres: densidade aqui é escolher a frase que discrimina esta referência das outras, não caber tudo. O detalhe vive no corpo, que o agente abre sob demanda.
 
 ## Como catalogar uma referência nova
 
@@ -155,7 +155,7 @@ Slug em kebab-case derivado do título. Slugs colidentes recebem sufixo discrimi
 ## Anti-padrões
 
 - **Diário disfarçado de referência.** Registro do que aconteceu na sessão é diário, não referência. Referência generaliza além do episódio.
-- **Referência sem `description` densa.** Description fraca degrada o `kn-indice`; agente passa direto.
+- **Referência sem `description` densa.** Description fraca degrada o `kn-indice`; agente passa direto. Description **longa** degrada também: acima de 200 caracteres o índice corta, e o que discrimina pode estar justamente no fim.
 - **Subpasta como substituto de domínio.** Subpasta organiza visualmente; domínio filtra para o agente. Não use subpasta esperando que ela filtre o que entra no `kn-indice` — quem decide isso é o campo `dominios:` do frontmatter.
 - **Mesmo conceito em dois arquivos** porque "encaixa em domínios diferentes". É **uma** referência com `dominios: [a, b]`.
 - **Catalogar tudo.** Se o conhecimento não vai ser consultado em sessão futura, não vira referência. Granularidade excessiva dilui o sinal.

@@ -4,6 +4,44 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Não publicado]
+
+### Corrigido — o contexto de cada sessão parou de crescer sem teto
+
+Num catálogo maduro, o índice de referências virava a maior parte do que a sessão
+carregava antes da primeira pergunta. Medido numa instalação real: 122 KB de índice
+por sessão, em 141 entradas.
+
+A `description` de cada referência agora entra no índice até **200 caracteres**, com
+o corte visível. O arquivo da referência **não muda** — quem quiser o texto inteiro
+abre a referência, que é o que o método já pede. E referência catalogada em mais de
+um domínio passou a ser descrita uma vez por sessão, com as demais apontando onde
+ela está. No mesmo catálogo, isso levou os 122 KB para **37 KB**, sem perder nenhuma
+entrada.
+
+Cada arquivo `kn-indice-<domínio>.md` continua listando tudo que é do domínio dele.
+
+### Corrigido — domínio repetido duplicava a entrada no índice
+
+Referência cujo frontmatter declarava o mesmo domínio duas vezes aparecia duas vezes
+no índice daquele domínio, e o total de entradas contava a duplicata.
+
+### Adicionado — aviso quando a pasta repete o contexto
+
+Quem rodou `koine gerar` em algum momento tem na pasta um arquivo com o contexto de
+então. Desde a v0.7.0 a sessão recebe o contexto por fora, e os dois eram carregados
+juntos — na instalação medida, 122 KB de cada lado. O launch agora diz que isso está
+acontecendo e que o arquivo pode ser apagado. **Não apaga nada**: o arquivo foi criado
+a pedido, e quem decide é você.
+
+O aviso não aparece para quem usa o modo skills, onde esse arquivo é a via de entrega.
+
+### Adicionado — `koine validar` aponta as descrições que não cabem no índice
+
+Diz quantas referências estão acima do limite, quanto elas somam e nomeia as dez
+maiores — onde encurtar rende mais. **Não reescreve nenhuma**: `description` é texto
+seu. `koine validar --todas` lista o resto.
+
 ## [0.12.0] — 2026-09-02
 
 ### Corrigido — escopo apontando para `Documentos` encontra a pasta certa no Windows
