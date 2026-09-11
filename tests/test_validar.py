@@ -366,3 +366,64 @@ def test_relatorio_nomeia_o_arquivo_e_o_limite(tmp_path):
 
     assert "longa.md" in texto
     assert str(indice.LIMITE_DESCRICAO) in texto
+
+
+def _refs_longas(tmp_path, tamanhos):
+    for i, n in enumerate(tamanhos):
+        (tmp_path / f"ref{i:02d}.md").write_text(
+            REF_LONGA_VAL.format(desc="a" * n), encoding="utf-8")
+    return validar.varrer([str(tmp_path)], refs_indexadas=(str(tmp_path),))
+
+
+def test_relatorio_resume_quando_ha_muitas_descricoes_longas(tmp_path):
+    """Um relatório que acusa 93% do catálogo não é acionável — medido na
+    instalação da Renata em 10/09/2026: 156 de 167. O resumo diz quantas são e
+    nomeia onde o corte rende mais."""
+    achados = _refs_longas(tmp_path, [300 + i * 10 for i in range(15)])
+
+    texto = validar.relatorio(achados)
+
+    assert "15 referências" in texto
+    # as 10 maiores nomeadas, e as 5 menores fora
+    assert "ref14.md" in texto
+    assert "ref05.md" in texto
+    assert "ref04.md" not in texto
+
+
+def test_relatorio_lista_todas_quando_pedido(tmp_path):
+    achados = _refs_longas(tmp_path, [300 + i * 10 for i in range(15)])
+
+    texto = validar.relatorio(achados, todas=True)
+
+    for i in range(15):
+        assert f"ref{i:02d}.md" in texto
+
+
+def test_relatorio_nao_resume_poucas(tmp_path):
+    """Abaixo do limiar do resumo, cada uma aparece — é a lista curta que o
+    usuário consegue atacar de uma vez."""
+    achados = _refs_longas(tmp_path, [300, 400, 500])
+
+    texto = validar.relatorio(achados)
+
+    for nome in ("ref00.md", "ref01.md", "ref02.md"):
+        assert nome in texto
+
+
+def test_cli_todas_desliga_o_resumo(tmp_path, monkeypatch, capsys):
+    """A flag existe para o usuário, não só para a função — sem ligá-la ao CLI
+    o resumo não teria escape."""
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    refs = tmp_path / "refs"
+    refs.mkdir()
+    (refs / "kn-indice-tecnologia.md").write_text("---\ntipo: indice\n---\n",
+                                                  encoding="utf-8")
+    for i in range(15):
+        (refs / f"ref{i:02d}.md").write_text(
+            REF_LONGA_VAL.format(desc="a" * (300 + i * 10)), encoding="utf-8")
+
+    cli.main(["validar", str(refs), "--todas"])
+    saida = capsys.readouterr().out
+
+    assert "ref00.md" in saida
+    assert "referências com `description`" not in saida

@@ -384,18 +384,34 @@ def _criar_symlink(link: str, alvo: str) -> None:
         shutil.copyfile(alvo, link)  # Windows sem Developer Mode: cópia regenerada por sessão
 
 
+def _e_pasta_referencias(alvo: str) -> bool:
+    """A pasta tem índice gerado por nós, logo é pasta-referências de algum escopo."""
+    try:
+        return any(f.startswith("kn-indice-") and f.endswith(".md")
+                   for f in os.listdir(alvo))
+    except OSError:
+        return False
+
+
 def _cmd_validar(args: list[str]) -> int:
     """Varre o frontmatter da config do usuário e da pasta dada (default: a
     atual). Sem `--corrigir`, não escreve nada. Sai 1 quando sobra algo a
-    corrigir — serve de gate em script."""
+    corrigir — serve de gate em script.
+
+    `--todas` desliga o resumo das `description` longas: num catálogo maduro elas
+    são a maioria dos achados, e o relatório resume para continuar acionável."""
     cfg = paths.config_dir()
     alvos = [a for a in args if not a.startswith("-")] or [os.getcwd()]
     # a pasta-referências do escopo mora fora da config e é onde vivem as
     # referências da /kn-11 — varrer só a config deixaria de fora justo elas
     resolvidas = [(a, ) + _validar.refs_do_escopo(a, cfg) for a in alvos]
     refs = [r for _, r, existe in resolvidas if r and existe]
-    achados = _validar.varrer([cfg] + alvos + refs,
-                              refs_indexadas=tuple(refs))
+    # Alvo apontado à mão que JÁ é uma pasta-referências conta como indexado: ele
+    # se reconhece pelos próprios `kn-indice-*.md`. Sem isso, `koine validar
+    # <pasta-referencias>` não acusaria description longa nenhuma, porque a lista
+    # do escopo só se resolve a partir de uma pasta de TRABALHO.
+    indexadas = tuple(refs) + tuple(a for a in alvos if _e_pasta_referencias(a))
+    achados = _validar.varrer([cfg] + alvos + refs, refs_indexadas=indexadas)
     # Pasta-referências que resolve e não existe é achado, não silêncio: é o
     # estado que faz o launch abrir sem índice, e o que ele mostra — o caminho
     # resolvido — é o diagnóstico inteiro num Windows com pasta redirecionada.
@@ -403,7 +419,7 @@ def _cmd_validar(args: list[str]) -> int:
                                 _validar.REFS_AUSENTE, motivo=r)
                 for alvo, r, existe in resolvidas if r and not existe]
     if "--corrigir" not in args:
-        print(_validar.relatorio(achados), end="")
+        print(_validar.relatorio(achados, todas="--todas" in args), end="")
         return 1 if achados else 0
     corrigidos, pendentes = _validar.corrigir(achados)
     print(_validar.relatorio_correcao(corrigidos, pendentes), end="")

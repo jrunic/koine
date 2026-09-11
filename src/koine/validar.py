@@ -21,6 +21,15 @@ SEM_FICHA = "sem-ficha"  # CONTEXTO.md sem `escopo:` — a sessão não abre nes
 REFS_AUSENTE = "refs-ausente"  # o escopo aponta para pasta que não existe no disco
 DESCRICAO_LONGA = "descricao-longa"  # cabe na referência, não cabe no índice
 
+# A partir de quantas `description` longas o relatório resume em vez de listar.
+# Medido na instalação de uma usuária em 10/09/2026: 156 das 167 referências
+# (93%) estavam acima do teto. Relatório que acusa quase tudo não é acionável —
+# e treina o usuário a pular a seção, que é o oposto do que ele existe para
+# fazer. Abaixo do limiar a lista curta continua, porque ali ela se ataca de uma
+# vez. `--todas` sempre lista.
+LIMIAR_RESUMO = 10
+MAIORES_NO_RESUMO = 10
+
 
 @dataclass
 class Achado:
@@ -124,13 +133,19 @@ def _analisar(arq: str, refs_indexadas: tuple = ()) -> Achado | None:
     return None
 
 
-def relatorio(achados: list[Achado]) -> str:
+def relatorio(achados: list[Achado], todas: bool = False) -> str:
     """Texto para o usuário — o mesmo que ele veria num aviso de sessão, só que
     reunido e antes de a sessão quebrar."""
     if not achados:
         return "Frontmatter: nenhum problema encontrado.\n"
     linhas = [f"Frontmatter: {len(achados)} arquivo(s) para corrigir.\n"]
+    longas = [a for a in achados if a.estado == DESCRICAO_LONGA]
+    resumir = not todas and len(longas) >= LIMIAR_RESUMO
+    if resumir:
+        linhas += _resumo_descricoes(longas)
     for a in achados:
+        if resumir and a.estado == DESCRICAO_LONGA:
+            continue
         if a.estado == REFS_AUSENTE:
             linhas.append(f"  ✗ {a.arquivo}")
             linhas.append("      o escopo desta pasta aponta para uma pasta-referências")
@@ -167,6 +182,25 @@ def relatorio(achados: list[Achado]) -> str:
             linhas.append("      O Koine não consegue ler este frontmatter. Confira se há")
             linhas.append("      TAB no lugar de espaços e se toda linha é `chave: valor`.")
     return "\n".join(linhas) + "\n"
+
+
+def _resumo_descricoes(longas: list[Achado]) -> list[str]:
+    """O bloco que substitui N linhas iguais por um número e as maiores.
+
+    As maiores primeiro porque é onde o corte rende mais: numa `description` de
+    1.874 caracteres o índice mostra 11% dela; numa de 250, 80%.
+    """
+    total = sum(int(a.motivo) for a in longas)
+    linhas = [f"  ⚠ {len(longas)} referências com `description` acima de "
+              f"{indice.LIMITE_DESCRICAO} caracteres",
+              f"      Somam {total} caracteres, dos quais o índice mostra "
+              f"{len(longas) * indice.LIMITE_DESCRICAO}.",
+              "      Nada foi alterado: os arquivos estão inteiros e a sessão",
+              "      continua funcionando. Encurtar é opcional — comece por estas,",
+              "      onde rende mais (`--todas` lista o resto):"]
+    maiores = sorted(longas, key=lambda a: -int(a.motivo))[:MAIORES_NO_RESUMO]
+    linhas += [f"        {a.motivo:>5}  {a.arquivo}" for a in maiores]
+    return linhas
 
 
 def corrigir(achados: list[Achado]) -> tuple[list[Achado], list[Achado]]:
