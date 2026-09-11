@@ -67,3 +67,27 @@ def test_kn02_confere_a_pasta_pela_resolucao_do_produto():
     # normaliza os dois lados: a prosa começa a frase com maiúscula, e substring
     # é sensível a caixa
     assert "não resolva o caminho por conta própria" in texto.lower()
+
+
+def _skill(nome: str) -> str:
+    with open(os.path.join(HABILIDADES, nome, "SKILL.md"), encoding="utf-8") as f:
+        return f.read()
+
+
+def test_kn11_declara_o_mesmo_limite_do_gerador():
+    """A skill orienta a escrita; o gerador corta. Números diferentes fariam a
+    referência passar na kn-11 e aparecer cortada no índice mesmo assim."""
+    from koine import indice
+
+    assert str(indice.LIMITE_DESCRICAO) in _skill("kn-11-mantem-referencia")
+
+
+def test_kn12_descreve_o_mesmo_corte_do_gerador():
+    """O modo skills replica o índice À MÃO, a partir do texto desta skill.
+    Gerador que corta e skill que não corta fazem os dois modos divergirem em
+    silêncio — nada compara os dois."""
+    from koine import indice
+
+    texto = _skill("kn-12-prepara-contexto")
+    assert str(indice.LIMITE_DESCRICAO) in texto
+    assert indice.MARCA_DE_CORTE in texto

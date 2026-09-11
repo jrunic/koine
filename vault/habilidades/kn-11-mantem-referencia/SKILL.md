@@ -82,7 +82,7 @@ Resolva a pasta-referências do escopo (lendo `pasta-referencias:` no escopo e a
 ### Rodada A1 — Identidade
 
 1. **Title** — nome legível.
-2. **Description em 1 linha** — denso. Vai aparecer no `kn-indice-<dominio>.md` e decide se o agente futuro puxa a referência ou passa direto. Investir em description densa paga dividendos.
+2. **Description em 1 linha, até 200 caracteres** — densa e curta. Ela aparece no `kn-indice-<dominio>.md` que TODA sessão do escopo carrega, e decide se o agente futuro puxa a referência ou passa direto. Acima de 200 caracteres o índice mostra só o começo, seguido de `…` — o texto continua inteiro no arquivo, mas quem lê o catálogo vê menos. Densidade aqui é escolher a frase que discrimina esta referência das outras, não caber tudo.
 3. **Localização na pasta-referências** — raiz ou subpasta. Default: raiz. Sugira subpasta apenas se já houver subpastas no mesmo padrão (ex: `clientes/`, `decisoes/`) e a referência encaixar; ou se o usuário pedir. Subpasta organiza visualmente; **não substitui domínio** (que é o filtro programático).
 
 ### Rodada A2 — Domínios
@@ -198,6 +198,7 @@ Alerta: se a referência é citada em outros `.md` da pasta-referências (`grep`
 - **Não regenera `kn-indice-<dom>.md`** — isso é trabalho do `kn-agente` (modo binário) ou da `/kn-12-prepara-contexto` (modo skills).
 - **Não opera fora do escopo da sessão atual.** Para catalogar em outro escopo, abrir sessão na pasta de trabalho daquele escopo (ou criar uma pasta com `CONTEXTO.md` apontando para ele). Cross-escopo é fricção deliberada.
 - **Não cataloga em massa.** Uma invocação, uma referência. Catalogação em lote é antipadrão — dilui sinal e quebra a entrevista que dá densidade à `description`.
+- **Não usa a `description` como resumo do arquivo.** Ela é a linha do catálogo, não a sinopse: o corpo da referência é que carrega o detalhe. `description` que precisa de mais de 200 caracteres é sinal de que o material pede seções próprias no corpo — e o `koine validar` vai apontá-la.
 - **Não cria arquivo separado para o que cabe em uma frase.** Se a referência cabe em 1-2 linhas, prefira **uma linha em CONTEXTO.md** (alcance de pasta) ou **uma description densa** (alcance de escopo, que entra no `kn-indice`). Arquivo separado é para material denso (checklist, várias seções, lista longa) que se beneficia de estrutura própria.
 - **Não cataloga como referência de escopo o que serve a uma única pasta de trabalho.** Default seguro em dúvida: alcance de pasta. Promover para escopo depois é trivial; reverter um `kn-indice-*` poluído é caro.
 
@@ -208,4 +209,4 @@ Alerta: se a referência é citada em outros `.md` da pasta-referências (`grep`
 - Antes de qualquer materialização, **mostre o arquivo completo** (cria) ou **diff resumido** (atualiza) para confirmação.
 - Para remoção, confirmação explícita + Ação Documentada.
 - Se a captura inicial parece episódica demais (sem generalização possível), questione: "Isso vai te servir em sessão futura ou é diário desta sessão?". Diário não vira referência.
-- Se a `description` saiu fraca, **insista em refinar** — é o que o agente futuro vai ler antes de decidir se puxa a referência. Description fraca degrada o `kn-indice`.
+- Se a `description` saiu fraca, **insista em refinar** — é o que o agente futuro vai ler antes de decidir se puxa a referência. Description fraca degrada o `kn-indice`; description longa também, porque o índice corta em 200 caracteres e a parte que discrimina pode estar justamente no fim.
