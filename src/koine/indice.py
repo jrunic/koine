@@ -61,7 +61,10 @@ def gerar(pasta_refs: str, dominios: list[str]) -> None:
                     file=sys.stderr,
                 )
                 continue
-            for d in fm.get("dominios", []) or []:
+            # `dict.fromkeys` e não `set`: dedup preservando a ordem declarada.
+            # Frontmatter com o mesmo domínio duas vezes duplicava a linha NO
+            # MESMO índice, e o `entradas:` mentia junto (reproduzido 10/09/2026).
+            for d in dict.fromkeys(fm.get("dominios", []) or []):
                 if d in entradas:
                     entradas[d].append((rel, fm.get("description", "") or ""))
 

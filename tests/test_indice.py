@@ -133,3 +133,28 @@ def test_description_curta_nao_e_tocada(tmp_path, monkeypatch):
     idx = (refs / "kn-indice-tecnologia.md").read_text(encoding="utf-8")
     assert "- `curta.md` — uma nota curta" in idx
     assert "…" not in idx
+
+
+REF_DOMINIO_REPETIDO = """---
+title: Ref com domínio repetido
+description: Uma nota qualquer
+dominios: [tecnologia, universal, tecnologia]
+---
+
+# Corpo
+"""
+
+
+def test_dominio_repetido_entra_uma_vez(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    refs = tmp_path / "refs"
+    refs.mkdir()
+    (refs / "rep.md").write_text(REF_DOMINIO_REPETIDO, encoding="utf-8")
+
+    indice.gerar(str(refs), ["tecnologia", "universal"])
+
+    idx = (refs / "kn-indice-tecnologia.md").read_text(encoding="utf-8")
+    entradas = [l for l in idx.split("\n") if l.startswith("- `rep.md`")]
+    assert len(entradas) == 1
+    # o contador do frontmatter não pode mentir junto
+    assert "entradas: 1" in idx
