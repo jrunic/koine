@@ -56,6 +56,32 @@ def tem_marca_a_pedido(p: str) -> bool:
     return len(linhas) > 1 and linhas[1].strip() == MARCA_A_PEDIDO
 
 
+# Todo documento embutido abre por este título — `mescar_documentos` o escreve
+# com o nome do cliente depois do travessão. A forma `@path` da
+# `/kn-12-prepara-contexto` abre com o nome do arquivo (`# CLAUDE.md`), e é por
+# aí que as duas se distinguem sem adivinhar tamanho.
+TITULO_DOCUMENTO = "# Sessão Koine"
+
+
+def e_snapshot_inline(p: str) -> bool:
+    """O arquivo em `p` é um snapshot nosso com o contexto EMBUTIDO?
+
+    Distingue as duas coisas que carregam a mesma marca `a pedido`:
+
+    - o snapshot do `koine gerar`, que duplica o que o bundle já entrega;
+    - a forma `@path` da `/kn-12-prepara-contexto`, que no modo skills é a
+      única via de entrega e não pode ser desencorajada.
+    """
+    try:
+        with open(p, encoding="utf-8") as f:
+            linhas = f.read().split("\n", 4)
+    except (OSError, UnicodeDecodeError):
+        return False
+    if not linhas or linhas[0] != MARCADOR_KOINE:
+        return False
+    return any(l.startswith(TITULO_DOCUMENTO) for l in linhas[1:4])
+
+
 def marcar_a_pedido(conteudo: str) -> str:
     """Acrescenta a marca de intenção como SEGUNDA linha. Idempotente."""
     linhas = conteudo.split("\n")

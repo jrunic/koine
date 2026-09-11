@@ -488,3 +488,16 @@ def path_resultado(status, pasta, na_sessao) -> str:
             "    2. em Variáveis de usuário, selecione Path e clique em Editar\n"
             f"    3. Novo  →  {pasta}  →  OK\n"
             "    4. reabra o terminal\n")
+
+
+def aviso_carga_dupla(arquivo: str, comando: str) -> str:
+    """A pasta tem um snapshot que duplica o que o bundle já entrega.
+
+    Informacional, como o aviso de shell do launch: não bloqueia e não remove.
+    Remoção de arquivo não deixa `.bak`, e o snapshot foi materializado a pedido
+    do usuário — quem apaga é ele.
+    """
+    return (f"aviso: {arquivo} nesta pasta repete o contexto que a sessão já "
+            f"recebe por fora, e os dois são carregados juntos.\n"
+            f"       Ele foi criado por `{comando}` e não é mais necessário: "
+            f"apague-o quando quiser.\n")

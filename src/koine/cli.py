@@ -651,6 +651,26 @@ def _lancar_avisando_sem_contexto(cliente: str, pasta: str,
     return 0
 
 
+def avisar_carga_dupla(cliente: str, pasta: str) -> None:
+    """Avisa se a pasta tem snapshot nosso do arquivo DESTE cliente.
+
+    Escopado duas vezes, e as duas importam. Pelo arquivo do adapter corrente:
+    avisar numa sessão de opencode sobre um `CLAUDE.md` que ela não carrega é
+    alarme falso — a família de defeito que o gate de bancada da v0.12.0
+    reprovou. E pela forma: a `/kn-12-prepara-contexto` escreve o mesmo nome com
+    a mesma marca, e ali o arquivo é a única via de entrega do modo skills.
+
+    Sai ANTES do `contexto.resolver`, não junto da limpeza de estoque: o
+    `resolver` termina com código não-zero em três estados comuns (escopo
+    inexistente no terminal, agente inexistente, frontmatter irreparável), e
+    quem tem a pasta duplicada E um desses nunca ouviria sobre a duplicação.
+    """
+    arquivo = adapters.get(cliente).ARQUIVO
+    if escrita.e_snapshot_inline(os.path.join(pasta, arquivo)):
+        print(mensagens.aviso_carga_dupla(arquivo, f"koine gerar --para {cliente}"),
+              file=sys.stderr, end="")
+
+
 def _rodar_cliente(cliente: str, args: list[str]) -> int:
     # `--canal-paseo` é consumido AQUI, não por _separar_args: naquela gramática
     # todo token com hífen é flag do cliente, e a flag chegaria ao processo
@@ -688,6 +708,7 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
         return 1
     # auto-guiar: pasta de sessão sem CONTEXTO.md válido (só o launch trata).
     estado = _bootstrap.classificar(pasta)
+    avisar_carga_dupla(cliente, pasta)
     if canal_paseo and estado in (_bootstrap.AUSENTE, _bootstrap.VAZIO,
                                   _bootstrap.INCOMPLETO, _bootstrap.MALFORMADO):
         # Nada é escrito, e nada aborta. Escrever: as sondagens do orquestrador
