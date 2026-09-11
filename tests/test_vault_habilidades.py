@@ -91,3 +91,30 @@ def test_kn12_descreve_o_mesmo_corte_do_gerador():
     texto = _skill("kn-12-prepara-contexto")
     assert str(indice.LIMITE_DESCRICAO) in texto
     assert indice.MARCA_DE_CORTE in texto
+
+
+CONCEITO_GLOSSARIO = "conceitos/glossario.md"
+
+
+@pytest.mark.parametrize("skill", ["kn-13-sabatina-plano",
+                                   "kn-15-mantem-glossario",
+                                   "kn-99-encerra-sessao"])
+def test_skill_de_glossario_aponta_para_o_conceito(skill):
+    """Um dono só do comportamento. Duas descrições do mesmo comportamento
+    divergem em silêncio, e a divergência só aparece quando um usuário reclama
+    de vocabulário inconsistente — que é justamente o defeito que isto fecha."""
+    assert CONCEITO_GLOSSARIO in _skill(skill)
+
+
+def test_kn13_nao_descreve_mais_o_comportamento_de_glossario():
+    """A Camada 2 saiu para o conceito. Se o texto voltar para cá, são duas
+    fontes de novo."""
+    texto = _skill("kn-13-sabatina-plano")
+    assert "_Evitar_" not in texto  # marca do formato, que agora mora no conceito
+    assert "**Afiar.**" not in texto  # comportamento, idem
+
+
+def test_kn11_roteia_vocabulario_para_a_kn15():
+    """Glossário de escopo é uma referência catalogada — sem roteamento, as duas
+    skills disputam o mesmo pedido e nasce referência paralela ao glossário."""
+    assert "kn-15-mantem-glossario" in _skill("kn-11-mantem-referencia")

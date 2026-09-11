@@ -194,6 +194,7 @@ Alerta: se a referência é citada em outros `.md` da pasta-referências (`grep`
 ## O que NÃO faz
 
 - **Não cria escopo, pasta de trabalho, domínio, agente nem arquivo do usuário** — isso é `/kn-02-mantem-catalogo` e `/kn-03-cria-agente`.
+- **Não cria referência para vocabulário.** Termo, sinônimo a evitar, fronteira entre dois conceitos que se confundem — tudo isso é `GLOSSARIO.md`, e quem mantém é a `/kn-15-mantem-glossario`. Referência é sobre uma coisa do mundo; glossário é sobre como vocês a chamam.
 - **Não substitui o diário da sessão.** Diário é o registro do que aconteceu na sessão (escrito por `/kn-99-encerra-sessao` na pasta `diario/` da pasta de trabalho). Referência generaliza além do episódio. Se o usuário tenta catalogar coisa muito episódica, sugira o diário.
 - **Não regenera `kn-indice-<dom>.md`** — isso é trabalho do `kn-agente` (modo binário) ou da `/kn-12-prepara-contexto` (modo skills).
 - **Não opera fora do escopo da sessão atual.** Para catalogar em outro escopo, abrir sessão na pasta de trabalho daquele escopo (ou criar uma pasta com `CONTEXTO.md` apontando para ele). Cross-escopo é fricção deliberada.
