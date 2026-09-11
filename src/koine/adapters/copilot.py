@@ -73,10 +73,10 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     if cm.escopo_path:
         lanc.arquivos_externos[os.path.join(instr, "escopo.instructions.md")] = \
             render.wrapar_instructions(_ler(cm.escopo_path))
-    for ip in cm.indice_paths:
-        dom = render.dominio_de(ip)
+    for parte in render.secoes_de_indice(cm.indice_paths):
+        dom = parte.secao.removeprefix("Referências — ")
         lanc.arquivos_externos[os.path.join(instr, f"kn-indice-{dom}.instructions.md")] = \
-            render.wrapar_instructions(_ler(ip))
+            render.wrapar_instructions(parte.conteudo)
 
     return lanc
 

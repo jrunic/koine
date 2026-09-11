@@ -70,8 +70,7 @@ def _render(cm: ContextoMontado) -> str:
     add("Agente", cm.agente_path)
     if not cm.bootstrap:
         add("Escopo", cm.escopo_path)
-        for ip in cm.indice_paths:
-            add("Referências — " + render.dominio_de(ip), ip)
+        partes.extend(render.secoes_de_indice(cm.indice_paths))
     # INLINE: a instrução tem de vir embutida, não referenciada — o codex não
     # segue @path (ver ADR do mecanismo B).
     add("Instrução do Koine para esta sessão", cm.instrucao_path)
