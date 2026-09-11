@@ -174,6 +174,12 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
   bancada de macOS; é do mantenedor, OAuth por browser). As #708 e #709 fecharam em
   30/08 e saíram na v0.11.0. **Conferir a lista contra o rastreador antes de assumir
   que ela vale** — esta linha já ficou dois dias descrevendo tarefas fechadas.
+- **Em `main` e ainda NÃO publicado (#863/#871):** o teto de 200 caracteres na
+  `description` do índice, a dedup de entrada entre domínios, o aviso de carga
+  dupla no launch e o achado `DESCRICAO_LONGA` do `validar`. **A release exige
+  gate de bancada Windows** — o diff toca `cli.py` e o launch (critério em
+  `docs/guias/publicar-release.md`). Conferir contra o rastreador antes de
+  assumir que esta linha vale.
 
 ## Família `kn-2N` espelha o `jd-cria-design` do brain
 
