@@ -3,6 +3,9 @@ descricao: Guia para mantenedores — como adicionar suporte a um novo cliente I
 id: 202606261003
 tipo: guia
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [guia, harness, adapter, contribuir]
 ---
 

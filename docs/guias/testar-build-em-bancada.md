@@ -1,8 +1,11 @@
 ---
 descricao: "Guia para mantenedores — os dois caminhos para provar uma mudança em máquina de teste: build por tag de pré-release (quando há código de instalação) e vault de desenvolvimento na bancada macOS (quando o que muda é texto de skill ou comportamento de adapter)"
 id: 202608271800
+projeto: koine
 tipo: guia
 status: ativo
+escopo: repo:koine
+plataforma: "*"
 tags: [guia, release, teste, windows, contribuir]
 ---
 

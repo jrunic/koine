@@ -3,6 +3,9 @@ descricao: Guia da /kn-13 — como preparar e conduzir uma sabatina para extrair
 id: 202608181900
 tipo: guia
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [guia, kn-13, sabatina, entrevista, glossario, decisao, processo]
 ---
 

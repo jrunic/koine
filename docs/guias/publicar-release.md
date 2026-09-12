@@ -3,6 +3,9 @@ descricao: Guia para mantenedores — o ritual de release deste repositório, do
 id: 202608291400
 tipo: guia
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [guia, release, gate, teste, windows, contribuir]
 ---
 

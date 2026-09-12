@@ -3,6 +3,9 @@ descricao: Guia da família kn-2N — pré-requisitos, ordem de uso e o que cada
 id: 202608111700
 tipo: guia
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [guia, marca, design, kn-2N, prelo, imagio, pdf, identidade-visual]
 ---
 

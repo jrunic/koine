@@ -3,6 +3,9 @@ descricao: Guia de instalação do Koine — macOS, Linux e Windows; upgrade da 
 id: 202607090130
 tipo: guia
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [guia, instalacao, upgrade, windows, macos, linux]
 ---
 

@@ -3,6 +3,9 @@ descricao: Guia para quem usa Koine — instalar o Paseo e abrir sessões do cel
 id: 202608301800
 tipo: guia
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [guia, koine, paseo, acesso-remoto, celular, instalacao]
 ---
 

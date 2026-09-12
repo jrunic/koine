@@ -3,6 +3,9 @@ descricao: Guia — trocar o ditado e a fala para o serviço da OpenAI, que é o
 id: 202608302030
 tipo: guia
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [guia, koine, paseo, voz, ditado, openai]
 ---
 
