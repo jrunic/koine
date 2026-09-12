@@ -460,8 +460,11 @@ def test_add_dir_usa_a_forma_com_igual(tmp_path, monkeypatch):
                          pasta_abs=str(tmp_path))
     for nome in ("claude", "agy"):
         args = adapters.REGISTRY[nome].renderizar(cm).extra_args
-        assert len(args) == 1, f"{nome}: {args}"
-        assert args[0].startswith("--add-dir="), f"{nome}: {args}"
+        # Desde a #887 são VÁRIOS --add-dir (bundle + as raízes do Koine). O que
+        # este teste protege é a FORMA, não a quantidade: basta um na forma
+        # separada para a lista variádica engolir o token seguinte.
+        assert args, f"{nome}: sem extra_args"
+        assert all(a.startswith("--add-dir=") for a in args), f"{nome}: {args}"
 
 
 def test_paseo_info_prescreve_os_identificadores_dos_entries(capsys):

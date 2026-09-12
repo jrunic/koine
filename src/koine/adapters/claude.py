@@ -50,7 +50,8 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
         # diretórios e o cliente caiu em modo sessão pedindo prompt. A
         # sessão do orquestrador não sofria (o 1º arg dele é flag); o
         # diagnóstico de autenticação sofria, e ficava inútil.
-        extra_args=[f"--add-dir={bundle}"],
+        extra_args=[f"--add-dir={bundle}"]
+        + [f"--add-dir={r}" for r in render.raizes_de_leitura()],
     )
 
 
