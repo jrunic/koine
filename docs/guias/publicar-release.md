@@ -179,18 +179,25 @@ curl -fsSLO https://github.com/jrunic/koine/releases/download/v<versão>/koine-<
 curl -fsSLO https://github.com/jrunic/koine/releases/download/v<versão>/SHA256SUMS
 grep koine-<versão>.zip SHA256SUMS | shasum -a 256 -c -
 unzip -q koine-<versão>.zip -d pkg
-HOME=$(mktemp -d) python3 pkg/koine.pyz versao
+HOME=$(mktemp -d) python3.12 pkg/koine.pyz versao
 ```
 
 **Em HOME isolado**, e **de fora de qualquer checkout** — dentro do repositório o
 comando pode resolver o código local em vez do publicado.
+
+**Use um interpretador ≥3.12 explícito, não `python3`.** No macOS o `python3` do
+sistema é **3.9**, e o código usa sintaxe 3.10+ (`X | None`). O que sai é um
+traceback de `TypeError: unsupported operand type(s) for |` dentro do pyz — que
+se lê como **release quebrada** e é só o interpretador errado. Aconteceu em
+12/09/2026, na verificação da v0.13.0. `/opt/homebrew/bin/python3.12` serve, e
+não é o `.venv` do checkout.
 
 ### 4.2 O que esta release deveria mudar, mudou?
 
 Nomear o sinal **antes** e medi-lo depois, executando **de dentro do pyz publicado**:
 
 ```bash
-PYTHONPATH=pkg/koine.pyz python3 -c "<exercita o comportamento novo>"
+PYTHONPATH=pkg/koine.pyz python3.12 -c "<exercita o comportamento novo>"
 ```
 
 Verificar que o arquivo está no zip **não** é verificar comportamento. Na v0.9.0 os

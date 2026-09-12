@@ -152,6 +152,32 @@ Duas coisas que isso ensina sobre este guia:
 Se a validação for pequena demais para justificar uma tag, o caminho é `KOINE_BASE_URL`
 apontando para um espelho — não copiar o pyz.
 
+## Levar script para a VM: arquivo, nunca argumento
+
+Medido em 12/09/2026, no gate da v0.13.0, depois de **três** tentativas perdidas:
+passar código Python por argumento do `cmd` não funciona, e cada forma falha de
+um jeito diferente.
+
+- **`%VAR%` não expande na mesma linha** — o `cmd` expande a linha inteira antes
+  de executá-la. É a mesma armadilha que derrubou o `install.bat` da v0.6.2.
+- **`%TEMP%` não resolve** no canal de execução remota; use caminho literal
+  (`C:\Users\<conta>\...`).
+- **Aspas aninhadas** entre o shell local, o `ssh` e o `cmd` viram outra coisa no
+  meio do caminho.
+
+O que funciona é o que a doutrina já manda — **arquivo, não argumento** —, e a
+bancada Windows fala SSH, então `scp` resolve:
+
+```bash
+scp -F ~/.ssh/config-bancada -o BatchMode=yes prova.py <conta>@<host>:prova.py
+# e um .bat de duas linhas, com CRLF, para executá-lo:
+printf '@echo off\r\n"<caminho\\do\\python.exe>" "C:\\Users\\<conta>\\prova.py"\r\n' > roda.bat
+scp -F ~/.ssh/config-bancada -o BatchMode=yes roda.bat <conta>@<host>:roda.bat
+```
+
+O `ssh_config` e o host de cada bancada estão no `config/bancadas.json` do repo
+de infraestrutura — o mesmo que o wrapper de execução remota lê.
+
 ## O outro caminho: provar comportamento de skill, sem release
 
 O procedimento acima existe para **código que o instalador entrega**. Quando o
