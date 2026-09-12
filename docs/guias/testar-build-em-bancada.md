@@ -1,5 +1,5 @@
 ---
-descricao: Guia para mantenedores — como levar um build de desenvolvimento para uma máquina de teste usando tag de pré-release, em vez de montar o koine.pyz à mão
+descricao: "Guia para mantenedores — os dois caminhos para provar uma mudança em máquina de teste: build por tag de pré-release (quando há código de instalação) e vault de desenvolvimento na bancada macOS (quando o que muda é texto de skill ou comportamento de adapter)"
 id: 202608271800
 tipo: guia
 status: ativo
@@ -149,10 +149,101 @@ Duas coisas que isso ensina sobre este guia:
 Se a validação for pequena demais para justificar uma tag, o caminho é `KOINE_BASE_URL`
 apontando para um espelho — não copiar o pyz.
 
+## O outro caminho: provar comportamento de skill, sem release
+
+O procedimento acima existe para **código que o instalador entrega**. Quando o
+que muda é **texto de skill, conceito do vault ou o que o adapter passa ao
+cliente**, cortar uma tag para cada rodada é caro demais — e o que se quer medir
+não é a instalação, é o que o agente faz.
+
+Para isso serve uma **segunda conta de usuário na mesma máquina** — um ambiente
+Koine real, isolado do seu, com os clientes IA instalados e logados. O acesso é
+por `sudo -u <conta>` com regra escopada no sudoers (sem Login Remoto, sem
+senha), e vale encapsular isso num wrapper: os comandos abaixo aparecem como
+`<na-conta-de-teste> <comando>`.
+
+O que a conta precisa ter: o Koine instalado, ao menos um escopo com
+pasta-referências, e os clientes autenticados — **o login é interativo e não se
+automatiza**.
+
+### 1. Leve o vault de desenvolvimento, sem tocar em wrapper nem pyz
+
+A conta lê o checkout do mantenedor, então não é preciso copiar nada:
+
+```bash
+<na-conta-de-teste> 'cd <checkout> && PYTHONPATH=src <checkout>/.venv/bin/python -c "
+from koine import instalar, skills
+print(instalar.extrair(\"vault\", \"<versão>-dev\"))
+print(skills.instalar_habilidades(\"claude\", \"<versão>-dev\"))
+"'
+```
+
+A conta de teste precisa **ler** o checkout — o que dispensa copiar o vault.
+
+`extrair` copia o vault para o XDG e `instalar_habilidades` põe as skills no
+harness. **Nenhum dos dois mexe nos wrappers nem no pyz** — é o que evita o laço
+descrito em "Por que não copiar o pyz à mão". Os shipped divergentes vão para
+`~/.cache/koine/backups/<versão>/`.
+
+### 2. Limpe o resíduo da medição anterior ANTES de medir
+
+Medição que escreve à mão — uma permissão injetada num config, um arquivo
+copiado para dentro de um bundle — faz a rodada seguinte passar **pelo andaime** e
+não pelo código. Em 12/09/2026 foi preciso uma Ação Documentada só para isso,
+depois de a verificação de efeito reprovar por resíduo próprio.
+
+Config e bundle são cache regenerado a cada launch: **apagar o arquivo** é mais
+seguro que editá-lo, e garante que o próximo venha do código.
+
+### 3. Rode pelo módulo do checkout, não pelo wrapper
+
+Os wrappers da bancada apontam para o pyz **instalado** (versão antiga). Para
+exercitar o código novo:
+
+```bash
+<na-conta-de-teste> 'cd <pasta-de-trabalho> && \
+  PYTHONPATH=<checkout>/src timeout 240 <checkout>/.venv/bin/python \
+  -m koine <cliente> <agente> . -- <flag-de-print> "<prompt>"'
+```
+
+Duas armadilhas que custam uma rodada cada:
+
+- **O `--` literal é obrigatório.** Sem ele, o valor da flag do cliente vira
+  posicional do wrapper e o cliente reclama de prompt ausente.
+- **A flag de print muda por cliente**, medido em 11/09/2026:
+  `claude`/`copilot`/`agy` → `-p`; `opencode` → `run`; `codex` → `exec
+  --skip-git-repo-check` (e ele exige repositório git ou a flag).
+
+### 4. O modo não interativo é o ponto, não um detalhe
+
+É justamente **sem humano para aprovar** que aparece o que o terminal esconde.
+Medido em 11/09/2026: três de cinco clientes negam leitura fora do diretório de
+trabalho, cada um com uma mensagem diferente, e no interativo isso passa por
+atrito normal porque o usuário aprova.
+
+Quando o agente **recusar** uma ação, discrimine antes de implementar contra a
+mensagem: peça a mesma operação **dentro** do diretório de trabalho, que está
+sempre liberado. Se recusar igual, o bloqueio é de ferramenta em modo headless —
+não do Koine. Foi assim que um falso defeito foi descartado em 12/09.
+
+### O que esta bancada NÃO prova
+
+- **A instalação.** Nada aqui passa pelo instalador nem pelos wrappers.
+- **Windows.** Defeito Windows-only continua exigindo a VM e o caminho por tag.
+- **Cliente sem login na conta de teste.** O fluxo OAuth exige TTY, e um canal
+  `sudo -u` **não aloca pty** — `script` falha com `tcgetattr/ioctl: Operation
+  not supported on socket`. Ou se faz o login uma vez, sentado na conta, ou a
+  linha daquele cliente roda na conta do mantenedor.
+- **`nohup` e processos de fundo.** Sem TTY, `nohup` falha com
+  `can't detach from console`; e redirecionar stdin de um FIFO bloqueia a
+  abertura até existir um escritor. Prefira comandos síncronos com `timeout`.
+
 ## Onde este guia entra
 
-Ele cobre **como** levar um build para a máquina de teste. **Quando** esse gate é
-obrigatório — e quando se pode pular com critério — está no
+Ele cobre **como** provar uma mudança em máquina de teste, pelos dois caminhos:
+build por tag (bancada Windows, código de instalação) e vault de desenvolvimento
+(bancada macOS, comportamento de skill e de adapter). **Quando** o gate de
+bancada é obrigatório — e quando se pode pular com critério — está no
 [`publicar-release.md`](publicar-release.md), junto do ritual de release inteiro.
 
 ## Ressalvas
