@@ -40,7 +40,13 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     bundle = cache.caminho_bundle(
         "copilot-bundles", cache.slot_sessao(cm.pasta_abs, render.agente_de(cm)))
     instr = os.path.join(bundle, ".github", "instructions")
-    lanc = Lancamento(env_vars={"COPILOT_CUSTOM_INSTRUCTIONS_DIRS": bundle})
+    lanc = Lancamento(
+        env_vars={"COPILOT_CUSTOM_INSTRUCTIONS_DIRS": bundle},
+        # As raízes NÃO vão para o bundle: aqui ele é diretório de instruções, e
+        # tudo que cai nele é CARREGADO no contexto de toda sessão. Alcance se
+        # resolve por permissão de leitura, não por cópia (a #863 mediu o custo).
+        extra_args=[f"--add-dir={r}" for r in render.raizes_de_leitura()],
+    )
 
     if cm.usuario_path:
         lanc.arquivos_externos[os.path.join(instr, "usuario.instructions.md")] = \
