@@ -180,7 +180,7 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
   `20260620-okf-conformance-e-frontmatter`: OKF v0.1 em inglês para campos da
   spec, PT-BR para extensões). O validador o acusa como campo legado; é falso
   positivo aqui, e renomear contraria a decisão do repo.
-- **Em `main` e ainda NÃO publicado (#874/#887):** o glossário virou conceito
+- **Publicado na v0.13.0 (#874/#887):** o glossário virou conceito
   (`vault/conceitos/glossario.md`), nasceu a `/kn-15-mantem-glossario`, a `kn-99`
   passou a perguntar pelo vocabulário, e **cada adapter passou a liberar as
   raízes que as skills leem e gravam** (config, vault e a pasta-referências da
@@ -194,12 +194,9 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
   Nada aponta mais para ele, e varrer o disco do usuário para apagar um `.md`
   morto é desproporcional. **Se aparecer um segundo caso de arquivo shipped
   removido, a limpeza de estoque vira tarefa própria** — hoje é um arquivo.
-- **Em `main` e ainda NÃO publicado (#863/#871):** o teto de 200 caracteres na
-  `description` do índice, a dedup de entrada entre domínios, o aviso de carga
-  dupla no launch e o achado `DESCRICAO_LONGA` do `validar`. **A release exige
-  gate de bancada Windows** — o diff toca `cli.py` e o launch (critério em
-  `docs/guias/publicar-release.md`). Conferir contra o rastreador antes de
-  assumir que esta linha vale.
+- **Publicado na v0.13.0 (#863/#871):** o teto de 200 caracteres na `description`
+  do índice, a dedup de entrada entre domínios, o aviso de carga dupla no launch
+  e o achado `DESCRICAO_LONGA` do `validar`.
 
 ## Família `kn-2N` espelha o `jd-cria-design` do brain
 
