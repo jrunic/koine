@@ -6,6 +6,18 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Não publicado]
 
+### Corrigido — as skills conseguem ler e gravar o que mandam
+
+Metade das skills manda carregar um arquivo do seu Koine — o conceito que define
+um formato, o escopo que diz onde as referências moram — e gravar o resultado na
+pasta de referências. A sessão não alcançava nada disso: no terminal o cliente
+pedia sua aprovação, e onde não há ninguém para aprovar (uma sessão aberta do
+celular, um agendamento) a skill parava no meio ou inventava o formato.
+
+Agora a sessão já nasce alcançando a sua configuração, o vault e a pasta de
+referências do escopo, em todos os clientes. Nada novo entra no contexto: é
+permissão de acesso a arquivo, não conteúdo carregado.
+
 ### Adicionado — o glossário deixou de depender da sabatina
 
 - **`/kn-15-mantem-glossario`** — conversa curta que cria ou atualiza o glossário
