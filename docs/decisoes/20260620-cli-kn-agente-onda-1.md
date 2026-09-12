@@ -1,7 +1,10 @@
 ---
 id: 202606200941
 tipo: decisao
-status: aceito
+status: aprovado
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 description: ADR — Sintaxe canônica do CLI kn-agente — posicional para ação default, subcomandos PT-BR, --versao como flag universal
 tags: [adr, koine, cli, kn-agente, arquitetura]
 ---

@@ -3,6 +3,9 @@ descricao: Por que o Koine ganhou um caminho para orquestrador de sessões — o
 id: 202608302000
 tipo: explicacao
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [explicacao, koine, paseo, acesso-remoto, decisao]
 ---
 

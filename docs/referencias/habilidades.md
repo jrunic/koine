@@ -3,6 +3,9 @@ descricao: Referência das skills kn-* distribuídas no vault — propósito, tr
 id: 202606280002
 tipo: referencia
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [referencia, habilidades, skills, kn]
 ---
 

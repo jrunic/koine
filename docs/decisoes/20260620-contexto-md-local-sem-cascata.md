@@ -1,7 +1,10 @@
 ---
 id: 202606200942
 tipo: decisao
-status: aceito
+status: aprovado
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 description: ADR — kn-agente resolve CONTEXTO.md apenas na pasta-alvo, sem subir na árvore e sem merge entre níveis
 tags: [adr, koine, contexto, harness, arquitetura]
 ---

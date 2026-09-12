@@ -3,6 +3,9 @@ descricao: Por que Koine separa em quatro camadas independentes — contexto his
 id: 202606201950
 tipo: explicacao
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [explicacao, koine, arquitetura, camadas, harness, habilidades, base-de-conhecimento]
 ---
 

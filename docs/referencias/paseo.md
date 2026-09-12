@@ -3,6 +3,9 @@ descricao: Referência da configuração que o Koine escreve num orquestrador de
 id: 202608302010
 tipo: referencia
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [referencia, koine, paseo, providers, configuracao]
 ---
 

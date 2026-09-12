@@ -3,6 +3,9 @@ descricao: Tutorial — do zero até abrir uma sessão Koine pelo celular, ditan
 id: 202608302020
 tipo: tutorial
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [tutorial, koine, paseo, celular, ditado, acesso-remoto]
 ---
 

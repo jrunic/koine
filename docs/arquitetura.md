@@ -3,6 +3,9 @@ descricao: Mapa estrutural do repositório koine — módulos, fluxos e responsa
 id: 202606201920
 tipo: referencia
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [arquitetura, koine, python, cli]
 ---
 

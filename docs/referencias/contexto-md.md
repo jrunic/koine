@@ -3,6 +3,9 @@ descricao: Schema do CONTEXTO.md local — frontmatter, campos obrigatórios, ex
 id: 202606261002
 tipo: referencia
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [referencia, contexto, frontmatter, ficha-koine]
 ---
 

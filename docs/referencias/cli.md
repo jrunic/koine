@@ -3,6 +3,9 @@ descricao: Referência dos comandos do CLI koine e dos wrappers de cliente IA
 id: 202606261001
 tipo: referencia
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [referencia, cli, kn-agente]
 ---
 

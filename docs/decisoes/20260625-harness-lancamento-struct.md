@@ -1,8 +1,12 @@
 ---
 id: 202606251830
 titulo: Harness.Renderizar retorna Lancamento em vez de []byte
-tipo: adr
-status: aceito
+description: "ADR — Harness.Renderizar passa a devolver Lancamento em vez de []byte, porque adapter que precisa de múltiplos arquivos em cache externo, symlink e variável de ambiente não consegue expressar isso num único buffer"
+tipo: decisao
+status: aprovado
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [harness, lancamento, adapters]
 ---
 

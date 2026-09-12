@@ -3,6 +3,9 @@ descricao: O que é Koine e por que existe — contexto de produto, motivação,
 id: 202606201921
 tipo: referencia
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [contexto, koine, produto]
 ---
 

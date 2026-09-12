@@ -3,6 +3,9 @@ descricao: Por que o contexto da sessão é montado das fontes canônicas a cada
 id: 202606202010
 tipo: explicacao
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [explicacao, koine, modelo-b, claude-md, referencias, harness]
 ---
 

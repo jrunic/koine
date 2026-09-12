@@ -1,7 +1,10 @@
 ---
 id: 202606200944
 tipo: decisao
-status: aceito
+status: aprovado
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 description: ADR — Vault Koine é distribuído via go:embed dentro do binário kn-agente; subcomando instalar extrai vault e planta domínios em ~/.config/koine; instalar-habilidades symlinka skills no harness
 tags: [adr, koine, distribuicao, embed, instalar, arquitetura]
 ---

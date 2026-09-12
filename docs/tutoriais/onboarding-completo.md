@@ -3,6 +3,9 @@ descricao: Tutorial passo a passo do zero ao primeiro agente operacional configu
 id: 202606280001
 tipo: tutorial
 status: ativo
+projeto: koine
+escopo: repo:koine
+plataforma: "*"
 tags: [tutorial, onboarding, instalacao, primeira-sessao]
 ---
 
