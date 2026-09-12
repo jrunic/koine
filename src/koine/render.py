@@ -51,8 +51,11 @@ def mescar_documentos(titulo: str, partes: list) -> str:
     return buf.rstrip("\n")
 
 
-def raizes_de_leitura() -> tuple:
-    """As raízes do Koine que a sessão precisa ALCANÇAR — não carregar.
+def raizes_alcancaveis(cm=None) -> tuple:
+    """As raízes que a sessão precisa ALCANÇAR — para ler e para gravar.
+
+    Não é carga: o que a sessão carrega continua sendo só o que o
+    `ContextoMontado` monta. Isto é permissão de acesso a arquivo.
 
     Nove das catorze skills mandam ler por caminho absoluto: conceitos, escopos,
     domínios, agentes e o arquivo do usuário. Medido em 11/09/2026, três de cinco
@@ -68,7 +71,19 @@ def raizes_de_leitura() -> tuple:
     acrescentá-la. `habilidades/` entra junto — é doutrina shipped, o mesmo texto
     que o cliente recebe quando a skill é invocada.
     """
-    return (paths.config_dir(), paths.vault_dir())
+    raizes = [paths.config_dir(), paths.vault_dir()]
+    # A pasta-referências do escopo, quando a sessão tem uma. As skills não só
+    # LEEM a doutrina: gravam ali — referência nova, glossário de escopo,
+    # `index.md`, `log.md`. Sem esta raiz a skill lê a regra e trava ao
+    # aplicá-la, um passo depois de onde travava antes (medido em 12/09/2026).
+    #
+    # Vem do `cm` e não de config fixa porque varia por escopo: é o diretório dos
+    # índices que o `contexto.resolver` já resolveu.
+    if cm is not None and getattr(cm, "indice_paths", None):
+        refs = os.path.dirname(cm.indice_paths[0])
+        if refs and refs not in raizes:
+            raizes.append(refs)
+    return tuple(raizes)
 
 
 def dominio_de(indice_path: str) -> str:

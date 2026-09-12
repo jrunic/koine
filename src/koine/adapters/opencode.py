@@ -73,7 +73,7 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
     cfg["permission"] = {
         "external_directory": {
             f"{r.replace(os.sep, '/')}/*": "allow"
-            for r in render.raizes_de_leitura()
+            for r in render.raizes_alcancaveis(cm)
         }
     }
     if sys.platform == "win32":

@@ -45,7 +45,7 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
         # As raízes NÃO vão para o bundle: aqui ele é diretório de instruções, e
         # tudo que cai nele é CARREGADO no contexto de toda sessão. Alcance se
         # resolve por permissão de leitura, não por cópia (a #863 mediu o custo).
-        extra_args=[f"--add-dir={r}" for r in render.raizes_de_leitura()],
+        extra_args=[f"--add-dir={r}" for r in render.raizes_alcancaveis(cm)],
     )
 
     if cm.usuario_path:
