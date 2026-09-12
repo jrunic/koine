@@ -174,6 +174,12 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
   bancada de macOS; é do mantenedor, OAuth por browser). As #708 e #709 fecharam em
   30/08 e saíram na v0.11.0. **Conferir a lista contra o rastreador antes de assumir
   que ela vale** — esta linha já ficou dois dias descrevendo tarefas fechadas.
+- **Frontmatter dos docs:** `projeto: koine`, `escopo: repo:koine`,
+  `plataforma: "*"` — os 27 passam no validador desde 12/09/2026. **O
+  `description` em inglês nos ADRs é deliberado** (ADR
+  `20260620-okf-conformance-e-frontmatter`: OKF v0.1 em inglês para campos da
+  spec, PT-BR para extensões). O validador o acusa como campo legado; é falso
+  positivo aqui, e renomear contraria a decisão do repo.
 - **Em `main` e ainda NÃO publicado (#874/#887):** o glossário virou conceito
   (`vault/conceitos/glossario.md`), nasceu a `/kn-15-mantem-glossario`, a `kn-99`
   passou a perguntar pelo vocabulário, e **cada adapter passou a liberar as
