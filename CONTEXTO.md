@@ -174,6 +174,14 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
   bancada de macOS; é do mantenedor, OAuth por browser). As #708 e #709 fecharam em
   30/08 e saíram na v0.11.0. **Conferir a lista contra o rastreador antes de assumir
   que ela vale** — esta linha já ficou dois dias descrevendo tarefas fechadas.
+- **Em `main` e ainda NÃO publicado (#874/#887):** o glossário virou conceito
+  (`vault/conceitos/glossario.md`), nasceu a `/kn-15-mantem-glossario`, a `kn-99`
+  passou a perguntar pelo vocabulário, e **cada adapter passou a liberar as
+  raízes que as skills leem e gravam** (config, vault e a pasta-referências da
+  sessão). **Antes de mexer em adapter, saiba disto:** metade das skills lê disco
+  fora do bundle, e três de cinco clientes negam essa leitura sem quem aprove —
+  quebrar `render.raizes_alcancaveis` trava as skills no canal, em silêncio, e a
+  suíte não pega (só a matriz na bancada pega).
 - **Resíduo declarado (#874):** quem já tinha o vault instalado fica com um
   `habilidades/kn-13-sabatina-plano/FORMATO-GLOSSARIO.md` **órfão** — o `extrair`
   copia e não remove o que saiu do pacote. Medido em 11/09/2026 num HOME isolado.
