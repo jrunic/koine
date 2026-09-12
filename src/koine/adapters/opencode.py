@@ -63,6 +63,19 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
               "Para isolar completamente, mova ou renomeie o arquivo.", file=sys.stderr)
 
     cfg = {"$schema": "https://opencode.ai/config.json", "instructions": [doc_path]}
+    # Sem isto o cliente AUTO-REJEITA a leitura de qualquer arquivo fora da pasta
+    # de trabalho — inclusive os conceitos e escopos que as skills mandam ler
+    # (medido em 11/09/2026: `permission requested: external_directory;
+    # auto-rejecting`). O glob de UM nível basta: medido em 12/09, `<raiz>/*`
+    # casa arquivo em subdiretório. A barra é `/` sempre — `os.sep` no Windows
+    # produziria `\` no pattern, que é a família do defeito que reprovou a rc1
+    # da v0.12.0: duas grafias da mesma pasta comparadas como string crua.
+    cfg["permission"] = {
+        "external_directory": {
+            f"{r.replace(os.sep, '/')}/*": "allow"
+            for r in render.raizes_de_leitura()
+        }
+    }
     if sys.platform == "win32":
         # O default do OpenCode varia por versão e, na estação que bloqueia o
         # PowerShell, derruba a ferramenta de shell com `uv_spawn`. Em vez de
