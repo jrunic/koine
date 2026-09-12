@@ -4,7 +4,23 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Não publicado]
+## [0.13.0] — 2026-09-12
+
+### Corrigido — o contexto de cada sessão parou de crescer sem teto
+
+Num catálogo maduro, o índice de referências virava a maior parte do que a sessão
+carregava antes da primeira pergunta. Medido numa instalação real: **122 KB** de
+índice por sessão, em 141 entradas.
+
+A `description` de cada referência agora entra no índice até **200 caracteres**,
+com o corte visível. O arquivo da referência **não muda** — quem quiser o texto
+inteiro abre a referência, que é o que o método já pede. E referência catalogada
+em mais de um domínio passou a ser descrita uma vez por sessão, com as demais
+apontando onde ela está. No mesmo catálogo, isso levou os 122 KB para **37 KB**,
+sem perder nenhuma entrada.
+
+Cada arquivo `kn-indice-<domínio>.md` continua listando tudo que é do domínio
+dele.
 
 ### Corrigido — as skills conseguem ler e gravar o que mandam
 
@@ -18,6 +34,11 @@ Agora a sessão já nasce alcançando a sua configuração, o vault e a pasta de
 referências do escopo, em todos os clientes. Nada novo entra no contexto: é
 permissão de acesso a arquivo, não conteúdo carregado.
 
+### Corrigido — domínio repetido duplicava a entrada no índice
+
+Referência cujo frontmatter declarava o mesmo domínio duas vezes aparecia duas
+vezes no índice daquele domínio, e o total de entradas contava a duplicata.
+
 ### Adicionado — o glossário deixou de depender da sabatina
 
 - **`/kn-15-mantem-glossario`** — conversa curta que cria ou atualiza o glossário
@@ -27,8 +48,25 @@ permissão de acesso a arquivo, não conteúdo carregado.
 - O **fechamento de sessão** (`/kn-99`) passou a perguntar pelo vocabulário quando
   ele oscilou na conversa — termo que você corrigiu em voz alta não morre mais com
   a sessão. Pergunta só quando houve sinal; e oferece, nunca cria sozinho.
-- `koine validar` aponta glossário que está na pasta de referências e não aparece
-  no índice.
+
+### Adicionado — aviso quando a pasta repete o contexto
+
+Quem rodou `koine gerar` em algum momento tem na pasta um arquivo com o contexto
+de então. Desde a v0.7.0 a sessão recebe o contexto por fora, e os dois eram
+carregados juntos — na instalação medida, 122 KB de cada lado. O launch agora diz
+que isso está acontecendo e que o arquivo pode ser apagado. **Não apaga nada**: o
+arquivo foi criado a pedido, e quem decide é você.
+
+O aviso não aparece para quem usa o modo skills, onde esse arquivo é a via de
+entrega.
+
+### Adicionado — `koine validar` ficou mais atento
+
+- Aponta as `description` que **não cabem** na linha do índice: diz quantas estão
+  acima do limite, quanto somam e nomeia as dez maiores — onde encurtar rende
+  mais. **Não reescreve nenhuma**: `description` é texto seu. `koine validar
+  --todas` lista o resto.
+- Aponta **glossário** que está na pasta de referências e não aparece no índice.
 
 ### Mudado
 
@@ -37,43 +75,6 @@ permissão de acesso a arquivo, não conteúdo carregado.
   depende de por qual porta você entrou.
 - O glossário de escopo passou a ser **catalogado** como qualquer conhecimento de
   escopo, sem perder o atalho que já existia no arquivo do escopo.
-
-
-### Corrigido — o contexto de cada sessão parou de crescer sem teto
-
-Num catálogo maduro, o índice de referências virava a maior parte do que a sessão
-carregava antes da primeira pergunta. Medido numa instalação real: 122 KB de índice
-por sessão, em 141 entradas.
-
-A `description` de cada referência agora entra no índice até **200 caracteres**, com
-o corte visível. O arquivo da referência **não muda** — quem quiser o texto inteiro
-abre a referência, que é o que o método já pede. E referência catalogada em mais de
-um domínio passou a ser descrita uma vez por sessão, com as demais apontando onde
-ela está. No mesmo catálogo, isso levou os 122 KB para **37 KB**, sem perder nenhuma
-entrada.
-
-Cada arquivo `kn-indice-<domínio>.md` continua listando tudo que é do domínio dele.
-
-### Corrigido — domínio repetido duplicava a entrada no índice
-
-Referência cujo frontmatter declarava o mesmo domínio duas vezes aparecia duas vezes
-no índice daquele domínio, e o total de entradas contava a duplicata.
-
-### Adicionado — aviso quando a pasta repete o contexto
-
-Quem rodou `koine gerar` em algum momento tem na pasta um arquivo com o contexto de
-então. Desde a v0.7.0 a sessão recebe o contexto por fora, e os dois eram carregados
-juntos — na instalação medida, 122 KB de cada lado. O launch agora diz que isso está
-acontecendo e que o arquivo pode ser apagado. **Não apaga nada**: o arquivo foi criado
-a pedido, e quem decide é você.
-
-O aviso não aparece para quem usa o modo skills, onde esse arquivo é a via de entrega.
-
-### Adicionado — `koine validar` aponta as descrições que não cabem no índice
-
-Diz quantas referências estão acima do limite, quanto elas somam e nomeia as dez
-maiores — onde encurtar rende mais. **Não reescreve nenhuma**: `description` é texto
-seu. `koine validar --todas` lista o resto.
 
 ## [0.12.0] — 2026-09-02
 
