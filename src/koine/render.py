@@ -1,5 +1,7 @@
 import os
 
+from koine import paths
+
 from dataclasses import dataclass
 
 
@@ -47,6 +49,26 @@ def mescar_documentos(titulo: str, partes: list) -> str:
         corpo = demover_h1(strip_frontmatter(p.conteudo))
         buf += corpo.rstrip("\n") + "\n\n"
     return buf.rstrip("\n")
+
+
+def raizes_de_leitura() -> tuple:
+    """As raízes do Koine que a sessão precisa ALCANÇAR — não carregar.
+
+    Nove das catorze skills mandam ler por caminho absoluto: conceitos, escopos,
+    domínios, agentes e o arquivo do usuário. Medido em 11/09/2026, três de cinco
+    clientes negam essa leitura fora do diretório de trabalho (claude, opencode,
+    copilot; codex e agy passam). No terminal o usuário aprova — atrito, não
+    bloqueio; sem ninguém para aprovar, a skill trava ou inventa formato.
+
+    Isto é permissão de leitura, e não entra no contexto: o que a sessão carrega
+    continua sendo só o que o `ContextoMontado` monta.
+
+    As raízes são inteiras, por decisão de 12/09/2026: `--add-dir` de um pai não
+    exclui filho, e raiz estreita faz a skill nova travar até alguém lembrar de
+    acrescentá-la. `habilidades/` entra junto — é doutrina shipped, o mesmo texto
+    que o cliente recebe quando a skill é invocada.
+    """
+    return (paths.config_dir(), paths.vault_dir())
 
 
 def dominio_de(indice_path: str) -> str:
