@@ -104,7 +104,10 @@ docs/
 
 - **Código:** inglês nos identificadores onde a convenção da comunidade pede; domínio em PT-BR quando o conceito é do método (ex.: `Lancamento`, `conflito`)
 - **Comentários:** PT-BR
-- **Commits:** conventional commits, em inglês
+- **Commits:** *conventional commits* com o **tipo em inglês** (`feat`, `fix`,
+  `docs`, `chore`), escopo entre parênteses nomeando o módulo ou a área, e
+  **assunto em português** — `feat(render): declara as raízes que a sessão
+  precisa alcançar`. Número da tarefa no fim, quando houver: `(#887)`.
 - **Slugs/pastas/comandos/flags:** PT-BR
 
 ### Testes
