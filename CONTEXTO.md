@@ -12,25 +12,24 @@ plataforma: "*"
 # CONTEXTO.md — Koine
 ## Onde o trabalho acontece
 
-**O trabalho de desenvolvimento acontece fora deste repositório**, nos documentos
-internos do autor — é lá que a sessão abre (`jd-claude <agente> criar-koine`).
+**O trabalho de desenvolvimento acontece fora deste repositório**, nos
+documentos internos do autor.
 
 | Artefato | Lar canônico |
 |---|---|
 | Roadmap de ciclos, spec, plano | fora deste repositório |
 | Arquivo de apoio de tarefa, diário de sessão | fora deste repositório |
-| Discussão de negócio, modelo de domínio, glossário | fora deste repositório |
+| Discussão de negócio | fora deste repositório |
 | **Código, testes, migrations** | **este repositório** |
-| **Documentação do produto** (Diátaxis) | **este repositório**, `docs/81-referencia/` |
-| **ADR de contrato da ferramenta** | **este repositório**, `docs/81-referencia/decisoes/` |
-| **README, CHANGELOG** | **este repositório** |
+| **Documentação do produto** (Diátaxis) | **este repositório**, `docs/` |
+| **ADR de contrato** | **este repositório**, `docs/decisoes/` |
+| **Modelo de domínio** | **este repositório**, `docs/dominio/` |
+| **README, CHANGELOG, GLOSSARIO, CONTEXTO** | **este repositório**, raiz |
 
-**Razão:** spec, plano, roadmap e diário são documentos operacionais internos —
-nomeiam contexto que não pertence a um repositório aberto. O repositório carrega
-o que a audiência dele precisa.
+**Razão:** spec, plano, roadmap e diário nomeiam contexto que não pertence a um
+repositório aberto. O repositório carrega o que a audiência dele precisa.
 
-**As skills leem esta seção** em vez de inferir por visibilidade. Repositório
-que não declara deixa a skill sem informação, e sem informação ela erra.
+**As skills leem esta seção** em vez de inferir por visibilidade.
 
 ## Propósito
 
