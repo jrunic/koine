@@ -6,6 +6,7 @@ tipo: guia
 status: ativo
 escopo: repo:koine
 plataforma: "*"
+dominios: [tecnologia]
 tags: [guia, release, teste, windows, contribuir]
 ---
 

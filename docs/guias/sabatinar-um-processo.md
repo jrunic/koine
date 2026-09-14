@@ -6,6 +6,7 @@ status: ativo
 projeto: koine
 escopo: repo:koine
 plataforma: "*"
+dominios: [tecnologia]
 tags: [guia, kn-13, sabatina, entrevista, glossario, decisao, processo]
 ---
 

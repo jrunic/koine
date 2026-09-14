@@ -5,6 +5,7 @@ status: aprovado
 projeto: koine
 escopo: repo:koine
 plataforma: "*"
+dominios: [tecnologia]
 description: ADR — Estrutura canônica de pastas de configuração do Koine — XDG puro, vault embed-only seletivo, tagged path, Ficha Koine universal, agente Hermes, arquivo do usuário × ficha cadastral
 tags: [adr, koine, xdg, vault, config, hermes]
 ---

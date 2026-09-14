@@ -6,6 +6,7 @@ status: ativo
 projeto: koine
 escopo: repo:koine
 plataforma: "*"
+dominios: [tecnologia]
 tags: [explicacao, koine, modelo-b, claude-md, referencias, harness]
 ---
 

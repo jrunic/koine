@@ -6,6 +6,7 @@ status: ativo
 projeto: koine
 escopo: repo:koine
 plataforma: "*"
+dominios: [tecnologia]
 tags: [referencia, contexto, frontmatter, ficha-koine]
 ---
 

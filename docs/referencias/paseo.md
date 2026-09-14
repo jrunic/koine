@@ -6,6 +6,7 @@ status: ativo
 projeto: koine
 escopo: repo:koine
 plataforma: "*"
+dominios: [tecnologia]
 tags: [referencia, koine, paseo, providers, configuracao]
 ---
 

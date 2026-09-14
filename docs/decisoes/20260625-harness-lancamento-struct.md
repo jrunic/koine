@@ -7,6 +7,7 @@ status: aprovado
 projeto: koine
 escopo: repo:koine
 plataforma: "*"
+dominios: [tecnologia]
 tags: [harness, lancamento, adapters]
 ---
 

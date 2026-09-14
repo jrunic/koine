@@ -6,6 +6,7 @@ status: ativo
 projeto: koine
 escopo: repo:koine
 plataforma: "*"
+dominios: [tecnologia]
 tags: [guia, marca, design, kn-2N, prelo, imagio, pdf, identidade-visual]
 ---
 

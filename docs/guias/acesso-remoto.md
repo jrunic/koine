@@ -6,6 +6,7 @@ status: ativo
 projeto: koine
 escopo: repo:koine
 plataforma: "*"
+dominios: [tecnologia]
 tags: [guia, koine, paseo, acesso-remoto, celular, instalacao]
 ---
 

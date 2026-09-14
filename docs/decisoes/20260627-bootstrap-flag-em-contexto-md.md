@@ -5,6 +5,7 @@ status: aprovado
 projeto: koine
 escopo: repo:koine
 plataforma: "*"
+dominios: [tecnologia]
 description: "ADR — schema do CONTEXTO.md ganha campo opcional `bootstrap: bool` para sinalizar modo bootstrap explícito gerado por kn-agente instalar"
 tags: [adr, koine, contexto, schema, bootstrap, onboarding]
 ---

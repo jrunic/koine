@@ -5,6 +5,7 @@ status: aprovado
 projeto: koine
 escopo: repo:koine
 plataforma: "*"
+dominios: [tecnologia]
 description: ADR — Sintaxe canônica do CLI kn-agente — posicional para ação default, subcomandos PT-BR, --versao como flag universal
 tags: [adr, koine, cli, kn-agente, arquitetura]
 ---

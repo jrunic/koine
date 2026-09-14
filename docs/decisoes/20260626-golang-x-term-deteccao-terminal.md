@@ -5,6 +5,7 @@ status: aprovado
 projeto: koine
 escopo: repo:koine
 plataforma: "*"
+dominios: [tecnologia]
 description: ADR — adotar golang.org/x/term para detecção de terminal em kn-agente instalar
 tags: [adr, koine, golang-x-term, terminal, onboarding]
 ---

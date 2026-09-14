@@ -5,6 +5,7 @@ status: aprovado
 projeto: koine
 escopo: repo:koine
 plataforma: "*"
+dominios: [tecnologia]
 description: ADR — Koine adota OKF v0.1 como formato canônico da base de conhecimento; frontmatter usa inglês para campos OKF-spec e PT-BR para extensões Koine
 tags: [adr, koine, okf, frontmatter, arquitetura]
 ---

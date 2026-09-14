@@ -6,6 +6,7 @@ status: ativo
 projeto: koine
 escopo: repo:koine
 plataforma: "*"
+dominios: [tecnologia]
 tags: [explicacao, koine, arquitetura, camadas, harness, habilidades, base-de-conhecimento]
 ---
 
