@@ -77,7 +77,7 @@ Ignore o resto — componentes de UI, elevation, navegação, shapes de tela. Um
 
 ### Rodada 2 — Mapear os tokens
 
-O que cada token pinta e qual o default quando ausente é do prelo — consulte `docs/81-referencia/referencias/tokens.md` no repo. O mapeamento **de onde o valor vem no DESIGN.md** é desta skill:
+O que cada token pinta e qual o default quando ausente é do prelo — consulte `docs/referencias/tokens.md` no repo. O mapeamento **de onde o valor vem no DESIGN.md** é desta skill:
 
 | Token | Fonte no DESIGN.md | Se ausente |
 |---|---|---|
