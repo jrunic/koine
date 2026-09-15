@@ -53,6 +53,7 @@ Espaço entre blocos permite adicionar skills futuras sem renumeração cascata.
 | **kn-13-sabatina-plano** | `/kn-13-sabatina-plano` | Quando é preciso entender antes de decidir | Entrevista socrática que confere o que o usuário afirma contra a evidência real, afia o vocabulário no `GLOSSARIO.md` e registra a decisão que passa nos três critérios |
 | **kn-14-organiza-workspaces** | `/kn-14-organiza-workspaces` | Quando nasce pasta de trabalho | Registrar pastas no Paseo — projeto, nome e workspace — para abri-las do celular |
 | **kn-15-mantem-glossario** | `/kn-15-mantem-glossario` | Quando a mesma coisa é chamada de dois jeitos | Criar ou atualizar o `GLOSSARIO.md` do trabalho — cada termo com um sentido só, os sinônimos que ficam de fora e as fronteiras entre conceitos |
+| **kn-16-agenda-trabalho** | `/kn-16-agenda-trabalho` | Quando um trabalho deve rodar sozinho | Agendar no Paseo com --cwd da pasta de trabalho e timezone explícito |
 | **kn-21-escreve-design** | `/kn-21-escreve-design` | 1× por marca, revisada quando a identidade muda | Escrever o `DESIGN.md` da marca na pasta-referências do escopo |
 | **kn-22-gera-imagem** | `/kn-22-gera-imagem` | Quando a sessão precisa de peça visual | Compor prompt a partir do `DESIGN.md` e gerar imagem via `imagio` |
 | **kn-23-gera-marca-prelo** | `/kn-23-gera-marca-prelo` | 1× por marca, regerada quando o `DESIGN.md` muda | Derivar `tokens.css` + `config.json` + fontes para o `prelo` |
@@ -412,6 +413,7 @@ Após `koine instalar`:
 ├── kn-13-sabatina-plano/SKILL.md
 ├── kn-14-organiza-workspaces/SKILL.md
 ├── kn-15-mantem-glossario/SKILL.md
+├── kn-16-agenda-trabalho/SKILL.md
 ├── kn-21-escreve-design/SKILL.md
 ├── kn-22-gera-imagem/SKILL.md
 ├── kn-23-gera-marca-prelo/SKILL.md

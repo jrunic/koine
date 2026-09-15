@@ -137,3 +137,48 @@ def test_a_skill_de_organizacao_nao_cita_setup():
 def test_a_skill_de_organizacao_nao_oferece_mover_por_recriar():
     texto = _texto("kn-14-organiza-workspaces").lower()
     assert "não faz isso" in texto or "nao faz isso" in texto
+
+
+def _kn16():
+    return _texto("kn-16-agenda-trabalho")
+
+
+def test_kn16_create_tem_cwd_e_timezone():
+    texto = _kn16()
+    assert "schedule create" in texto
+    assert "--cwd" in texto
+    assert "--timezone" in texto
+
+
+def test_kn16_update_cwd_corrige_tela():
+    texto = _kn16()
+    assert "schedule update" in texto
+    baixo = texto.lower()
+    assert "tela" in baixo
+    assert "--cwd" in texto
+
+
+def test_kn16_nao_cita_daemon_pair():
+    assert "daemon pair" not in _kn16()
+
+
+def test_kn16_exige_contexto_e_escopo():
+    texto = _kn16()
+    assert "CONTEXTO.md" in texto
+    assert "escopo" in texto.lower()
+
+
+def test_kn16_manda_kn04_se_status_falhar():
+    texto = _kn16()
+    assert "paseo status" in texto
+    assert "kn-04" in texto
+
+
+def test_kn16_le_provider_do_info():
+    assert "paseo-info" in _kn16()
+
+
+def test_kn16_nao_ensina_every_sozinho():
+    texto = _kn16()
+    if "--every" in texto:
+        assert "não use" in texto.lower() or "nao use" in texto.lower() or "sozinho" in texto.lower()
