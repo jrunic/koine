@@ -69,6 +69,20 @@ agente inexistente (declarado pela pasta ou pedido pelo provider). Em todos, o
 `koine atualizar` regenera os wrappers, então quem já tem instalado os recebe sem
 reinstalar.
 
+## Onde o Koine procura o config e o comando
+
+`PASEO_HOME` é opcional: definida e não-vazia, é autoritária — os comandos do
+Koine operam só nela. Sem a variável, o Koine usa o `config.json` que encontrar
+no local padrão (`~/.paseo`); sem config nenhum, é lá que o `paseo-configurar`
+cria um. Se houver mais de um config candidato, os comandos que escrevem
+param e listam os caminhos.
+
+O comando `paseo` é procurado no seu PATH e, depois, na instalação padrão do
+aplicativo (`%LOCALAPPDATA%\Programs\Paseo\resources\bin` no Windows,
+`/Applications/Paseo.app/Contents/Resources/bin` no macOS). Encontrado fora do
+PATH, o `koine paseo-doctor` diz a pasta exata para adicionar ao PATH do seu
+terminal — e os comandos seguem funcionando pelo caminho completo.
+
 ## Os dois providers por cliente
 
 | Identificador | Diferença |
