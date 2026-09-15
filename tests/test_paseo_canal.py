@@ -483,3 +483,18 @@ def test_paseo_info_prescreve_os_identificadores_dos_entries(capsys):
     assert dados["claude"]["provider_hermes"] == "kn-claude-hermes"
     assert dados["opencode"]["provider"] == "kn-opencode"
     assert dados["opencode"]["provider_hermes"] == "kn-opencode-hermes"
+
+
+# --- wrapper fora do PATH cai no diretório canônico (spec 20260915) --------
+
+def test_matriz_acha_wrapper_fora_do_path(tmp_path, monkeypatch):
+    from koine import paseo as _p
+    bin_dir = tmp_path / ".local" / "bin"
+    bin_dir.mkdir(parents=True)
+    (bin_dir / "kn-claude-paseo.bat").write_text("@echo off", encoding="utf-8")
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setattr(_p.os, "name", "nt")
+    monkeypatch.setattr(_p.shutil, "which", lambda _: None)
+    m = _p.matriz()
+    assert m["claude"]["existe"] is True
+    assert m["claude"]["caminho"].endswith("kn-claude-paseo.bat")

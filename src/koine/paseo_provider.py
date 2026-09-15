@@ -1,6 +1,7 @@
 """Entries de provider Koine no config do Paseo (jd-task #881)."""
 import copy
 import os
+import sys
 from dataclasses import dataclass
 
 from koine.paseo import matriz as _matriz_real
@@ -75,6 +76,8 @@ def mesclar_providers(cfg: dict, matriz: dict) -> tuple[dict, list]:
 def _executavel(caminho: str) -> bool:
     if not caminho or not os.path.isfile(caminho):
         return False
+    if sys.platform == "win32" and caminho.lower().endswith((".cmd", ".bat")):
+        return True  # quem decide é o cmd.exe /c, não o bit POSIX
     return os.access(caminho, os.X_OK)
 
 

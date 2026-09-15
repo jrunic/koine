@@ -225,3 +225,21 @@ def test_cli_json_entries(tmp_path, monkeypatch, capsys):
     ids = {e["id"] for e in saida["entries"]}
     assert "kn-claude" in ids and "kn-claude-hermes" in ids
     assert saida["gravou"] is True
+
+
+# --- .bat/.cmd no Windows não depende do bit POSIX (spec 20260915) ---------
+
+def test_executavel_bat_no_windows_nao_precisa_de_bit_x(tmp_path, monkeypatch):
+    alvo = tmp_path / "kn-claude-paseo.bat"
+    alvo.write_text("@echo off", encoding="utf-8")
+    monkeypatch.setattr(pp.sys, "platform", "win32")
+    assert pp._executavel(str(alvo)) is True
+
+
+def test_executavel_posix_continua_exigindo_x(tmp_path):
+    alvo = tmp_path / "kn-claude-paseo"
+    alvo.write_text("#!/bin/sh\n", encoding="utf-8")
+    os.chmod(alvo, 0o644)
+    assert pp._executavel(str(alvo)) is False
+    os.chmod(alvo, 0o755)
+    assert pp._executavel(str(alvo)) is True
