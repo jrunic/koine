@@ -24,6 +24,7 @@ from koine import (
     launch,
     mensagens,
     paseo,
+    paseo_diagnostico,
     pasta as pasta_mod,
     pathenv,
     paths,
@@ -38,7 +39,7 @@ from koine._version import __version__
 
 SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades", "instalar-wrappers",
                "gerar", "mostrar", "validar", "atualizar", "definir-agente",
-               "paseo-info"}
+               "paseo-info", "paseo-doctor"}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -49,7 +50,8 @@ def main(argv: list[str] | None = None) -> int:
     if not argv:
         print("uso: koine <cliente|subcomando> ...\n"
               "subcomandos: instalar, instalar-habilidades, gerar, mostrar, "
-              "validar, atualizar, paseo-info, versao", file=sys.stderr)
+              "validar, atualizar, paseo-info, paseo-doctor, versao",
+              file=sys.stderr)
         return 2
 
     primeiro = argv[0]
@@ -75,6 +77,8 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_definir_agente(argv[1:])
         if primeiro == "paseo-info":
             return _cmd_paseo_info(argv[1:])
+        if primeiro == "paseo-doctor":
+            return _cmd_paseo_doctor(argv[1:])
     if primeiro in adapters.REGISTRY:
         return _rodar_cliente(primeiro, argv[1:])
 
@@ -649,6 +653,29 @@ def _cmd_paseo_info(args: list[str]) -> int:
         print(f"{cliente:10} {info['provider']:14} {info['provider_hermes']:22} "
               f"{info['wrapper']:22} extends={info['extends']}{marca}")
     return 0
+
+
+def _cmd_paseo_doctor(args: list[str]) -> int:
+    """Diagnóstico do Paseo, legível por default e em JSON sob demanda."""
+    import json
+    from koine import paseo_diagnostico as pd
+    verificacoes = pd.diagnosticar()
+    if "--json" in args:
+        print(json.dumps([{"id": v.id, "situacao": v.situacao,
+                           "mensagem": v.mensagem, "dado": v.dado}
+                          for v in verificacoes], indent=2, ensure_ascii=False))
+        return pd.codigo_de_saida(verificacoes)
+
+    marca = {pd.OK: "ok  ", pd.AVISO: "aviso", pd.ERRO: "ERRO"}
+    for v in verificacoes:
+        print(f"[{marca[v.situacao]}] {v.mensagem}")
+    erros = sum(1 for v in verificacoes if v.situacao == pd.ERRO)
+    print()
+    if erros:
+        print(f"{erros} problema(s) impedem o Paseo de funcionar como deveria.")
+    else:
+        print("Nenhum problema encontrado.")
+    return pd.codigo_de_saida(verificacoes)
 
 
 def _lancar_avisando_sem_contexto(cliente: str, pasta: str,

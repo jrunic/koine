@@ -16,6 +16,9 @@ def _isola_xdg(monkeypatch):
     for k in list(os.environ):
         if k.startswith("XDG_"):
             monkeypatch.delenv(k, raising=False)
+    # Mesmo motivo do XDG_*: o diagnóstico do Paseo resolve o home por esta
+    # variável, e herdá-la faria a suíte medir a máquina de quem roda.
+    monkeypatch.delenv("PASEO_HOME", raising=False)
 
 
 @pytest.fixture
