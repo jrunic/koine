@@ -1,4 +1,5 @@
 """Escrita do config do Paseo — conjunto fechado (jd-task #880)."""
+import copy
 import json
 import os
 import shutil
@@ -131,10 +132,69 @@ def _preencher(cfg: dict, alts: list) -> None:
 
 def mesclar(cfg: dict) -> tuple[dict, list[Alteracao]]:
     """Devolve (cópia mesclada, alterações). Não grava."""
-    import copy
     novo = copy.deepcopy(cfg)
     alts: list[Alteracao] = []
     _forcar_true(novo, ["daemon", "browserTools", "enabled"], alts)
     _forcar_true(novo, ["daemon", "mcp", "injectIntoAgents"], alts)
     _preencher(novo, alts)
     return novo, alts
+
+
+def _recusar_alvo(caminho: str) -> None:
+    if os.path.islink(caminho):
+        raise RecusaErro("symlink", f"{caminho} é um symlink.")
+    if os.path.isdir(caminho):
+        raise RecusaErro("diretorio", f"{caminho} é um diretório.")
+
+
+def _ler(caminho: str) -> tuple[dict | None, str]:
+    if not os.path.lexists(caminho):
+        return None, ""
+    _recusar_alvo(caminho)
+    try:
+        with open(caminho, encoding="utf-8", newline="") as f:
+            bruto = f.read()
+    except OSError as e:
+        raise RecusaErro("ilegivel", str(e)) from e
+    if not bruto.strip():
+        return {}, bruto
+    try:
+        dados = json.loads(bruto)
+    except json.JSONDecodeError as e:
+        raise RecusaErro("ilegivel", f"JSON inválido: {e}") from e
+    if not isinstance(dados, dict):
+        raise RecusaErro("ilegivel", "o config não é um objeto JSON.")
+    return dados, bruto
+
+
+def _dump(obj: dict, crlf: bool) -> str:
+    texto = json.dumps(obj, indent=2, ensure_ascii=False) + "\n"
+    if crlf:
+        texto = texto.replace("\n", "\r\n")
+    return texto
+
+
+def aplicar(*, dry_run: bool = False, home: str | None = None) -> Resultado:
+    home = home or home_para_escrita()
+    caminho = caminho_config(home)
+    if os.path.lexists(caminho):
+        _recusar_alvo(caminho)
+    atual, bruto = _ler(caminho)
+    if atual is None:
+        atual = {}
+    novo, alts = mesclar(atual)
+    if not alts:
+        return Resultado(alteracoes=[], gravou=False, caminho=caminho,
+                         dry_run=dry_run)
+    if dry_run:
+        return Resultado(alteracoes=alts, gravou=False, caminho=caminho,
+                         dry_run=True)
+    os.makedirs(home, exist_ok=True)
+    if os.path.isfile(caminho):
+        shutil.copy2(caminho, caminho + ".bak")
+    crlf = "\r\n" in bruto
+    tmp = caminho + ".tmp"
+    with open(tmp, "w", encoding="utf-8", newline="") as f:
+        f.write(_dump(novo, crlf))
+    os.replace(tmp, caminho)
+    return Resultado(alteracoes=alts, gravou=True, caminho=caminho, dry_run=False)
