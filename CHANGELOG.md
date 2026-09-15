@@ -4,6 +4,19 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0] — 2026-09-15
+
+### Adicionado — a lista de providers já nasce limpa
+
+O `koine paseo-provider` desabilita os providers nativos do orquestrador
+(Claude, Codex, Copilot, OpenCode, Pi, Oh My Pi) que você não mexeu — os
+nativos cruas abrem sessão sem o seu contexto e sem o seu agente, e agora não
+aparecem mais como opção.
+
+Escolhas suas são preservadas: nativo ligado de propósito ou com comando
+customizado fica como está; nas próximas execuções o comando não muda nada
+que já está do jeito que ele deixou.
+
 ## [0.15.0] — 2026-09-15
 
 ### Adicionado — o Paseo no Windows sem variável de ambiente
