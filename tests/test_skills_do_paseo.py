@@ -99,3 +99,41 @@ def test_a_skill_de_conexao_reload_na_reexecucao():
     baixo = texto.lower()
     assert "sessão" in baixo or "sessao" in baixo
     assert "paseo" in baixo
+
+
+def test_a_skill_de_organizacao_tem_rename_e_archive():
+    texto = _texto("kn-14-organiza-workspaces")
+    assert "workspace rename" in texto
+    assert "workspace archive" in texto
+    assert "--reset" in texto
+
+
+def test_a_skill_de_organizacao_nao_inventa_move():
+    texto = _texto("kn-14-organiza-workspaces")
+    assert "workspace move" not in texto
+
+
+def test_a_skill_de_organizacao_avisa_mv_da_pasta():
+    """Trecho contínuo — não palavras soltas em seções diferentes."""
+    texto = _texto("kn-14-organiza-workspaces").lower()
+    assert "auto-arquiv" in texto
+
+
+def test_a_skill_de_organizacao_rename_e_titulo():
+    texto = _texto("kn-14-organiza-workspaces").lower()
+    assert "título" in texto or "titulo" in texto
+
+
+def test_a_skill_de_organizacao_archive_sem_desfazer():
+    texto = _texto("kn-14-organiza-workspaces").lower()
+    assert "não tem" in texto or "nao tem" in texto
+    assert "desarquiv" in texto or "unarchive" in texto
+
+
+def test_a_skill_de_organizacao_nao_cita_setup():
+    assert "workspace setup" not in _texto("kn-14-organiza-workspaces")
+
+
+def test_a_skill_de_organizacao_nao_oferece_mover_por_recriar():
+    texto = _texto("kn-14-organiza-workspaces").lower()
+    assert "não faz isso" in texto or "nao faz isso" in texto

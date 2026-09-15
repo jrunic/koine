@@ -1,6 +1,6 @@
 ---
 name: kn-14-organiza-workspaces
-description: Registra suas pastas de trabalho no Paseo, para abri-las de fora do computador. Varre o que você tem, propõe uma organização e cria projeto e workspace com o nome certo — resolvendo as duas camadas que a interface do Paseo expõe cruas. Rode toda vez que nascer pasta de trabalho nova. Precisa da /kn-04-conecta-o-paseo feita antes.
+description: Registra pastas de trabalho no Paseo para abri-las de fora. Cria projeto e workspace, renomeia o título, arquiva. Avisa: mv na pasta com o daemon no ar arquiva sozinho; não há mover entre projetos. Precisa da /kn-04 feita antes.
 id: 202608301720
 projeto: koine
 tipo: habilidade
@@ -102,3 +102,34 @@ paseo workspace ls
 
 Cada pasta aparecendo com o título combinado. Diga ao usuário que elas já estão
 visíveis no celular — não é preciso fazer mais nada no aparelho.
+
+## 5. Mudar o título visível
+
+Isso **não** muda o caminho da pasta. O Paseo indexa estado pelo cwd.
+
+```
+paseo workspace rename <id> "<título>"
+paseo workspace rename <id> --reset
+```
+
+`--reset` volta ao nome da pasta ou da branch. Para achar o id: `paseo workspace ls`.
+
+Título de **projeto** continua `paseo project rename` (seção 3). Não rode estes comandos de dentro da sessão **daquele** workspace.
+
+## 6. Arquivar
+
+```
+paseo workspace archive <id>
+```
+
+O workspace sai da lista ativa. Esta CLI **não tem** `unarchive` — não tem como desarquivar. Não promete devolver transcript do cliente. Não arquive de dentro da sessão daquele workspace.
+
+## 7. Não se move entre projetos
+
+Não existe verbo de mover workspace. `--project` só vale na criação.
+
+Arquivar e recriar no outro projeto **perde** o estado indexado pelo caminho. Esta skill **não faz isso**. Deixe no projeto atual, ou o usuário aceita a perda por conta própria.
+
+## 8. Não dê mv na pasta com o daemon no ar
+
+Medido: o daemon **auto-arquiva** o workspace em segundos. A sessão órfã. Nome visível = seção 5, não `mv`.
