@@ -619,26 +619,7 @@ def _cmd_paseo_info(args: list[str]) -> int:
     um provider que abre sessão sem contexto e sem erro.
     """
     import json
-    import shutil
-    dados = {}
-    for cliente in paseo.com_rota():
-        r = paseo.rota(cliente)
-        # O caminho ABSOLUTO resolvido, e não só o nome: o serviço do
-        # orquestrador roda com ambiente mínimo, e provider com nome puro fica
-        # indisponível. Quem prescreve o nome é quem tem como resolvê-lo — a
-        # alternativa é cada consumidor rodar o seu `command -v` e divergir.
-        caminho = shutil.which(paseo.wrapper_de(cliente))
-        dados[cliente] = {"wrapper": paseo.wrapper_de(cliente),
-                          "provider": paseo.entry_de(cliente),
-                          "provider_hermes": paseo.entry_hermes_de(cliente),
-                          "extends": r.extends, "args": list(r.args),
-                          # Prescrever um nome que não existe no disco é o que
-                          # faz o agente improvisar o comando do provider —
-                          # exatamente o que a /kn-04 manda não fazer. Acontece
-                          # de verdade: `koine atualizar` de uma versão anterior
-                          # não cria wrapper introduzido depois (jd-task #749).
-                          "existe": caminho is not None,
-                          "caminho": caminho}
+    dados = paseo.matriz()
     ausentes = [i["wrapper"] for i in dados.values() if not i["existe"]]
     if ausentes:
         # stderr, nunca stdout: o `--json` é consumido por ferramenta, e sujar a

@@ -174,6 +174,31 @@ def _dump(obj: dict, crlf: bool) -> str:
     return texto
 
 
+def escrever(novo: dict, *, dry_run: bool = False,
+             home: str | None = None) -> tuple[bool, str, str, bool]:
+    """Devolve (gravou, caminho, bruto_lido, dry_run)."""
+    home = home or home_para_escrita()
+    caminho = caminho_config(home)
+    if os.path.lexists(caminho):
+        _recusar_alvo(caminho)
+    atual, bruto = _ler(caminho)
+    if atual is None:
+        atual = {}
+    if novo == atual:
+        return False, caminho, bruto, dry_run
+    if dry_run:
+        return False, caminho, bruto, True
+    os.makedirs(home, exist_ok=True)
+    if os.path.isfile(caminho):
+        shutil.copy2(caminho, caminho + ".bak")
+    crlf = "\r\n" in bruto
+    tmp = caminho + ".tmp"
+    with open(tmp, "w", encoding="utf-8", newline="") as f:
+        f.write(_dump(novo, crlf))
+    os.replace(tmp, caminho)
+    return True, caminho, bruto, False
+
+
 def aplicar(*, dry_run: bool = False, home: str | None = None) -> Resultado:
     home = home or home_para_escrita()
     caminho = caminho_config(home)
@@ -189,12 +214,5 @@ def aplicar(*, dry_run: bool = False, home: str | None = None) -> Resultado:
     if dry_run:
         return Resultado(alteracoes=alts, gravou=False, caminho=caminho,
                          dry_run=True)
-    os.makedirs(home, exist_ok=True)
-    if os.path.isfile(caminho):
-        shutil.copy2(caminho, caminho + ".bak")
-    crlf = "\r\n" in bruto
-    tmp = caminho + ".tmp"
-    with open(tmp, "w", encoding="utf-8", newline="") as f:
-        f.write(_dump(novo, crlf))
-    os.replace(tmp, caminho)
-    return Resultado(alteracoes=alts, gravou=True, caminho=caminho, dry_run=False)
+    gravou, caminho, _, _ = escrever(novo, dry_run=False, home=home)
+    return Resultado(alteracoes=alts, gravou=gravou, caminho=caminho, dry_run=False)

@@ -6,6 +6,7 @@ alcançável, e os que são não são alcançáveis do mesmo jeito. Esta é a ú
 declaração da matriz — o `cli`, o `wrappers` e o comando de leitura perguntam
 aqui, em vez de cada um carregar uma cópia que envelheceria sozinha.
 """
+import shutil
 from dataclasses import dataclass, field
 
 
@@ -50,3 +51,21 @@ def entry_de(cliente: str) -> str:
 def entry_hermes_de(cliente: str) -> str:
     """Identificador do provider que força o Hermes por variável de ambiente."""
     return f"kn-{cliente}-hermes"
+
+
+def matriz(*, which=shutil.which) -> dict:
+    """Matriz por cliente com rota. `which` é costura da suíte."""
+    dados = {}
+    for cliente in com_rota():
+        r = rota(cliente)
+        caminho = which(wrapper_de(cliente))
+        dados[cliente] = {
+            "wrapper": wrapper_de(cliente),
+            "provider": entry_de(cliente),
+            "provider_hermes": entry_hermes_de(cliente),
+            "extends": r.extends,
+            "args": list(r.args),
+            "existe": caminho is not None,
+            "caminho": caminho,
+        }
+    return dados
