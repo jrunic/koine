@@ -208,3 +208,20 @@ def test_aplicar_dry_run_nao_grava(tmp_path, monkeypatch):
     assert r.gravou is False
     assert r.dry_run is True
     assert p.read_text(encoding="utf-8") == bruto
+
+
+def test_cli_json_entries(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr("koine.paseo_configurar.sys.platform", "darwin")
+    monkeypatch.setenv("PASEO_HOME", str(tmp_path))
+    exe = tmp_path / "w"
+    exe.write_text("x")
+    exe.chmod(0o755)
+    (tmp_path / "config.json").write_text(json.dumps(
+        {"daemon": {"relay": {"enabled": False}}}), encoding="utf-8")
+    monkeypatch.setattr(pp, "matriz", lambda: {"claude": _info(str(exe))})
+    from koine import cli
+    assert cli.main(["paseo-provider", "--json"]) == 0
+    saida = json.loads(capsys.readouterr().out)
+    ids = {e["id"] for e in saida["entries"]}
+    assert "kn-claude" in ids and "kn-claude-hermes" in ids
+    assert saida["gravou"] is True

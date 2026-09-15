@@ -39,7 +39,8 @@ from koine._version import __version__
 
 SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades", "instalar-wrappers",
                "gerar", "mostrar", "validar", "atualizar", "definir-agente",
-               "paseo-info", "paseo-doctor", "paseo-configurar"}
+               "paseo-info", "paseo-doctor", "paseo-configurar",
+               "paseo-provider"}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -51,7 +52,7 @@ def main(argv: list[str] | None = None) -> int:
         print("uso: koine <cliente|subcomando> ...\n"
               "subcomandos: instalar, instalar-habilidades, gerar, mostrar, "
               "validar, atualizar, paseo-info, paseo-doctor, "
-              "paseo-configurar, versao",
+              "paseo-configurar, paseo-provider, versao",
               file=sys.stderr)
         return 2
 
@@ -82,6 +83,8 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_paseo_doctor(argv[1:])
         if primeiro == "paseo-configurar":
             return _cmd_paseo_configurar(argv[1:])
+        if primeiro == "paseo-provider":
+            return _cmd_paseo_provider(argv[1:])
     if primeiro in adapters.REGISTRY:
         return _rodar_cliente(primeiro, argv[1:])
 
@@ -689,6 +692,36 @@ def _cmd_paseo_configurar(args: list[str]) -> int:
             print(f"{a.chave}: plantada {a.depois!s}")
         else:
             print(f"{a.chave}: de {a.antes!s} para {a.depois!s}")
+    if r.dry_run:
+        print("(dry-run: nada foi gravado)")
+    elif r.gravou:
+        print(f"gravado em {r.caminho}")
+    return 0
+
+
+def _cmd_paseo_provider(args: list[str]) -> int:
+    import json
+    from koine import paseo_provider as pp
+    dry = "--dry-run" in args
+    as_json = "--json" in args
+    try:
+        r = pp.aplicar(dry_run=dry)
+    except pp.RecusaErro as e:
+        print(e.mensagem, file=sys.stderr)
+        return 1
+    if as_json:
+        print(json.dumps({
+            "gravou": r.gravou,
+            "dry_run": r.dry_run,
+            "caminho": r.caminho,
+            "entries": [{"id": e.id, "acao": e.acao} for e in r.entries],
+        }, indent=2, ensure_ascii=False))
+        return 0
+    if all(e.acao == "inalterado" for e in r.entries) or not r.entries:
+        print("Nada a alterar.")
+        return 0
+    for e in r.entries:
+        print(f"{e.id}: {e.acao}")
     if r.dry_run:
         print("(dry-run: nada foi gravado)")
     elif r.gravou:
