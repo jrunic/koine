@@ -46,3 +46,45 @@ def home_para_escrita() -> str:
 
 def caminho_config(home: str) -> str:
     return os.path.join(home, "config.json")
+
+
+def _obj(pai: dict, nome: str, caminho: str) -> dict:
+    if nome not in pai:
+        pai[nome] = {}
+    if not isinstance(pai[nome], dict):
+        raise RecusaErro(
+            "tipo",
+            f"`{caminho}` deveria ser objeto JSON e é {type(pai[nome]).__name__}.")
+    return pai[nome]
+
+
+def _forcar_true(cfg: dict, partes: list[str], alteracoes: list) -> None:
+    atual = cfg
+    caminho = []
+    for parte in partes[:-1]:
+        caminho.append(parte)
+        atual = _obj(atual, parte, ".".join(caminho))
+    ultima = partes[-1]
+    chave = ".".join(partes)
+    if ultima not in atual:
+        atual[ultima] = True
+        alteracoes.append(Alteracao(chave, None, True))
+        return
+    valor = atual[ultima]
+    if not isinstance(valor, bool):
+        raise RecusaErro(
+            "tipo",
+            f"`{chave}` deveria ser boolean e é {type(valor).__name__}.")
+    if valor is not True:
+        atual[ultima] = True
+        alteracoes.append(Alteracao(chave, valor, True))
+
+
+def mesclar(cfg: dict) -> tuple[dict, list[Alteracao]]:
+    """Devolve (cópia mesclada, alterações). Não grava."""
+    import copy
+    novo = copy.deepcopy(cfg)
+    alts: list[Alteracao] = []
+    _forcar_true(novo, ["daemon", "browserTools", "enabled"], alts)
+    _forcar_true(novo, ["daemon", "mcp", "injectIntoAgents"], alts)
+    return novo, alts
