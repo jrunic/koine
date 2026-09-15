@@ -72,7 +72,9 @@ def test_opencode_args_no_command(tmp_path):
     info["provider_hermes"] = "kn-opencode-hermes"
     cfg = {"daemon": {"relay": {"enabled": False}}}
     novo, _ = pp.mesclar_providers(cfg, {"opencode": info})
-    assert novo["agents"]["providers"]["kn-opencode"]["command"] == [str(exe), "acp"]
+    # o subcomando do protocolo é do launch, não do entry — carregá-lo aqui
+    # duplicava o `acp` no spawn (medido no Grupo Aldo, 15/09/2026)
+    assert novo["agents"]["providers"]["kn-opencode"]["command"] == [str(exe)]
 
 
 def test_ja_canonico_e_inalterado(tmp_path):
@@ -81,8 +83,10 @@ def test_ja_canonico_e_inalterado(tmp_path):
     exe.chmod(0o755)
     cfg = {"daemon": {"relay": {"enabled": False}},
            "agents": {"providers": {
-               "kn-claude": {"extends": "claude", "command": [str(exe)]},
+               "kn-claude": {"extends": "claude", "command": [str(exe)],
+                             "label": "Koine · claude"},
                "kn-claude-hermes": {"extends": "claude", "command": [str(exe)],
+                                    "label": "Koine · claude Hermes",
                                     "env": {"KOINE_AGENTE": "hermes"}}}}}
     _, deltas = pp.mesclar_providers(cfg, {"claude": _info(str(exe))})
     assert {d.acao for d in deltas} == {"inalterado"}
@@ -243,3 +247,39 @@ def test_executavel_posix_continua_exigindo_x(tmp_path):
     assert pp._executavel(str(alvo)) is False
     os.chmod(alvo, 0o755)
     assert pp._executavel(str(alvo)) is True
+
+
+# --- label e acp para o Paseo 0.8.0 (diário do Patrick, 15/09) ------------
+
+def _info_claude():
+    return {"extends": "claude", "args": [], "caminho": "/x/kn-claude-paseo",
+            "wrapper": "kn-claude-paseo", "provider": "kn-claude",
+            "provider_hermes": "kn-claude-hermes"}
+
+
+def test_entry_tem_label():
+    novo, _ = pp.mesclar_providers({}, {"claude": _info_claude()})
+    provs = novo["agents"]["providers"]
+    assert provs["kn-claude"]["label"] == "Koine · claude"
+    assert provs["kn-claude-hermes"]["label"] == "Koine · claude Hermes"
+
+
+def test_opencode_nao_duplica_acp():
+    # a rota MANTÉM o args: o launch é quem injeta o subcomando (cli.py).
+    # O entry não pode carregar também — daí a duplicação medida no Grupo Aldo.
+    from koine.adapters import opencode
+    assert opencode.PASEO.args == ("acp",)
+    info = {"extends": opencode.PASEO.extends,
+            "args": list(opencode.PASEO.args),
+            "caminho": "/x/kn-opencode-paseo", "wrapper": "kn-opencode-paseo",
+            "provider": "kn-opencode", "provider_hermes": "kn-opencode-hermes"}
+    novo, _ = pp.mesclar_providers({}, {"opencode": info})
+    assert novo["agents"]["providers"]["kn-opencode"]["command"] == ["/x/kn-opencode-paseo"]
+
+
+def test_label_divergente_do_koine_e_corrigido():
+    cfg = {"agents": {"providers": {"kn-claude": {
+        "extends": "claude", "command": ["/velho"], "label": "coisa antiga"}}}}
+    novo, deltas = pp.mesclar_providers(cfg, {"claude": _info_claude()})
+    assert novo["agents"]["providers"]["kn-claude"]["label"] == "Koine · claude"
+    assert any(d.id == "kn-claude" and d.acao == "atualizado" for d in deltas)

@@ -27,6 +27,9 @@ def _aplicar_entry(existente: dict | None, desejado: dict, ident: str) -> tuple[
     if novo.get("extends") != desejado["extends"]:
         novo["extends"] = desejado["extends"]
         mudou = True
+    if novo.get("label") != desejado["label"]:
+        novo["label"] = desejado["label"]
+        mudou = True
     if novo.get("command") != desejado["command"]:
         novo["command"] = list(desejado["command"])
         mudou = True
@@ -52,14 +55,19 @@ def mesclar_providers(cfg: dict, matriz: dict) -> tuple[dict, list]:
     agents = _obj(novo, "agents", "agents")
     providers = _obj(agents, "providers", "agents.providers")
     deltas = []
-    for info in matriz.values():
+    for cliente, info in matriz.items():
+        # O command do entry leva SÓ o caminho: o subcomando do protocolo é
+        # injetado pelo launch (cli.py, prefixo da rota). Declará-lo aqui
+        # também duplicava o `acp` no spawn — medido no Grupo Aldo, 15/09.
         desejado_g = {
             "extends": info["extends"],
-            "command": [info["caminho"], *info["args"]],
+            "label": f"Koine · {cliente}",
+            "command": [info["caminho"]],
         }
         desejado_h = {
             "extends": info["extends"],
-            "command": [info["caminho"], *info["args"]],
+            "label": f"Koine · {cliente} Hermes",
+            "command": [info["caminho"]],
             "env": {"KOINE_AGENTE": "hermes"},
         }
         for ident, desejado in (
