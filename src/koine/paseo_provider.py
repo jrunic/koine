@@ -3,6 +3,7 @@ import copy
 import os
 from dataclasses import dataclass
 
+from koine.paseo import matriz as _matriz_real
 from koine.paseo_configurar import RecusaErro, _obj
 from koine.paseo_diagnostico import AUSENTE, busca
 
@@ -93,3 +94,40 @@ def preparar(cfg: dict, matriz: dict) -> tuple[dict, list]:
             "wrapper-morto",
             "wrapper não executável: " + ", ".join(mortos))
     return mesclar_providers(cfg, matriz)
+
+
+def matriz():
+    return _matriz_real()
+
+
+@dataclass
+class ResultadoProv:
+    entries: list
+    gravou: bool
+    caminho: str
+    dry_run: bool = False
+
+
+def aplicar(*, dry_run=False, home=None):
+    from koine import paseo_configurar as pc
+    home = home or pc.home_para_escrita()
+    caminho = pc.caminho_config(home)
+    if not os.path.lexists(caminho):
+        raise RecusaErro(
+            "sem-arquivo",
+            "não há config. Rode `koine paseo-configurar`.")
+    atual, _ = pc._ler(caminho)
+    if atual is None:
+        raise RecusaErro(
+            "sem-arquivo",
+            "não há config. Rode `koine paseo-configurar`.")
+    novo, deltas = preparar(atual, matriz())
+    if all(d.acao == "inalterado" for d in deltas):
+        return ResultadoProv(entries=deltas, gravou=False, caminho=caminho,
+                             dry_run=dry_run)
+    if dry_run:
+        return ResultadoProv(entries=deltas, gravou=False, caminho=caminho,
+                             dry_run=True)
+    gravou, caminho, _, _ = pc.escrever(novo, dry_run=False, home=home)
+    return ResultadoProv(entries=deltas, gravou=gravou, caminho=caminho,
+                         dry_run=False)

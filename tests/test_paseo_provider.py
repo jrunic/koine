@@ -143,3 +143,68 @@ def test_command_string_aborta(tmp_path):
     with pytest.raises(pp.RecusaErro) as e:
         pp.preparar(cfg, {"claude": _info(str(exe))})
     assert e.value.motivo == "tipo"
+
+
+def test_aplicar_grava_e_doctor_completo(tmp_path, monkeypatch):
+    monkeypatch.setattr("koine.paseo_configurar.sys.platform", "darwin")
+    monkeypatch.setenv("PASEO_HOME", str(tmp_path))
+    exe = tmp_path / "w"
+    exe.write_text("x")
+    exe.chmod(0o755)
+    cfg = {"daemon": {"relay": {"enabled": False},
+                      "browserTools": {"enabled": True},
+                      "mcp": {"injectIntoAgents": True}}}
+    p = tmp_path / "config.json"
+    p.write_text(json.dumps(cfg), encoding="utf-8")
+    monkeypatch.setattr(pp, "matriz", lambda: {"claude": _info(str(exe))})
+    r = pp.aplicar()
+    assert r.gravou is True
+    from koine.paseo_diagnostico import verificar_providers
+    d = json.loads(p.read_text(encoding="utf-8"))
+    monkeypatch.setattr("koine.paseo_diagnostico._prescritos",
+                        lambda: ["kn-claude", "kn-claude-hermes"])
+    monkeypatch.setattr("koine.paseo_diagnostico._disponiveis", lambda: None)
+    v = verificar_providers(d)
+    assert v.dado["estado"] == "completo"
+
+
+def test_aplicar_sem_arquivo_aborta(tmp_path, monkeypatch):
+    monkeypatch.setattr("koine.paseo_configurar.sys.platform", "darwin")
+    monkeypatch.setenv("PASEO_HOME", str(tmp_path))
+    monkeypatch.setattr(pp, "matriz", lambda: {"claude": _info("/bin/true")})
+    with pytest.raises(pp.RecusaErro) as e:
+        pp.aplicar()
+    assert e.value.motivo == "sem-arquivo"
+
+
+def test_aplicar_segunda_vez_nao_grava(tmp_path, monkeypatch):
+    monkeypatch.setattr("koine.paseo_configurar.sys.platform", "darwin")
+    monkeypatch.setenv("PASEO_HOME", str(tmp_path))
+    exe = tmp_path / "w"
+    exe.write_text("x")
+    exe.chmod(0o755)
+    p = tmp_path / "config.json"
+    p.write_text(json.dumps({"daemon": {"relay": {"enabled": False}}}),
+                 encoding="utf-8")
+    monkeypatch.setattr(pp, "matriz", lambda: {"claude": _info(str(exe))})
+    pp.aplicar()
+    h = hashlib.sha256(p.read_bytes()).hexdigest()
+    r = pp.aplicar()
+    assert r.gravou is False
+    assert hashlib.sha256(p.read_bytes()).hexdigest() == h
+
+
+def test_aplicar_dry_run_nao_grava(tmp_path, monkeypatch):
+    monkeypatch.setattr("koine.paseo_configurar.sys.platform", "darwin")
+    monkeypatch.setenv("PASEO_HOME", str(tmp_path))
+    exe = tmp_path / "w"
+    exe.write_text("x")
+    exe.chmod(0o755)
+    p = tmp_path / "config.json"
+    bruto = json.dumps({"daemon": {"relay": {"enabled": False}}})
+    p.write_text(bruto, encoding="utf-8")
+    monkeypatch.setattr(pp, "matriz", lambda: {"claude": _info(str(exe))})
+    r = pp.aplicar(dry_run=True)
+    assert r.gravou is False
+    assert r.dry_run is True
+    assert p.read_text(encoding="utf-8") == bruto
