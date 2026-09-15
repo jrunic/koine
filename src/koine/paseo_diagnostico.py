@@ -244,7 +244,7 @@ def verificar_servico(cfg: dict) -> Verificacao:
 
 def _versao_de(saida: str) -> str | None:
     """Última ocorrência de x.y.z na saída — no Paseo 0.8.0 o `--version`
-    pode preceder-se de log de startup (medido no Grupo Aldo, 15/09/2026)."""
+    pode preceder-se de log de startup (medido em campo, 15/09/2026)."""
     achados = re.findall(r"\d+\.\d+\.\d+", saida or "")
     return achados[-1] if achados else None
 
@@ -414,7 +414,7 @@ def _prescritos() -> list[str]:
 def _disponiveis() -> tuple[set[str], set[str]] | None:
     """(disponíveis, desligados) segundo o serviço. None = não deu para
     perguntar. Desligado é ESCOLHA do usuário, não defeito — medido no
-    Grupo Aldo em 15/09/2026: o doctor reprovava o que o usuário tinha
+    ambiente corporativo em 15/09/2026: o doctor reprovava o que o tinha
     desligado de propósito."""
     saida = _rodar_paseo(["provider", "ls", "--json"])
     if saida is None:

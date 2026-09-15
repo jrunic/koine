@@ -73,7 +73,7 @@ def test_opencode_args_no_command(tmp_path):
     cfg = {"daemon": {"relay": {"enabled": False}}}
     novo, _ = pp.mesclar_providers(cfg, {"opencode": info})
     # o subcomando do protocolo é do launch, não do entry — carregá-lo aqui
-    # duplicava o `acp` no spawn (medido no Grupo Aldo, 15/09/2026)
+    # duplicava o `acp` no spawn (medido em campo, 15/09/2026)
     assert novo["agents"]["providers"]["kn-opencode"]["command"] == [str(exe)]
 
 
@@ -249,7 +249,7 @@ def test_executavel_posix_continua_exigindo_x(tmp_path):
     assert pp._executavel(str(alvo)) is True
 
 
-# --- label e acp para o Paseo 0.8.0 (diário do Patrick, 15/09) ------------
+# --- label e acp para o Paseo 0.8.0 (medido em campo, 15/09/2026) ----------
 
 def _info_claude():
     return {"extends": "claude", "args": [], "caminho": "/x/kn-claude-paseo",
@@ -266,7 +266,7 @@ def test_entry_tem_label():
 
 def test_opencode_nao_duplica_acp():
     # a rota MANTÉM o args: o launch é quem injeta o subcomando (cli.py).
-    # O entry não pode carregar também — daí a duplicação medida no Grupo Aldo.
+    # O entry não pode carregar também — daí a duplicação medida em campo.
     from koine.adapters import opencode
     assert opencode.PASEO.args == ("acp",)
     info = {"extends": opencode.PASEO.extends,

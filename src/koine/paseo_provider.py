@@ -58,7 +58,7 @@ def mesclar_providers(cfg: dict, matriz: dict) -> tuple[dict, list]:
     for cliente, info in matriz.items():
         # O command do entry leva SÓ o caminho: o subcomando do protocolo é
         # injetado pelo launch (cli.py, prefixo da rota). Declará-lo aqui
-        # também duplicava o `acp` no spawn — medido no Grupo Aldo, 15/09.
+        # também duplicava o `acp` no spawn — medido em campo, 15/09.
         desejado_g = {
             "extends": info["extends"],
             "label": f"Koine · {cliente}",

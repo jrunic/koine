@@ -450,7 +450,7 @@ def test_verifica_executaveis_ausente_e_erro_com_procurados(monkeypatch):
     assert r"C:\Apps\Paseo\resources\bin" in v.mensagem
 
 
-# --- versão sem log de startup; provider desligado (diário do Patrick) -----
+# --- versão sem log de startup; provider desligado (medido em campo, 15/09) -
 
 def test_versao_ignora_log_de_startup(monkeypatch):
     bruto = "Starting daemon...\nlistening on pipe\n0.8.0\n"
