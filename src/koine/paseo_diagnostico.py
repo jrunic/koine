@@ -13,7 +13,7 @@ Paseo 0.8.0.
 import glob
 import json
 import os
-import shutil
+import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -242,12 +242,20 @@ def verificar_servico(cfg: dict) -> Verificacao:
         {"listen": ouvindo, "listen_declarado": declarado})
 
 
+def _versao_de(saida: str) -> str | None:
+    """Última ocorrência de x.y.z na saída — no Paseo 0.8.0 o `--version`
+    pode preceder-se de log de startup (medido no Grupo Aldo, 15/09/2026)."""
+    achados = re.findall(r"\d+\.\d+\.\d+", saida or "")
+    return achados[-1] if achados else None
+
+
 def verificar_versoes() -> Verificacao:
     """O aplicativo e o serviço estão na mesma versão?"""
     bruto = _rodar_paseo(["--version"])
-    app = bruto.strip() if bruto else None
+    app = _versao_de(bruto) if bruto else None
     status = _rodar_paseo(["status"])
     daemon = campo_do_status(status, "Daemon Version") if status else None
+    daemon = _versao_de(daemon) if daemon else None
 
     if app is None:
         return Verificacao("versao.aplicativo_e_daemon", ERRO,
@@ -403,7 +411,11 @@ def _prescritos() -> list[str]:
     return nomes
 
 
-def _disponiveis() -> set[str] | None:
+def _disponiveis() -> tuple[set[str], set[str]] | None:
+    """(disponíveis, desligados) segundo o serviço. None = não deu para
+    perguntar. Desligado é ESCOLHA do usuário, não defeito — medido no
+    Grupo Aldo em 15/09/2026: o doctor reprovava o que o usuário tinha
+    desligado de propósito."""
     saida = _rodar_paseo(["provider", "ls", "--json"])
     if saida is None:
         return None
@@ -411,7 +423,9 @@ def _disponiveis() -> set[str] | None:
         lista = json.loads(saida)
     except json.JSONDecodeError:
         return None
-    return {p.get("provider") for p in lista if p.get("status") == "available"}
+    disp = {p.get("provider") for p in lista if p.get("status") == "available"}
+    desp = {p.get("provider") for p in lista if p.get("status") == "disabled"}
+    return disp, desp
 
 
 def verificar_providers(cfg: dict) -> Verificacao:
@@ -441,7 +455,16 @@ def verificar_providers(cfg: dict) -> Verificacao:
 
     vistos = _disponiveis()
     if vistos is not None:
-        mortos = [n for n in presentes if n not in vistos]
+        disponiveis, desligados_svc = vistos
+        desligados = sorted(n for n in presentes if n in desligados_svc)
+        if desligados:
+            return Verificacao(
+                "providers.do_koine", AVISO,
+                f"{', '.join(desligados)} está(ão) no config e desligado(s) "
+                "por você — ligue na tela do Paseo quando quiser usar.",
+                {"estado": "desligado", "presentes": presentes,
+                 "faltando": [], "desligados": desligados, "indisponiveis": []})
+        mortos = [n for n in presentes if n not in disponiveis]
         if mortos:
             return Verificacao(
                 "providers.do_koine", ERRO,

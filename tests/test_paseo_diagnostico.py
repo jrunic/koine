@@ -323,7 +323,7 @@ def test_configuracao_parcial_e_erro(monkeypatch):
 
 def test_todos_os_prescritos_presentes_e_ok(monkeypatch):
     monkeypatch.setattr(pd, "_prescritos", lambda: ["kn-claude", "kn-codex"])
-    monkeypatch.setattr(pd, "_disponiveis", lambda: {"kn-claude", "kn-codex"})
+    monkeypatch.setattr(pd, "_disponiveis", lambda: ({"kn-claude", "kn-codex"}, set()))
     v = pd.verificar_providers(_cfg_com_providers("kn-claude", "kn-codex"))
     assert v.situacao == pd.OK
     assert v.dado["estado"] == "completo"
@@ -331,7 +331,7 @@ def test_todos_os_prescritos_presentes_e_ok(monkeypatch):
 
 def test_presente_no_config_e_indisponivel_no_servico_e_erro(monkeypatch):
     monkeypatch.setattr(pd, "_prescritos", lambda: ["kn-claude", "kn-codex"])
-    monkeypatch.setattr(pd, "_disponiveis", lambda: {"kn-claude"})
+    monkeypatch.setattr(pd, "_disponiveis", lambda: ({"kn-claude"}, set()))
     v = pd.verificar_providers(_cfg_com_providers("kn-claude", "kn-codex"))
     assert v.situacao == pd.ERRO
     assert v.dado["indisponiveis"] == ["kn-codex"]
@@ -447,3 +447,30 @@ def test_verifica_executaveis_ausente_e_erro_com_procurados(monkeypatch):
     v = pd.verificar_executaveis()
     assert v.situacao == pd.ERRO
     assert r"C:\Apps\Paseo\resources\bin" in v.mensagem
+
+
+# --- versão sem log de startup; provider desligado (diário do Patrick) -----
+
+def test_versao_ignora_log_de_startup(monkeypatch):
+    bruto = "Starting daemon...\nlistening on pipe\n0.8.0\n"
+    monkeypatch.setattr(pd, "_rodar_paseo",
+                        lambda a: bruto if a == ["--version"] else
+                        "Daemon Version: 0.8.0\n")
+    v = pd.verificar_versoes()
+    assert v.situacao == pd.OK
+    assert v.dado["aplicativo"] == "0.8.0"
+
+
+def test_provider_prescrito_desligado_e_aviso_nunca_erro(monkeypatch):
+    lista = json.dumps([
+        {"provider": "kn-claude", "status": "disabled"},
+        {"provider": "kn-claude-hermes", "status": "available"}])
+    monkeypatch.setattr(pd, "_rodar_paseo",
+                        lambda a: lista if a == ["provider", "ls", "--json"]
+                        else None)
+    cfg = {"agents": {"providers": {"kn-claude": {}, "kn-claude-hermes": {}}}}
+    monkeypatch.setattr(pd, "_prescritos",
+                        lambda: ["kn-claude", "kn-claude-hermes"])
+    v = pd.verificar_providers(cfg)
+    assert v.situacao == pd.AVISO
+    assert v.dado["desligados"] == ["kn-claude"]
