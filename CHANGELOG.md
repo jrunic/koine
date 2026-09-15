@@ -4,6 +4,28 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] — 2026-09-15
+
+### Adicionado — o Paseo deixa de ser JSON ditado
+
+Quatro comandos passam a escrever e diagnosticar o orquestrador, em vez de a skill
+pedir ao agente que edite o arquivo:
+
+- **`koine paseo-doctor`** — lê o config, o daemon e o que o Koine espera; aponta o
+  que falta sem gravar.
+- **`koine paseo-configurar`** — grava as chaves medidas (relay, browser, MCP,
+  CORS, ditado) validando contra o catálogo da versão instalada.
+- **`koine paseo-provider`** — cria os entries `jd-*` a partir do `paseo-info`.
+- **`koine paseo-info`** segue sendo o catálogo (já existia).
+
+A skill **`/kn-04-conecta-o-paseo`** agora chama esses comandos. **`/kn-14`**
+ganhou rename, archive e o que dá para fazer sem um verbo `move` no CLI.
+**`/kn-16-agenda-trabalho`** agenda com `--cwd` explícito, o contorno da tela que
+grava a pasta errada.
+
+Os docs de Paseo passam a citar a versão **0.8.0** (medida em **2026-09-13**) e o
+guia de acesso remoto descreve o upgrade pelo aplicativo, não pelo Homebrew.
+
 ## [0.13.0] — 2026-09-12
 
 ### Corrigido — o contexto de cada sessão parou de crescer sem teto
