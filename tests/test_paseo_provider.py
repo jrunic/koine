@@ -97,3 +97,49 @@ def test_path_mudou_atualiza(tmp_path):
                "kn-claude": {"extends": "claude", "command": ["/old/w"]}}}}
     _, deltas = pp.mesclar_providers(cfg, {"claude": _info(str(exe))})
     assert any(d.id == "kn-claude" and d.acao == "atualizado" for d in deltas)
+
+
+def test_sem_relay_aborta():
+    with pytest.raises(pp.RecusaErro) as e:
+        pp.preparar({}, {"claude": _info("/x")})
+    assert e.value.motivo == "sem-relay"
+
+
+def test_wrapper_ausente_aborta():
+    cfg = {"daemon": {"relay": {"enabled": False}}}
+    info = _info(None)
+    info["existe"] = False
+    with pytest.raises(pp.RecusaErro) as e:
+        pp.preparar(cfg, {"claude": info})
+    assert e.value.motivo == "wrapper-ausente"
+
+
+def test_wrapper_diretorio_aborta(tmp_path):
+    d = tmp_path / "dir"
+    d.mkdir()
+    cfg = {"daemon": {"relay": {"enabled": False}}}
+    with pytest.raises(pp.RecusaErro) as e:
+        pp.preparar(cfg, {"claude": _info(str(d))})
+    assert e.value.motivo == "wrapper-morto"
+
+
+def test_providers_lista_aborta(tmp_path):
+    exe = tmp_path / "w"
+    exe.write_text("x")
+    exe.chmod(0o755)
+    cfg = {"daemon": {"relay": {"enabled": False}},
+           "agents": {"providers": []}}
+    with pytest.raises(pp.RecusaErro) as e:
+        pp.preparar(cfg, {"claude": _info(str(exe))})
+    assert e.value.motivo == "tipo"
+
+
+def test_command_string_aborta(tmp_path):
+    exe = tmp_path / "w"
+    exe.write_text("x")
+    exe.chmod(0o755)
+    cfg = {"daemon": {"relay": {"enabled": False}},
+           "agents": {"providers": {"kn-claude": {"command": "/usr/bin/x"}}}}
+    with pytest.raises(pp.RecusaErro) as e:
+        pp.preparar(cfg, {"claude": _info(str(exe))})
+    assert e.value.motivo == "tipo"

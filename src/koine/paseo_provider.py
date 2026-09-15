@@ -69,3 +69,27 @@ def mesclar_providers(cfg: dict, matriz: dict) -> tuple[dict, list]:
             providers[ident] = entry
             deltas.append(EntryDelta(ident, acao))
     return novo, deltas
+
+
+def _executavel(caminho: str) -> bool:
+    if not caminho or not os.path.isfile(caminho):
+        return False
+    return os.access(caminho, os.X_OK)
+
+
+def preparar(cfg: dict, matriz: dict) -> tuple[dict, list]:
+    if busca(cfg, "daemon.relay.enabled") is AUSENTE:
+        raise RecusaErro(
+            "sem-relay",
+            "não há daemon.relay.enabled no config. Rode `koine paseo-configurar`.")
+    faltam = [i["wrapper"] for i in matriz.values() if not i.get("caminho")]
+    if faltam:
+        raise RecusaErro(
+            "wrapper-ausente",
+            "wrappers ausentes: " + ", ".join(faltam) + ". Rode `koine instalar`.")
+    mortos = [i["caminho"] for i in matriz.values() if not _executavel(i["caminho"])]
+    if mortos:
+        raise RecusaErro(
+            "wrapper-morto",
+            "wrapper não executável: " + ", ".join(mortos))
+    return mesclar_providers(cfg, matriz)
