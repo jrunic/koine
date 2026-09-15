@@ -87,7 +87,8 @@ def test_ja_canonico_e_inalterado(tmp_path):
                              "label": "Koine · claude"},
                "kn-claude-hermes": {"extends": "claude", "command": [str(exe)],
                                     "label": "Koine · claude Hermes",
-                                    "env": {"KOINE_AGENTE": "hermes"}}}}}
+                                    "env": {"KOINE_AGENTE": "hermes"}},
+               **{n: {"enabled": False} for n in pp.NATIVOS_DO_PASEO}}}}
     _, deltas = pp.mesclar_providers(cfg, {"claude": _info(str(exe))})
     assert {d.acao for d in deltas} == {"inalterado"}
 
