@@ -39,7 +39,7 @@ from koine._version import __version__
 
 SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades", "instalar-wrappers",
                "gerar", "mostrar", "validar", "atualizar", "definir-agente",
-               "paseo-info", "paseo-doctor"}
+               "paseo-info", "paseo-doctor", "paseo-configurar"}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -50,7 +50,8 @@ def main(argv: list[str] | None = None) -> int:
     if not argv:
         print("uso: koine <cliente|subcomando> ...\n"
               "subcomandos: instalar, instalar-habilidades, gerar, mostrar, "
-              "validar, atualizar, paseo-info, paseo-doctor, versao",
+              "validar, atualizar, paseo-info, paseo-doctor, "
+              "paseo-configurar, versao",
               file=sys.stderr)
         return 2
 
@@ -79,6 +80,8 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_paseo_info(argv[1:])
         if primeiro == "paseo-doctor":
             return _cmd_paseo_doctor(argv[1:])
+        if primeiro == "paseo-configurar":
+            return _cmd_paseo_configurar(argv[1:])
     if primeiro in adapters.REGISTRY:
         return _rodar_cliente(primeiro, argv[1:])
 
@@ -676,6 +679,40 @@ def _cmd_paseo_doctor(args: list[str]) -> int:
     else:
         print("Nenhum problema encontrado.")
     return pd.codigo_de_saida(verificacoes)
+
+
+def _cmd_paseo_configurar(args: list[str]) -> int:
+    import json
+    from koine import paseo_configurar as pc
+    dry = "--dry-run" in args
+    as_json = "--json" in args
+    try:
+        r = pc.aplicar(dry_run=dry)
+    except pc.RecusaErro as e:
+        print(e.mensagem, file=sys.stderr)
+        return 1
+    if as_json:
+        print(json.dumps({
+            "gravou": r.gravou,
+            "dry_run": r.dry_run,
+            "caminho": r.caminho,
+            "alteracoes": [{"chave": a.chave, "antes": a.antes, "depois": a.depois}
+                           for a in r.alteracoes],
+        }, indent=2, ensure_ascii=False))
+        return 0
+    if not r.alteracoes:
+        print("Nada a alterar.")
+        return 0
+    for a in r.alteracoes:
+        if a.antes is None:
+            print(f"{a.chave}: plantada {a.depois!s}")
+        else:
+            print(f"{a.chave}: de {a.antes!s} para {a.depois!s}")
+    if r.dry_run:
+        print("(dry-run: nada foi gravado)")
+    elif r.gravou:
+        print(f"gravado em {r.caminho}")
+    return 0
 
 
 def _lancar_avisando_sem_contexto(cliente: str, pasta: str,
