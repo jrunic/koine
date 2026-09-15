@@ -4,6 +4,33 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] — 2026-09-15
+
+### Adicionado — o Paseo no Windows sem variável de ambiente
+
+Configurar o Paseo não exige mais criar `PASEO_HOME` nem editar arquivos do
+seu terminal. O Koine passa a procurar o `config.json` do Paseo no local
+padrão (`~/.paseo`) e usar o que encontrar; sem nenhum, é lá que o
+`paseo-configurar` cria. `PASEO_HOME` continua valendo como escolha
+explícita — e aí é exclusiva.
+
+O comando `paseo` e os wrappers do Koine também passam a ser procurados
+fora do PATH, nos locais padrão de instalação. Quando o comando está
+instalado mas fora do PATH, o `koine paseo-doctor` mostra a pasta exata
+para adicionar ao PATH do seu terminal — e os comandos seguem funcionando
+pelo caminho completo.
+
+### Corrigido — providers compatíveis com o Paseo 0.8.0
+
+- Os providers gerados pelo `koine paseo-provider` ganham `label`, que esta
+  versão do Paseo espera nos providers customizados.
+- O comando do provider do OpenCode não duplica mais o subcomando do
+  protocolo: quem injeta é o lançamento, não a configuração.
+- O `paseo-doctor` não reprova provider que você desligou de propósito —
+  vira aviso, com o nome.
+- O `paseo-doctor` lê a versão do Paseo mesmo quando a saída do comando vem
+  precedida de log de inicialização.
+
 ## [0.14.0] — 2026-09-15
 
 ### Adicionado — o Paseo deixa de ser JSON ditado
