@@ -111,7 +111,11 @@ def test_voz_ausente_e_aviso_nunca_erro():
 
 
 def test_rodar_paseo_devolve_none_quando_a_cli_nao_existe(monkeypatch):
-    monkeypatch.setattr(pd.shutil, "which", lambda _: None)
+    from koine import paseo_ambiente as amb
+    # sem executável no PATH NEM no local padrão — costura no resolvedor,
+    # porque o fallback de instalação padrão é caminho legítimo desde a
+    # spec 20260915
+    monkeypatch.setattr(amb, "resolver_executavel", lambda n: None)
     assert pd._rodar_paseo(["status"]) is None
 
 
@@ -395,3 +399,51 @@ def test_cli_tabela_marca_cada_situacao(monkeypatch, capsys):
     cli.main(["paseo-doctor"])
     linhas = capsys.readouterr().out.splitlines()
     assert sum(1 for l in linhas if "m1" in l or "m2" in l or "m3" in l) == 3
+
+
+# --- CLI do Paseo pelo resolvedor de ambiente (spec 20260915) --------------
+
+def test_rodar_paseo_usa_o_ambiente(monkeypatch):
+    from koine import paseo_ambiente as amb
+    chamadas = []
+
+    def fake_executar(exe, args, **kw):
+        chamadas.append((exe, args))
+        return type("R", (), {"returncode": 0, "stdout": "ok"})()
+
+    monkeypatch.setattr(amb, "resolver_executavel",
+                        lambda n: amb.Executavel("/fora/do/path/paseo.cmd",
+                                                 "fallback"))
+    monkeypatch.setattr(amb, "executar", fake_executar)
+    assert pd._rodar_paseo(["status"]) == "ok"
+    assert chamadas[0] == ("/fora/do/path/paseo.cmd", ["status"])
+
+
+def test_verifica_executaveis_aponta_diretorio_do_path(monkeypatch):
+    from koine import paseo_ambiente as amb
+    monkeypatch.setattr(amb, "resolver_executavel",
+                        lambda n: amb.Executavel(
+                            r"C:\Apps\Paseo\resources\bin\paseo.cmd",
+                            "fallback") if n == "paseo" else None)
+    v = pd.verificar_executaveis()
+    assert v.situacao == pd.AVISO
+    assert r"C:\Apps\Paseo\resources\bin" in v.mensagem
+    assert "PATH" in v.mensagem
+
+
+def test_verifica_executaveis_no_path_e_ok(monkeypatch):
+    from koine import paseo_ambiente as amb
+    monkeypatch.setattr(amb, "resolver_executavel",
+                        lambda n: amb.Executavel("/usr/local/bin/paseo", "path"))
+    v = pd.verificar_executaveis()
+    assert v.situacao == pd.OK
+
+
+def test_verifica_executaveis_ausente_e_erro_com_procurados(monkeypatch):
+    from koine import paseo_ambiente as amb
+    monkeypatch.setattr(amb, "resolver_executavel", lambda n: None)
+    monkeypatch.setattr(amb, "pastas_padrao_do_paseo",
+                        lambda: [r"C:\Apps\Paseo\resources\bin"])
+    v = pd.verificar_executaveis()
+    assert v.situacao == pd.ERRO
+    assert r"C:\Apps\Paseo\resources\bin" in v.mensagem

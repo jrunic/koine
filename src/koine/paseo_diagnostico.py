@@ -166,18 +166,47 @@ def verificar_voz(cfg: dict) -> Verificacao:
 def _rodar_paseo(args: list[str], *, timeout: int = 15) -> str | None:
     """Única porta de saída para a CLI do Paseo. Devolve stdout ou None.
 
-    None significa "não deu para perguntar" — CLI fora do PATH, estouro de
-    prazo ou saída não-zero. Quem chama decide o que isso quer dizer no
-    contexto dele; este módulo não transforma silêncio em veredito.
+    Resolve o executável pelo ambiente (PATH → local padrão de instalação)
+    e executa pela primitiva certa do SO (`cmd /c` para `.cmd`/`.bat` no
+    Windows). None significa "não deu para perguntar" — sem executável,
+    estouro de prazo ou saída não-zero. Quem chama decide o que isso quer
+    dizer no contexto dele; este módulo não transforma silêncio em veredito.
     """
-    if shutil.which("paseo") is None:
+    from koine import paseo_ambiente
+    exe = paseo_ambiente.resolver_executavel("paseo")
+    if exe is None:
         return None
     try:
-        r = subprocess.run(["paseo", *args], capture_output=True,
-                           text=True, timeout=timeout)
+        r = paseo_ambiente.executar(exe.caminho, args, timeout=timeout)
     except (subprocess.TimeoutExpired, OSError):
         return None
     return r.stdout if r.returncode == 0 else None
+
+
+def verificar_executaveis() -> Verificacao:
+    """`paseo` alcançável? Fora do PATH vira aviso com o diretório exato a
+    inserir — o mentorado copia e cola, não adivinha (spec 20260915)."""
+    from koine import paseo_ambiente as amb
+    exe = amb.resolver_executavel("paseo")
+    if exe is None:
+        procurados = amb.pastas_padrao_do_paseo()
+        return Verificacao(
+            "executaveis.paseo", ERRO,
+            "não encontrei o comando `paseo` — nem no PATH, nem em "
+            + (", ".join(procurados) if procurados else "local padrão nenhum")
+            + ". Reinstale o aplicativo Paseo.",
+            {"estado": "ausente", "procurados": procurados})
+    if exe.origem == "fallback":
+        pasta = os.path.dirname(exe.caminho)
+        return Verificacao(
+            "executaveis.paseo", AVISO,
+            f"o comando do Paseo está em {exe.caminho}, mas essa pasta não "
+            f"está no seu PATH. Para chamar `paseo` de qualquer terminal, "
+            f"adicione ao PATH: {pasta}",
+            {"estado": "fora-do-path", "caminho": exe.caminho, "pasta": pasta})
+    return Verificacao("executaveis.paseo", OK,
+                       "comando `paseo` alcançável pelo PATH.",
+                       {"estado": "no-path", "caminho": exe.caminho})
 
 
 def campo_do_status(saida: str, rotulo: str) -> str | None:
@@ -440,7 +469,8 @@ def diagnosticar(home: str | None = None) -> list[Verificacao]:
     if cfg is None:
         return [v_config]
 
-    fora = [v_config, verificar_servico(cfg), verificar_versoes()]
+    fora = [v_config, verificar_executaveis(), verificar_servico(cfg),
+            verificar_versoes()]
     for chave in CHAVES_DO_CANAL:
         fora.append(verificar_chave_do_canal(cfg, chave))
     fora.append(verificar_relay(cfg))
