@@ -12,6 +12,9 @@ tags: [tutorial, koine, paseo, celular, ditado, acesso-remoto]
 
 # Tutorial — abrir uma sessão Koine pelo celular
 
+Medido contra Paseo **0.8.0** em **2026-09-13**. Upgrade e deriva de versão: ver o
+[guia de acesso remoto](../guias/acesso-remoto.md).
+
 Ao final deste tutorial você vai pegar o telefone, abrir uma sessão na sua pasta de
 trabalho, **ditar uma pergunta em português** e receber a resposta com o seu contexto
 carregado — o seu perfil, o seu escopo, a sua pasta.
@@ -65,8 +68,8 @@ Ela vai:
 2. **Descobrir o que a sua máquina tem** e cruzar com o que tem caminho.
 3. **Perguntar quais clientes você vai usar de fato**, e confirmar o login abrindo
    uma sessão mínima em cada. Não deduza por você: ela precisa da sua resposta.
-4. **Escrever a configuração**, antes da primeira abertura.
-5. **Escrever os providers** — dois por cliente.
+4. **Chamar** `koine paseo-configurar`, antes da primeira abertura.
+5. **Chamar** `koine paseo-provider` — dois entries por cliente com rota.
 
 Ao final, ela pede para você abrir o aplicativo.
 

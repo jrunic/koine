@@ -12,7 +12,12 @@ tags: [referencia, koine, paseo, providers, configuracao]
 
 # Referência — o Koine no orquestrador de sessões
 
-O que a `/kn-04-conecta-o-paseo` escreve, e por quê. Para o passo a passo, veja o
+Medido contra Paseo **0.8.0** em **2026-09-13**. Upgrade e deriva de versão: ver o
+[guia de acesso remoto](../guias/acesso-remoto.md).
+
+A `/kn-04-conecta-o-paseo` **chama** `koine paseo-configurar` e
+`koine paseo-provider`. Este documento descreve o que esses comandos gravam, e
+por quê. Para o passo a passo, veja o
 [tutorial](../tutoriais/acesso-pelo-celular.md); para entender a decisão, a
 [explicação](../explicacoes/por-que-paseo.md).
 

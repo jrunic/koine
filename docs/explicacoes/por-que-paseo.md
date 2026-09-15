@@ -12,6 +12,9 @@ tags: [explicacao, koine, paseo, acesso-remoto, decisao]
 
 # Por que um orquestrador de sessões
 
+Medido contra Paseo **0.8.0** em **2026-09-13**. Upgrade e deriva de versão: ver o
+[guia de acesso remoto](../guias/acesso-remoto.md).
+
 O Koine nasceu para o terminal. Você abre `kn-claude` numa pasta, e a sessão sobe com
 o seu contexto. Isso resolve o problema que o produto existe para resolver — e amarra
 o uso a uma cadeira.

@@ -12,6 +12,8 @@ tags: [guia, koine, paseo, acesso-remoto, celular, instalacao]
 
 # Guia — Abrir sessões Koine de fora do computador
 
+Medido contra Paseo **0.8.0** em **2026-09-13**.
+
 Audiência: quem já usa o Koine no terminal e quer abrir sessões do celular ou do
 navegador, com o mesmo contexto e o mesmo agente.
 
@@ -217,13 +219,31 @@ Parear dispositivo**. Ela mostra um código e um link.
 
 O tráfego entre o celular e o computador é cifrado ponta a ponta.
 
+## Upgrade e deriva de versão
+
+No **macOS**, medido em 2026-09-13: o aplicativo pode atualizar **sozinho**, em
+janela de rollout. Duas máquinas iguais ficam em versões diferentes por dias, sem
+ninguém ter mandado atualizar. A versão não é escolha sua.
+
+Fonte de verdade: `paseo --version` e a linha de versão do daemon em `paseo status`.
+**Não** use o Homebrew como versão — o Caskroom pode ficar atrás do disco.
+
+Se aplicativo e daemon divergirem, rode `koine paseo-doctor`. Quem atende as sessões
+é o daemon.
+
+`brew upgrade --cask paseo` não é o caminho default. Se alguém mandar rodá-lo: o
+Homebrew pode **pedir senha no meio** (remove o atualizador embutido). Avise antes.
+Isto foi medido no macOS; não generalize ao Windows sem medição.
+
 ## Ordem recomendada
 
 1. Instalar o Paseo — **sem abrir**.
-2. `/kn-04-conecta-o-paseo` — configuração, providers, ditado, e a orientação do
-   pareamento.
+2. `/kn-04-conecta-o-paseo` — chama `paseo-configurar` e `paseo-provider`, ditado, e a
+   orientação do pareamento.
 3. Abrir o aplicativo e parear o celular.
 4. `/kn-14-organiza-workspaces` — registrar as pastas que você quer alcançar.
+5. Agendamento recorrente: `/kn-16-agenda-trabalho` — não criar pela tela (ela grava
+   o cwd do projeto).
 
 Depois disso, pasta nova só precisa do passo 4. E se você esquecer, o Paseo registra
 sozinho ao abrir — só com o nome da pasta, sem você escolher o agrupamento.

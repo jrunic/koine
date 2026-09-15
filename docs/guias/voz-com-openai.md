@@ -12,6 +12,9 @@ tags: [guia, koine, paseo, voz, ditado, openai]
 
 # Guia — voz em português com serviço pago
 
+Medido contra Paseo **0.8.0** em **2026-09-13**. Upgrade e deriva de versão: ver o
+[guia de acesso remoto](acesso-remoto.md).
+
 O Koine configura o ditado com um modelo **local e gratuito**, que entende português.
 E deixa a **fala desligada**, porque o único modelo de fala gratuito responde em
 inglês.
