@@ -48,3 +48,58 @@ def resolver_home() -> Home:
     if achados:
         return Home(achados[0], "descoberto", achados)
     return Home(locais_padroes()[0], "padrao", [])
+
+
+# --- Executáveis e primitiva de execução -------------------------------
+
+import shutil
+import subprocess
+import sys
+from dataclasses import dataclass
+
+FALLBACKS_DO_PASEO = {
+    "win32": lambda: [os.path.join(
+        os.environ.get("LOCALAPPDATA") or "", "Programs", "Paseo",
+        "resources", "bin", "paseo.cmd")],
+    "darwin": lambda: ["/Applications/Paseo.app/Contents/Resources/bin/paseo"],
+}
+
+
+def pastas_padrao_do_paseo() -> list[str]:
+    """Diretórios de instalação padrão do Paseo, por plataforma (medidos).
+
+    Windows medido na VM de bancada em 15/09/2026, instalação padrão:
+    `%LOCALAPPDATA%\\Programs\\Paseo\\resources\\bin\\paseo.cmd`.
+    """
+    fab = FALLBACKS_DO_PASEO.get(sys.platform)
+    return [p for p in (fab() if fab else []) if p]
+
+
+@dataclass(frozen=True)
+class Executavel:
+    caminho: str
+    origem: str  # "path" | "fallback"
+
+
+def resolver_executavel(nome: str) -> Executavel | None:
+    """PATH primeiro; depois os locais padrão. None = não achou em nenhum."""
+    achado = shutil.which(nome)
+    if achado:
+        return Executavel(achado, "path")
+    for pasta in pastas_padrao_do_paseo():
+        alvo = pasta if nome == "paseo" else os.path.join(pasta, nome)
+        if os.path.isfile(alvo):
+            return Executavel(alvo, "fallback")
+    return None
+
+
+def executar(executavel: str, args: list[str], *, timeout: int = 15):
+    """Primitiva única. No Windows, .cmd/.bat só executa por cmd.exe /c —
+    caminho absoluto de batch não é chamada direta (launch desde a v0.4.2).
+    Args em lista: o subprocess cuida do quoting de espaço no caminho."""
+    if (sys.platform == "win32"
+            and executavel.lower().endswith((".cmd", ".bat"))):
+        cmd = ["cmd", "/c", executavel, *args]
+    else:
+        cmd = [executavel, *args]
+    return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
