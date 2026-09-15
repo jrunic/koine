@@ -121,11 +121,12 @@ def test_rodar_paseo_devolve_none_quando_a_cli_nao_existe(monkeypatch):
 
 def test_rodar_paseo_devolve_none_quando_a_cli_falha(monkeypatch):
     """Saída não-zero é "não deu para perguntar", não "a resposta é vazia"."""
-    import subprocess as sp
-    monkeypatch.setattr(pd.shutil, "which", lambda _: "/usr/bin/paseo")
+    from koine import paseo_ambiente as amb
+    monkeypatch.setattr(amb, "resolver_executavel",
+                        lambda n: amb.Executavel("/usr/bin/paseo", "path"))
     monkeypatch.setattr(
-        pd.subprocess, "run",
-        lambda *a, **k: sp.CompletedProcess(a, 1, stdout="lixo", stderr=""))
+        amb, "executar",
+        lambda *a, **k: type("R", (), {"returncode": 1, "stdout": "lixo"})())
     assert pd._rodar_paseo(["status"]) is None
 
 
