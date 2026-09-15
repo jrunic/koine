@@ -15,6 +15,39 @@ class EntryDelta:
         self.acao = acao
 
 
+# Nativos do Paseo medidos em 15/09/2026 contra o 0.8.0 (`provider ls`).
+# Desabilitar o nativo não afeta quem o estende: com `claude` desabilitado,
+# providers `extends: claude` seguiam available (medido na máquina de ref.).
+NATIVOS_DO_PASEO = ("claude", "codex", "copilot", "opencode", "pi", "omp")
+
+
+def _desabilitar_nativos(providers: dict, deltas: list) -> None:
+    """Nativo sem escolha explícita do usuário sobe DESABILITADO — a sessão
+    pelo orquestrador entra pelos providers do Koine, e o nativo cru abre
+    sessão sem contexto. Classificação da entry (spec 20260915):
+
+    - sem entry                    -> planta {"enabled": false}
+    - sem `command` e sem enabled
+      true (settings do Paseo)     -> acrescenta enabled false, preserva o resto
+    - enabled true (escolha)       -> preserva
+    - com `command` (customização) -> preserva inteira
+    """
+    for nativo in NATIVOS_DO_PASEO:
+        if nativo not in providers:
+            providers[nativo] = {"enabled": False}
+            deltas.append(EntryDelta(nativo, "plantado"))
+            continue
+        entry = providers[nativo]
+        if not isinstance(entry, dict):
+            continue  # tipo estranho é do usuário; não se mexe
+        if entry.get("command") is not None or entry.get("enabled") is True:
+            continue
+        if entry.get("enabled") is False:
+            continue
+        entry["enabled"] = False
+        deltas.append(EntryDelta(nativo, "atualizado"))
+
+
 def _aplicar_entry(existente: dict | None, desejado: dict, ident: str) -> tuple[dict, str]:
     if existente is None:
         return copy.deepcopy(desejado), "plantado"
@@ -78,6 +111,7 @@ def mesclar_providers(cfg: dict, matriz: dict) -> tuple[dict, list]:
             entry, acao = _aplicar_entry(atual, desejado, ident)
             providers[ident] = entry
             deltas.append(EntryDelta(ident, acao))
+    _desabilitar_nativos(providers, deltas)
     return novo, deltas
 
 

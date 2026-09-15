@@ -283,3 +283,69 @@ def test_label_divergente_do_koine_e_corrigido():
     novo, deltas = pp.mesclar_providers(cfg, {"claude": _info_claude()})
     assert novo["agents"]["providers"]["kn-claude"]["label"] == "Koine · claude"
     assert any(d.id == "kn-claude" and d.acao == "atualizado" for d in deltas)
+
+
+# --- nativos do Paseo sobem desabilitados (spec 20260915-provider-nativos) --
+
+
+def _matriz_minima(caminho):
+    return {"claude": _info(caminho)}
+
+
+def _exe(tmp_path):
+    exe = tmp_path / "kn-claude-paseo"
+    exe.write_text("#!/bin/sh\n")
+    exe.chmod(0o755)
+    return str(exe)
+
+
+def test_nativo_sem_entry_e_plantado_desabilitado(tmp_path):
+    cfg = {"daemon": {"relay": {"enabled": False}}}
+    novo, deltas = pp.mesclar_providers(cfg, _matriz_minima(_exe(tmp_path)))
+    provs = novo["agents"]["providers"]
+    for nativo in pp.NATIVOS_DO_PASEO:
+        assert provs[nativo] == {"enabled": False}, nativo
+    assert any(d.id == "claude" and d.acao == "plantado" for d in deltas)
+
+
+def test_nativo_com_settings_ganha_enabled_false_por_acrescimo(tmp_path):
+    cfg = {"daemon": {"relay": {"enabled": False}},
+           "agents": {"providers": {"claude": {"mode": "auto"}}}}
+    novo, deltas = pp.mesclar_providers(cfg, _matriz_minima(_exe(tmp_path)))
+    assert novo["agents"]["providers"]["claude"] == {
+        "mode": "auto", "enabled": False}
+    assert any(d.id == "claude" and d.acao == "atualizado" for d in deltas)
+
+
+def test_nativo_ligado_pelo_usuario_e_preservado(tmp_path):
+    cfg = {"daemon": {"relay": {"enabled": False}},
+           "agents": {"providers": {"claude": {"enabled": True}}}}
+    novo, deltas = pp.mesclar_providers(cfg, _matriz_minima(_exe(tmp_path)))
+    assert novo["agents"]["providers"]["claude"] == {"enabled": True}
+    assert not any(d.id == "claude" for d in deltas)
+
+
+def test_nativo_ja_desabilitado_e_idempotente(tmp_path):
+    cfg = {"daemon": {"relay": {"enabled": False}},
+           "agents": {"providers": {"claude": {"enabled": False}}}}
+    _, deltas = pp.mesclar_providers(cfg, _matriz_minima(_exe(tmp_path)))
+    assert not any(d.id == "claude" for d in deltas)
+
+
+def test_nativo_customizado_com_command_e_preservado_inteiro(tmp_path):
+    propria = {"command": ["/meu/claude"], "mode": "auto"}
+    cfg = {"daemon": {"relay": {"enabled": False}},
+           "agents": {"providers": {"claude": dict(propria)}}}
+    novo, deltas = pp.mesclar_providers(cfg, _matriz_minima(_exe(tmp_path)))
+    assert novo["agents"]["providers"]["claude"] == propria
+    assert not any(d.id == "claude" for d in deltas)
+
+
+def test_nativo_desabilitado_nao_desliga_kn_que_estende(tmp_path):
+    cfg = {"daemon": {"relay": {"enabled": False}}}
+    novo, _ = pp.mesclar_providers(cfg, _matriz_minima(_exe(tmp_path)))
+    provs = novo["agents"]["providers"]
+    assert provs["claude"] == {"enabled": False}
+    assert provs["kn-claude"]["extends"] == "claude"
+    assert "enabled" not in provs["kn-claude"]
+    assert provs["kn-claude"]["command"] == [provs["kn-claude"]["command"][0]]
