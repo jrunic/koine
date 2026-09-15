@@ -14,12 +14,13 @@ def test_home_posix_reusa_o_diagnostico(tmp_path, monkeypatch):
     assert pc.home_para_escrita() == str(tmp_path)
 
 
-def test_windows_sem_variavel_aborta(monkeypatch):
+def test_windows_sem_variavel_usa_local_padrao(tmp_path, monkeypatch):
     monkeypatch.setattr(pc.sys, "platform", "win32")
+    monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.delenv("PASEO_HOME", raising=False)
-    with pytest.raises(pc.RecusaErro) as e:
-        pc.home_para_escrita()
-    assert e.value.motivo == "windows-sem-home"
+    monkeypatch.setattr(pc.os.path, "isfile",
+                        lambda p: p == os.path.join(str(tmp_path), ".paseo", "config.json"))
+    assert pc.home_para_escrita() == os.path.join(str(tmp_path), ".paseo")
 
 
 def test_windows_com_variavel_aceita(tmp_path, monkeypatch):

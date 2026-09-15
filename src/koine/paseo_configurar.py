@@ -32,17 +32,15 @@ class Resultado:
 
 
 def home_para_escrita() -> str:
-    """Home onde ESTE comando pode gravar.
+    """Home onde ESTE comando pode gravar — o resolvedor único decide.
 
-    Windows sem PASEO_HOME aborta: o default do produto ali não foi medido.
-    Gravar em ~/.paseo fantasma é o defeito que a spec recusa.
+    PASEO_HOME definido e não-vazio é autoritativo (cria nele se faltar
+    config); sem ele, descobre nos locais padrão e aborta se houver mais de
+    um config. Nunca grava em pasta fantasma: sem config nenhum, o alvo é o
+    local padrão do Paseo.
     """
-    if sys.platform == "win32" and "PASEO_HOME" not in os.environ:
-        raise RecusaErro(
-            "windows-sem-home",
-            "neste sistema não medi onde o Paseo guarda o config. "
-            "Defina PASEO_HOME ou rode em macOS/Linux.")
-    return home_do_paseo()
+    from koine import paseo_ambiente
+    return paseo_ambiente.resolver_home().caminho
 
 
 def caminho_config(home: str) -> str:
