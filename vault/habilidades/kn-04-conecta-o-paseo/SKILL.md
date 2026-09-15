@@ -1,6 +1,6 @@
 ---
 name: kn-04-conecta-o-paseo
-description: Prepara o Paseo para abrir sessões Koine de fora do computador — do celular ou do navegador. Detecta quais clientes de IA da máquina funcionam por esse caminho, escreve a configuração dos providers, deixa o ditado entendendo português e conduz o pareamento do aparelho. OPCIONAL — só faz sentido se você for operar sessões fora do terminal; quem trabalha só no computador não precisa dela.
+description: Prepara o Paseo para sessões Koine de fora do computador. Chama paseo-info, paseo-configurar, paseo-provider e paseo-doctor; explica o relay; conduz pareamento e o login do navegador interno. OPCIONAL — quem trabalha só no terminal não precisa.
 id: 202608301710
 projeto: koine
 tipo: habilidade
@@ -20,10 +20,11 @@ Diga isto ao usuário **na primeira mensagem**. Descobrir depois é pior.
 - **Codex e Antigravity não têm caminho por aqui.** Não é configuração faltando: o
   jeito como eles sobem não permite. Quem usa um deles continua no terminal, que
   segue funcionando igual.
-- **A resposta falada não existe em português.** Ditar funciona, e é o que vamos
-  configurar. Ouvir o agente responder em português, sem serviço pago, não é possível
-  hoje — só há um modelo de fala gratuito, em inglês. Por isso a fala fica desligada:
-  entregar metade faz o usuário tentar, falhar e achar que o produto é ruim.
+- **A resposta falada não existe em português.** Ditar funciona, e é o que os
+  comandos vão configurar. Ouvir o agente responder em português, sem serviço pago,
+  não é possível hoje — só há um modelo de fala gratuito, em inglês. Por isso a fala
+  fica desligada: entregar metade faz o usuário tentar, falhar e achar que o produto
+  é ruim.
 
 Se ele usa Claude Code, Copilot CLI ou OpenCode, siga.
 
@@ -37,58 +38,49 @@ Rode e leiam juntos:
 koine paseo-info --json
 ```
 
-Isso lista os clientes que têm caminho pelo Paseo, o wrapper de cada um e o que a
-configuração precisa dizer. **Use o que sair daí.** Não decore lista nem escreva uma
-aqui: ela muda quando o Koine ganha cliente novo, e uma cópia desatualizada produz
-provider que abre sessão sem contexto e sem erro.
+Isso lista os clientes que têm caminho pelo Paseo e se o wrapper existe. **Use o que
+sair daí.** Não decore lista.
 
-**Se ele avisar que algum wrapper não existe no PATH, pare aqui.** Rode `koine instalar`
-e repita o comando antes de seguir. Máquina que chegou nesta versão por `koine atualizar`
-a partir de uma anterior à 0.11 pode estar sem os wrappers introduzidos depois — e o nome
-que este comando prescreve não existiria no disco. **Nunca improvise o comando do provider
-para contornar isso**: provider apontado para um comando que não é o wrapper abre sessão e
-responde, sem contexto nenhum e sem erro.
-
-Depois:
+**Papel 1 do instalar — relato.** Sempre:
 
 ```
 koine instalar
 ```
 
-Ele relata quais clientes existem nesta máquina e o que cada um consegue fazer aqui.
-**É essa a fonte sobre o que está instalado** — não procure os programas por conta
-própria: em Windows essa busca dá resposta errada, e já custou uma correção.
+Ele relata quais clientes existem nesta máquina. **É essa a fonte sobre o que está
+instalado** — não procure os programas por conta própria: em Windows essa busca dá
+resposta errada.
 
-**Cruze as duas listas.** Só entra no Paseo cliente que aparece nas duas. Diga ao
-usuário o que ficou de fora e por quê, antes de perguntar qualquer coisa.
+**Cruze as duas listas só para decidir quais clientes de IA sondar o login.** Não
+use o cruzamento para omitir provider: o comando da seção 3 grava a matriz inteira.
 
-### Login
+**Papel 2 do instalar — wrappers.** Se o info avisar que algum wrapper não existe no
+PATH, pare, rode `koine instalar` de novo se ainda não rodou, e repita o info.
+**Nunca improvise o comando do provider.**
 
-Para cada cliente que sobrou, pergunte se ele já fez login.
+### Login dos clientes de IA
 
-**Não conclua que está logado porque existe pasta de configuração.** Isso não prova
-nada — já se viu cliente com config, logs e plugins no lugar falhar a sessão por
-falta de autenticação.
+Para cada cliente que sobrou no cruzamento, pergunte se ele já fez login.
+
+**Não conclua que está logado porque existe pasta de configuração.**
 
 Confirme abrindo **uma** sessão mínima por cliente, **uma única vez**, e só para os
-clientes que ele disse que vai usar: essa sondagem gasta uma chamada de verdade na
-conta dele. Se falhar por autenticação, mande logar pelo comando do próprio cliente e
-siga com os outros. Numa reexecução desta skill, não repita o que já deu certo.
+que ele disse que vai usar. Se falhar por autenticação, mande logar pelo comando do
+próprio cliente e siga com os outros. **Numa reexecução, não repita o que já deu certo.**
 
 ---
 
 ## 2. Instalar o Paseo — e NÃO abrir ainda
 
-Instale pelo caminho do sistema. O guia `acesso-remoto` da documentação tem o passo a
-passo de cada um.
+Instale pelo caminho do sistema. O guia de acesso remoto da documentação tem o passo
+a passo de cada um.
 
 **Depois de instalar, não abra o aplicativo.** Este é o passo que quase todo mundo
 erra, e ele decide quase 1 GB de download.
 
 O Paseo baixa os modelos de voz **quando o serviço sobe**, e o serviço sobe **quando o
-aplicativo abre**. Ele baixa o que a configuração pedir — e a configuração padrão pede
-um modelo de ditado **em inglês** mais um de fala. Trocar depois **baixa outro**, sem
-apagar o primeiro.
+aplicativo abre**. A configuração padrão pede ditado em inglês mais fala. Trocar
+depois **baixa outro**, sem apagar o primeiro.
 
 - Configurando antes: **um** modelo, 631 MB.
 - Abrindo antes: dois agora, um terceiro depois — mais de 1,6 GB para chegar no mesmo
@@ -96,131 +88,52 @@ apagar o primeiro.
 
 ---
 
-## 3. A configuração, antes da primeira abertura
+## 3. Os comandos, antes da primeira abertura
 
-Crie o arquivo `config.json` dentro da pasta `.paseo` do usuário. Crie a pasta se não
-existir — o Paseo a criaria sozinho no primeiro run, e criá-la antes é justamente o
-truque que economiza o download.
+Não edite o config à mão. Não dita JSON.
 
-```json
-{
-  "version": 1,
-  "daemon": {
-    "relay": { "enabled": false }
-  },
-  "features": {
-    "dictation": {
-      "stt": { "provider": "local", "model": "parakeet-tdt-0.6b-v3-int8" }
-    },
-    "voiceMode": { "enabled": false }
-  }
-}
+```
+koine paseo-configurar
 ```
 
-**A chave de relay é obrigatória, e escrever `false` não é redundância.** Medido em
-30/08/2026, na mesma máquina, mudando só isso: com a chave **ausente** o serviço
-conecta ao relay e fica alcançável pela internet; com `enabled: false`, não conecta.
-A documentação diz que o padrão é desligado — escrito à mão, o comportamento é o
-oposto.
+Se sair diferente de zero, leia a mensagem. **Não edite o arquivo.**
 
-Omitir a chave **expõe a máquina do usuário sem ele decidir**, e é justamente a
-decisão que esta skill não pode tomar por ele. Quem liga o relay é ele, na tela do
-aplicativo, depois de você explicar o que é.
+```
+koine paseo-provider
+```
 
-- **`parakeet-tdt-0.6b-v3-int8`** entende 25 idiomas europeus e detecta sozinho qual
-  está sendo falado. Não existe ajuste de idioma para ele: o campo `language` que
-  aparece na documentação vale só para o serviço pago. Não o use.
-- **`voiceMode: false`** desliga escuta, detecção de turno e fala de uma vez. É o que
-  evita baixar o modelo de fala em inglês, e é o que evita prometer o que não temos.
+Ele grava a matriz inteira dos clientes com rota. Se recusar por wrapper, volte ao
+papel 2 da seção 1 — não invente `command`.
 
-**Não escreva isso em variável de ambiente.** Funciona — e tira o controle do
-aplicativo em silêncio: a tela passa a mostrar um valor que não tem efeito, sem aviso
-nenhum. O arquivo mantém o aplicativo no comando, que é o que o usuário espera.
+**Omitir a chave de relay expõe a máquina** — o comando a escreve desligada. Quem
+liga o relay é o usuário, na tela, depois de você explicar o que é. A skill não liga.
 
-**Não invente valor.** Use exatamente os nomes acima. Valor fora do catálogo não
-degrada: derruba o serviço inteiro, e a linha de comando junto.
+**Não escreva isso em variável de ambiente.** Tira o controle da tela do aplicativo
+em silêncio.
 
-**Agora sim, mande abrir o aplicativo.** Ele baixa o modelo em segundo plano; avise
-que isso leva alguns minutos e consome banda.
+### Primeira vez
+
+O aplicativo ainda não abriu. Não rode `paseo reload`.
+
+### Reexecução (app já de pé)
+
+Depois dos dois comandos, `paseo reload`. **Se esta sessão estiver aberta pelo
+próprio Paseo**, não recarregue: entregue o reload ao usuário, avisando que a sessão
+vai cair e que é esperado.
+
+**Agora sim, mande abrir o aplicativo** (primeira vez) ou confirme que já está aberto
+(reexecução). Na primeira, ele baixa o modelo em segundo plano; avise que isso leva
+alguns minutos e consome banda.
 
 ---
 
-## 4. Os providers do Koine
-
-Não existe comando para criar provider: é edição do mesmo `config.json`.
-
-Para cada cliente que passou nas duas listas, escreva **dois** entries a partir do que
-o `koine paseo-info --json` devolveu:
-
-- um **genérico**, com o identificador do campo `provider` e sem variável de ambiente:
-  deixa a pasta decidir o agente;
-- um **com a variável** `KOINE_AGENTE` apontando o Hermes, com o identificador do
-  campo `provider_hermes`: abre o Hermes mesmo em pasta cujo padrão é outro agente.
-
-O comando ainda devolve o `wrapper`, que vai no comando do entry, e o tipo do
-provider.
-
-**Escreva o caminho ABSOLUTO do wrapper, nunca só o nome.** O serviço do Paseo roda
-com um ambiente mínimo — a pasta de programas do usuário **não** está no caminho de
-busca dele. Com o nome puro, o provider fica `Unavailable` com
-`Resolved path: not found`, e a sessão que o usuário abrir do celular não sobe.
-
-O próprio `koine paseo-info --json` já devolve esse caminho resolvido, no campo
-`caminho` — use ele. Se estiver `null`, o wrapper não existe: volte ao passo 1.
-
-Para conferir à mão:
-
-```
-command -v kn-<cliente>-paseo      # macOS e Linux
-where kn-<cliente>-paseo           # Windows
-```
-
-Medido em 30/08/2026: o serviço rodava com `/opt/homebrew/bin:/usr/bin:/bin` e os
-seis providers apareciam como não encontrados, mesmo com os wrappers instalados e
-executáveis.
-
-**Use os identificadores que o comando deu — não invente nome.** Eles são prescritos
-pelo Koine de propósito: nome escolhido na hora diverge entre máquinas, e no dia em
-que alguma ferramenta precisar ler ou consertar essa configuração ela encontraria dois
-vocabulários para a mesma coisa.
-
-**Preserve o que já estiver no arquivo.** Ele é configuração viva e pode ter coisa de
-terceiro dentro; mescle campo a campo, não sobrescreva o arquivo inteiro.
-
-Aplique sem reiniciar:
-
-```
-paseo reload
-paseo provider ls
-```
-
-Os entries têm que aparecer na listagem. Se não aparecerem, o arquivo tem erro de
-sintaxe — releia antes de seguir.
-
-### Se houver mais de uma pessoa usando o Paseo nesta máquina
+## 4. Duas pessoas na mesma máquina
 
 Só nesse caso — se o usuário for o único, pule.
 
-O Paseo escuta numa porta, e duas pessoas na mesma máquina não podem usar a mesma.
-Quem chegar depois precisa escolher outra, **no arquivo de configuração**
-(`daemon.listen`) — não por argumento de linha de comando nem por variável de
-ambiente: os dois deixam a tela do aplicativo mostrando um valor que não tem efeito,
-em silêncio, do mesmo jeito que acontece com a voz.
-
-**E há uma armadilha que não perdoa.** A ajuda do comando diz, na descrição do
-`--host`: *"default: local socket/pipe, then localhost:6767"*. Quer dizer que, se o
-serviço do usuário estiver parado, o comando **cai na porta padrão** — que é a da
-outra pessoa. Um comando de listar acerta a sessão alheia; um de parar, também.
-
-Por isso, quando a porta não for a padrão, deixe a escolha fixa no ambiente do
-usuário:
-
-```
-export PASEO_HOST=127.0.0.1:<porta escolhida>
-```
-
-no `~/.zshrc` ou equivalente. Isso força candidato único e tira a porta padrão do
-caminho.
+Duas pessoas na mesma máquina não compartilham a porta. Esta skill **não** escreve
+a porta. Oriente `PASEO_HOST` no perfil do shell para não cair na porta padrão da
+outra pessoa, e aponte o guia de acesso remoto da documentação. Não dite JSON.
 
 ---
 
@@ -228,14 +141,13 @@ caminho.
 
 Isto é feito **na tela do aplicativo, pelo usuário** — não por você.
 
-Antes de mandar ligar, explique o que é: o tráfego passa por um serviço do Paseo,
-cifrado ponta a ponta, e é o que dispensa configurar rede. **Se ele está em máquina de
-empresa, peça que confirme que a política permite.** Se não permitir, o caminho é
-pedir à TI — não contornar.
+Antes de mandar ligar, explique: o tráfego passa por um serviço do Paseo, cifrado
+ponta a ponta, e dispensa configurar rede. **Se ele está em máquina de empresa, peça
+que confirme que a política permite.** Se não permitir, o caminho é pedir à TI — não
+contornar.
 
 O caminho na interface: **Ajustes → o seu host → Parear dispositivo**. O relay se liga
-ali mesmo — e é ali que ele deve ser ligado, porque a configuração que você escreveu o
-deixou desligado de propósito. A tela mostra um código e um link.
+ali mesmo. A tela mostra um código e um link.
 
 > **Diga isto com todas as letras:** esse link é uma senha. Quem o tiver abre sessões
 > na máquina dele. Não colar em conversa, não mandar por mensagem, não guardar em
@@ -243,42 +155,45 @@ deixou desligado de propósito. A tela mostra um código e um link.
 
 No celular: instalar o aplicativo do Paseo, escanear o código, e o computador aparece.
 
-Quando ele avisar que pareou, confirme por aqui:
+---
 
-```
-paseo status
-```
+## 6. Login do navegador interno
 
-O campo de relay deve mostrar um endereço, não `disabled`.
+Depois do aplicativo aberto. O sintoma é a sessão do agente responder `Please run login`.
+**Não é o login do Claude** (nem do Copilot, nem do OpenCode). É o navegador de dentro
+do Paseo, uma vez; as sessões seguintes aproveitam.
+
+Peça ao usuário para entrar no site que o agente precisa, **dentro do navegador do
+Paseo**. Não leia cookie. Não abra a pasta de partições.
+
+Numa reexecução, se o doctor já viu sessão gravada, não peça de novo.
 
 ---
 
-## 6. Antes de terminar
+## 7. Fecho
 
-O usuário ainda **não tem pastas para abrir no celular**. Projeto e workspace são a
-etapa seguinte, e quem faz é a `/kn-14-organiza-workspaces`.
+```
+koine paseo-doctor
+```
 
-Mande rodar agora, com as pastas que ele quer alcançar de fora.
+`--json` se você for consumir as verificações. Pronto é a saída do doctor, não
+busca de wrapper.
 
-## A identidade do serviço, e por que não se mexe nela
+- Linha `[ERRO]`: leia, explique, **não edite o config**.
+- Aviso (ditado, etc.): informe; não mande “consertar YAML”.
+- Se configurar ou provider tiverem saído 1 mais cedo: a mensagem deles manda; ainda
+  assim não edite o arquivo.
 
-A pasta `.paseo` do usuário guarda **a identidade do serviço** — o par de chaves e o
-identificador que os aparelhos pareados conhecem. Mover ou apagar essa pasta faz o
-serviço renascer com identidade nova, e **todo celular pareado deixa de encontrá-lo**:
-o sintoma é tempo esgotado no aparelho, sem mensagem de erro.
+O usuário ainda **não tem pastas para abrir no celular**. Quem faz é a
+`/kn-14-organiza-workspaces`. Mande rodar agora, com as pastas que ele quer alcançar
+de fora.
 
-Se isso acontecer, há duas saídas: parear de novo, ou devolver os dois arquivos de
-identidade da cópia antiga para a pasta nova. A segunda preserva o pareamento.
+## A identidade do serviço
 
-Ao mexer nessa pasta por qualquer motivo, **mova, não apague** — ela também guarda o
-registro de projetos e workspaces.
+A pasta de estado do Paseo guarda a identidade do serviço — o par de chaves e o
+identificador que os aparelhos pareados conhecem. Mover ou apagar faz o serviço
+renascer com identidade nova, e **todo celular pareado deixa de encontrá-lo**: o
+sintoma é tempo esgotado no aparelho, sem mensagem de erro.
 
-## Quando reiniciar o serviço
-
-Mudança de configuração de voz exige reiniciar o serviço; o resto reconcilia com
-`paseo reload`. Fazendo na ordem desta skill, não há reinício — a configuração é
-escrita antes da primeira abertura.
-
-**Se você estiver rodando dentro de uma sessão aberta pelo próprio Paseo**, reiniciar
-o serviço mata a sua própria sessão no meio. Nesse caso não reinicie: entregue o passo
-ao usuário como a última coisa, avisando que a sessão vai cair e que é esperado.
+Se isso acontecer: parear de novo, ou devolver os dois arquivos de identidade da cópia
+antiga. Ao mexer nessa pasta, **mova, não apague**.
