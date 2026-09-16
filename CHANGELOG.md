@@ -4,6 +4,15 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.1] — 2026-09-16
+
+### Corrigido — OpenCode no Windows usa o shell compatível
+
+O `kn-opencode` passa a configurar `cmd` no Windows. Em algumas estações, a
+sonda curta do PowerShell passava, mas o OpenCode falhava ao iniciar o mesmo
+executável com `Unexpected server error`. O `cmd` foi validado no caminho
+completo do cliente e mantém as instruções e permissões do Koine.
+
 ## [0.16.0] — 2026-09-15
 
 ### Adicionado — a lista de providers já nasce limpa

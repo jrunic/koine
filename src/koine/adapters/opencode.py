@@ -50,7 +50,7 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
 
     Mantém: config em ~/.cache/koine/opencode-configs/<slot>.json, env
     OPENCODE_CONFIG + OPENCODE_DISABLE_CLAUDE_CODE=1, aviso de AGENTS.md global,
-    e o melhor shell que a máquina executa no Windows (escadinha em shell.py).
+    e `cmd` no Windows.
     """
     slot = cache.slot_sessao(cm.pasta_abs, render.agente_de(cm))
     cfg_path = cache.caminho_arquivo("opencode-configs", slot, "json")
@@ -77,13 +77,10 @@ def renderizar(cm: ContextoMontado) -> Lancamento:
         }
     }
     if sys.platform == "win32":
-        # O default do OpenCode varia por versão e, na estação que bloqueia o
-        # PowerShell, derruba a ferramenta de shell com `uv_spawn`. Em vez de
-        # fixar `cmd` para todo mundo — o que rebaixava a máquina saudável —, o
-        # Koine grava o melhor degrau que ESTA máquina executa.
-        escolhido = shell.melhor(ACEITA_SHELL)
-        if escolhido is not None:
-            cfg["shell"] = escolhido.invocacao
+        # A sonda de PowerShell pode passar, mas o OpenCode falha ao inicializar
+        # esse executável em estações corporativas. `cmd` foi medido no caminho
+        # completo do cliente e evita o `uv_spawn`.
+        cfg["shell"] = shell.CMD
 
     # paridade com json.MarshalIndent(cfg, "", "  ") do Go: indent 2, UTF-8 cru
     data = json.dumps(cfg, indent=2, ensure_ascii=False)

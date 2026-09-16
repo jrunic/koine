@@ -98,18 +98,17 @@ def test_opencode_bootstrap_leva_contexto_e_omite_escopo_e_indices(tmp_path, mon
     assert lanc.symlinks == {}
 
 
-def test_opencode_windows_usa_o_melhor_degrau_disponivel(tmp_path, monkeypatch):
-    # máquina Windows comum: o pwsh roda, e é o que o usuário deve receber.
+def test_opencode_windows_usa_cmd_mesmo_quando_o_powershell_executa(tmp_path, monkeypatch):
+    # O OpenCode pode falhar ao inicializar o PowerShell mesmo depois de a sonda
+    # curta passar; cmd foi validado pelo cliente na estação corporativa.
     _isolar_home(monkeypatch, tmp_path / "home")
     monkeypatch.setattr(sys, "platform", "win32")
     _forcar_sonda(monkeypatch, {shell.PWSH: shell.EXECUTOU, shell.CMD: shell.EXECUTOU})
     cfg = json.loads(next(iter(opencode.renderizar(_cm(tmp_path)).arquivos_externos.values())))
-    assert cfg["shell"] == "pwsh"
+    assert cfg["shell"] == "cmd"
 
 
-def test_opencode_windows_cai_no_bash_quando_a_politica_nega_o_powershell(tmp_path, monkeypatch):
-    # é a estação corporativa medida em 28/08: pwsh e powershell recusados (1260),
-    # Git Bash presente. Antes desta mudança ela recebia cmd.
+def test_opencode_windows_usa_cmd_quando_a_politica_nega_o_powershell(tmp_path, monkeypatch):
     _isolar_home(monkeypatch, tmp_path / "home")
     monkeypatch.setattr(sys, "platform", "win32")
     _forcar_sonda(monkeypatch, {shell.PWSH: shell.RECUSADO,
@@ -117,12 +116,10 @@ def test_opencode_windows_cai_no_bash_quando_a_politica_nega_o_powershell(tmp_pa
                                 shell.BASH: shell.EXECUTOU,
                                 shell.CMD: shell.EXECUTOU})
     cfg = json.loads(next(iter(opencode.renderizar(_cm(tmp_path)).arquivos_externos.values())))
-    assert cfg["shell"] == "bash"
+    assert cfg["shell"] == "cmd"
 
 
-def test_opencode_windows_chega_no_cmd_quando_e_o_unico(tmp_path, monkeypatch):
-    # o piso: estação travada e SEM Git Bash. Nenhuma máquina Windows pode ficar
-    # sem shell — é a correção da v0.5.3, que esta mudança não pode regredir.
+def test_opencode_windows_usa_cmd_quando_e_o_unico(tmp_path, monkeypatch):
     _isolar_home(monkeypatch, tmp_path / "home")
     monkeypatch.setattr(sys, "platform", "win32")
     _forcar_sonda(monkeypatch, {shell.PWSH: shell.RECUSADO,
@@ -133,7 +130,7 @@ def test_opencode_windows_chega_no_cmd_quando_e_o_unico(tmp_path, monkeypatch):
     assert cfg["shell"] == "cmd"
 
 
-def test_opencode_windows_grava_caminho_absoluto_quando_o_bash_esta_fora_do_path(tmp_path, monkeypatch):
+def test_opencode_windows_nao_escolhe_bash_fora_do_path(tmp_path, monkeypatch):
     _isolar_home(monkeypatch, tmp_path / "home")
     monkeypatch.setattr(sys, "platform", "win32")
     absoluto = r"C:\Users\x\AppData\Local\Programs\Git\bin\bash.exe"
@@ -141,7 +138,7 @@ def test_opencode_windows_grava_caminho_absoluto_quando_o_bash_esta_fora_do_path
                         lambda n: (absoluto, shell.EXECUTOU) if n == shell.BASH
                         else (n, shell.RECUSADO))
     cfg = json.loads(next(iter(opencode.renderizar(_cm(tmp_path)).arquivos_externos.values())))
-    assert cfg["shell"] == absoluto
+    assert cfg["shell"] == "cmd"
 
 
 def test_opencode_fora_do_windows_omite_shell(tmp_path, monkeypatch):
@@ -160,7 +157,7 @@ def test_opencode_bootstrap_windows_tambem_declara_shell(tmp_path, monkeypatch):
     cm = _cm(tmp_path, bootstrap=True, escopo_path="", indice_paths=[])
     lanc = opencode.renderizar(cm)
     cfg = json.loads(next(iter(lanc.arquivos_externos.values())))
-    assert cfg["shell"] == "pwsh"
+    assert cfg["shell"] == "cmd"
     assert cfg["instructions"] == [
         cache.caminho_arquivo("opencode-configs", cache.slot_sessao(str(tmp_path), render.agente_de(cm)), "md")]
 
