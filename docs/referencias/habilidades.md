@@ -14,7 +14,7 @@ tags: [referencia, habilidades, skills, kn]
 
 ## Visão geral
 
-Koine distribui **11 skills** no vault (`vault/habilidades/kn-NN-*/SKILL.md`), instaladas em `~/.local/share/koine/habilidades/` pelo `koine instalar` e **copiadas** dali para a pasta de skills de cada harness detectado (ex: `~/.claude/skills/`, `~/.config/opencode/skills/`).
+Koine distribui **16 skills** no vault (`vault/habilidades/kn-NN-*/SKILL.md`), instaladas em `~/.local/share/koine/habilidades/` pelo `koine instalar` e **copiadas** dali para a pasta de skills de cada harness detectado (ex: `~/.claude/skills/`, `~/.config/opencode/skills/`).
 
 **Todo agente Koine pode e deve usar as skills `kn-*`.** Elas são do método, não de um agente — ficam instaladas no harness e disponíveis em qualquer sessão, com Hermes ou com um agente operacional derivado.
 
@@ -54,6 +54,7 @@ Espaço entre blocos permite adicionar skills futuras sem renumeração cascata.
 | **kn-14-organiza-workspaces** | `/kn-14-organiza-workspaces` | Quando nasce pasta de trabalho | Registrar pastas no Paseo — projeto, nome e workspace — para abri-las do celular |
 | **kn-15-mantem-glossario** | `/kn-15-mantem-glossario` | Quando a mesma coisa é chamada de dois jeitos | Criar ou atualizar o `GLOSSARIO.md` do trabalho — cada termo com um sentido só, os sinônimos que ficam de fora e as fronteiras entre conceitos |
 | **kn-16-agenda-trabalho** | `/kn-16-agenda-trabalho` | Quando um trabalho deve rodar sozinho | Agendar no Paseo com --cwd da pasta de trabalho e timezone explícito |
+| **kn-17-trata-erro** | `/kn-17-trata-erro` | Quando um erro trava a sessão | Consultar o catálogo de erros conhecidos e, se não resolver, montar e enviar um relato redigido, com confirmação, por uma cascata de 3 degraus de transporte |
 | **kn-21-escreve-design** | `/kn-21-escreve-design` | 1× por marca, revisada quando a identidade muda | Escrever o `DESIGN.md` da marca na pasta-referências do escopo |
 | **kn-22-gera-imagem** | `/kn-22-gera-imagem` | Quando a sessão precisa de peça visual | Compor prompt a partir do `DESIGN.md` e gerar imagem via `imagio` |
 | **kn-23-gera-marca-prelo** | `/kn-23-gera-marca-prelo` | 1× por marca, regerada quando o `DESIGN.md` muda | Derivar `tokens.css` + `config.json` + fontes para o `prelo` |
@@ -297,6 +298,36 @@ conhecimento formado (`/kn-11-mantem-referencia`) nem fechar a sessão
 - `/kn-12-prepara-contexto` — regenera os índices depois de gravar no escopo
 
 **SKILL.md:** `~/.local/share/koine/habilidades/kn-15-mantem-glossario/SKILL.md`
+
+---
+
+## `kn-17-trata-erro`
+
+**Roda quando um erro trava a sessão do mentorado** e não é resolvido de
+imediato.
+
+Dois estágios: consulta o documento de erros conhecidos sempre pela versão
+mais recente da branch `main` e tenta o remédio documentado; se não resolver,
+monta um relato estruturado e redigido, mostra um resumo em linguagem simples,
+pede confirmação explícita, e só então envia por uma cascata de 3 degraus
+(chamada ao serviço, arquivo local, texto na tela) — garantindo que o relato
+chegue mesmo em clientes sem shell utilizável.
+
+**Inputs:**
+- O texto do erro que travou a sessão
+- `docs/referencias/erros-conhecidos.md`, lido da branch `main` do repositório
+  público
+
+**Outputs:**
+- Erro resolvido pelo catálogo: nenhum relato — só a correção aplicada
+- Erro não resolvido e confirmado pelo mentorado: um relato publicado no
+  serviço `koine-relatos`, ou um arquivo `relato-koine-pendente.json` na
+  pasta de trabalho, ou texto na conversa com orientação de e-mail —
+  dependendo de qual degrau da cascata funcionou
+
+**Skills relacionadas:** nenhuma — é terminal (não invoca outra skill).
+
+**SKILL.md:** `~/.local/share/koine/habilidades/kn-17-trata-erro/SKILL.md`
 
 ---
 
