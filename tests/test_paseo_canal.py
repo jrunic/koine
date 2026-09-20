@@ -408,6 +408,11 @@ def test_paseo_info_avisa_quando_prescreve_wrapper_que_nao_existe(tmp_path, monk
     """
     import json
     monkeypatch.setenv("PATH", str(tmp_path))          # PATH sem wrapper nenhum
+    # HOME também precisa ser isolado: sem isso, o fallback para o diretório
+    # canônico (`_wrapper_em_padrao`, que lê `~`) encontra o wrapper REAL da
+    # máquina que roda a suíte, se ela já tiver o koine instalado de verdade —
+    # achado em 20/09/2026 rodando localmente após uma instalação real.
+    monkeypatch.setenv("HOME", str(tmp_path))
     assert cli.main(["paseo-info", "--json"]) == 0
     saida = capsys.readouterr()
     dados = json.loads(saida.out)                       # stdout continua parseável
@@ -497,8 +502,14 @@ def test_matriz_acha_wrapper_fora_do_path(tmp_path, monkeypatch):
     (bin_dir / "kn-claude-paseo.bat").write_text("@echo off", encoding="utf-8")
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setattr(_p.os, "name", "nt")
-    monkeypatch.setattr(_p.shutil, "which", lambda _: None)
-    m = _p.matriz()
+    # `matriz(*, which=shutil.which)` liga o default UMA VEZ, na definição da
+    # função — monkeypatch.setattr(_p.shutil, "which", ...) não alcança esse
+    # valor já capturado. O docstring já dizia "which é costura da suíte":
+    # a costura é o PARÂMETRO, não o módulo. Achado em 20/09/2026 — o teste
+    # passava sempre, mesmo sem valer nada, porque nenhuma máquina que rodou a
+    # suíte antes tinha um /Users/<user>/.local/bin/kn-claude-paseo real; a
+    # primeira que teve (esta) expôs que o `which` real respondia por baixo.
+    m = _p.matriz(which=lambda _: None)
     assert m["claude"]["existe"] is True
     assert m["claude"]["caminho"].endswith("kn-claude-paseo.bat")
 
