@@ -4,6 +4,20 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0] — 2026-09-20
+
+### Adicionado — tratamento e relato de erro (`kn-17-trata-erro`)
+
+`KOINE.md` ganha uma linha apontando para a nova skill `kn-17-trata-erro`, que
+consulta `docs/referencias/erros-conhecidos.md` (sempre a versão mais recente
+da branch `main`) antes de qualquer outra coisa, e só monta um relato — com
+redação de caminho absoluto e confirmação explícita do usuário — quando o
+catálogo não resolve. O envio degrada por uma cascata de 3 transportes (chamada
+direta, arquivo local, texto na conversa) para chegar mesmo em clientes sem
+shell utilizável. O relato é publicado, com segurança, num serviço
+intermediário próprio (`koine-relatos`) — nenhuma credencial de escrita vai
+embutida no pacote distribuído.
+
 ## [0.16.1] — 2026-09-16
 
 ### Corrigido — OpenCode no Windows usa o shell compatível
