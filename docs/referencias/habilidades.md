@@ -321,8 +321,8 @@ chegue mesmo em clientes sem shell utilizável.
 **Outputs:**
 - Erro resolvido pelo catálogo: nenhum relato — só a correção aplicada
 - Erro não resolvido e confirmado pelo mentorado: um relato publicado no
-  serviço `koine-relatos`, ou um arquivo `relato-koine-pendente.json` na
-  pasta de trabalho, ou texto na conversa com orientação de e-mail —
+  serviço `koine-relatos`, ou um arquivo `diario/AAAAMMDD-relato-erro.json`
+  na pasta de trabalho, ou texto na conversa com orientação de e-mail —
   dependendo de qual degrau da cascata funcionou
 
 **Skills relacionadas:** nenhuma — é terminal (não invoca outra skill).

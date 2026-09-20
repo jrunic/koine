@@ -103,13 +103,22 @@ de novo na mesma sessão a menos que o mentorado peça.
 
 Tente cada degrau só se o anterior **falhar** — nunca pule um degrau
 direto para o próximo por suposição; a falha real de execução é o único
-sinal válido (não a presença ou ausência de uma ferramenta).
+sinal válido (não a presença ou ausência de uma ferramenta). **Assim que um
+degrau tiver sucesso, pare — não execute nem ofereça o degrau seguinte.**
+Mostrar dois caminhos de envio ao mesmo tempo (ex.: "arquivo salvo, mas você
+também pode copiar este texto e mandar por e-mail") confunde o mentorado sem
+necessidade.
 
 **Grava o arquivo primeiro, sempre — antes de tentar a rede.** Isso não é o
 degrau 2 adiantado: é o que torna o degrau 1 possível sem quoting frágil, e
-já deixa pronto o artefato do degrau 2 se o envio falhar. Grave o relato em
-JSON, redigido, num arquivo na pasta de trabalho atual, por exemplo
-`relato-koine-pendente.json`:
+já deixa pronto o artefato do degrau 2 se o envio falhar.
+
+O arquivo vai na subpasta `diario/` da pasta de trabalho (a mesma que a
+sessão já mantém para registros — crie a pasta se ela não existir), nomeado
+com a data de hoje: `diario/AAAAMMDD-relato-erro.json`. **Se esse nome já
+existir** (mais de um relato no mesmo dia), acrescente um número:
+`diario/AAAAMMDD-relato-erro-2.json`, `-3.json`, e assim por diante — nunca
+sobrescreva um relato anterior. Grave o relato em JSON, redigido:
 
 ```json
 {"koine_versao":"...","cliente_ia":"...","sistema_operacional":"...","erro_cru":"...","sondagem_shell":"...","config_gerada":"..."}
@@ -124,33 +133,35 @@ degrau 1 com `-d @arquivo`, e insistir nele sem o arquivo reintroduziria o
 problema de quoting que esta ordem existe para evitar.
 
 **Degrau 1 — chamada direta ao serviço, lendo o corpo do arquivo.** Com o
-arquivo gravado, tente rodar:
+arquivo gravado (chame-o de `<arquivo>` abaixo — o nome exato que você deu a
+ele em `diario/`), tente rodar:
 
 ```bash
 curl -sS -w "\n%{http_code}" -X POST https://relatos.jedilabs.com.br/relatos \
   -H "Content-Type: application/json" \
   -H "X-Koine-Client: koine-mentorado-v1" \
-  -d @relato-koine-pendente.json
+  -d @<arquivo>
 ```
 
 `-d @arquivo` (em vez de `-d '{...}'` com aspas simples) é o que torna este
 comando portável — aspas simples não funcionam como quoting no `cmd.exe` do
 Windows, e é exatamente lá que o degrau 1 mais precisa funcionar. A última
-linha da saída é o código HTTP. Foi `200` ou `201`? Pronto — diga ao
-mentorado que o relato foi enviado, e apague o arquivo local. Qualquer outra
-coisa — comando não encontrado, sem rede, erro de execução, ou um código que
-não seja `200`/`201` — é falha; vá para o degrau 2.
+linha da saída é o código HTTP. Foi `200` ou `201`? Diga ao mentorado que o
+relato foi enviado, apague o arquivo de `diario/`, e **pare aqui**. Qualquer
+outra coisa — comando não encontrado, sem rede, erro de execução, ou um
+código que não seja `200`/`201` — é falha; vá para o degrau 2.
 
-**Degrau 2 — arquivo local (o mesmo já gravado).** Se o degrau 1 falhou (ou
-se você já pulou direto para cá por não ter conseguido gravar antes — nesse
-caso não há arquivo, vá direto ao degrau 3), diga ao mentorado: o relato
-ficou salvo em `relato-koine-pendente.json`, e que ele pode ser enviado
-depois — anexado a um e-mail para `koine@orlandoferreira.com.br`, ou por
-outro meio que o mantenedor tenha combinado com ele.
+**Degrau 2 — arquivo local (o mesmo já gravado em `diario/`).** Se o degrau 1
+falhou (ou se você já pulou direto para cá por não ter conseguido gravar
+antes — nesse caso não há arquivo, vá direto ao degrau 3), diga ao
+mentorado: o relato ficou salvo em `diario/<nome-do-arquivo>`, e que ele pode
+ser enviado depois — anexado a um e-mail para `koine@orlandoferreira.com.br`,
+ou por outro meio que o mantenedor tenha combinado com ele. **Pare aqui** —
+não ofereça também o degrau 3 nesta mesma resposta.
 
-**Degrau 3 — texto na tela.** Se nem a chamada nem a escrita em arquivo
-funcionaram, mostre o conteúdo do relato como texto simples, direto na
-conversa, e diga ao mentorado: capture a tela (print) e envie por e-mail
+**Degrau 3 — texto na tela.** Só chega aqui se nem a chamada nem a escrita em
+arquivo funcionaram. Mostre o conteúdo do relato como texto simples, direto
+na conversa, e diga ao mentorado: capture a tela (print) e envie por e-mail
 para `koine@orlandoferreira.com.br`. Este degrau não depende de nenhuma
 ferramenta além de você conseguir escrever texto na conversa — funciona em
 qualquer cliente, inclusive os citados na seção "O que NÃO vai funcionar".
