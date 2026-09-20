@@ -888,7 +888,16 @@ def _rodar_cliente(cliente: str, args: list[str]) -> int:
     except conflito.ConflitoErro as e:
         print(str(e), file=sys.stderr)
         return 1
-    args_cliente = prefixo + (lanc.extra_args or []) + extras_usuario
+    chrome_arg = []
+    if canal_paseo and cliente == "claude" and os.environ.get("KOINE_PASEO_CHROME", "1") != "0":
+        # Paridade com o paseo-jd-shim do infra-manager: o binário claude já
+        # liga --chrome sozinho quando é interativo, e só desliga por default
+        # em modo headless — que é como o Paseo o invoca. Sem isso, sessão
+        # via Paseo nunca tem Claude-in-Chrome. Escape por sessão via
+        # KOINE_PASEO_CHROME=0 no env do provider (sobrevive ao merge do
+        # `koine paseo-provider`, que só escreve a chave KOINE_AGENTE).
+        chrome_arg = ["--chrome"]
+    args_cliente = prefixo + (lanc.extra_args or []) + extras_usuario + chrome_arg
     if sys.platform == "win32":
         # Uma linha: o relatório completo é da instalação. Aqui é o que o usuário
         # precisa para não perder tempo — e a sessão SOBE assim mesmo, porque sem

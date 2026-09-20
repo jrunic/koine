@@ -100,13 +100,16 @@ def test_o_separador_e_o_que_impede_o_valor_de_virar_pasta(sem_launch, tmp_path,
     """
     trab = _preparar_pasta_valida(tmp_path, monkeypatch)
     assert cli.main(["claude", "--canal-paseo", "--", "--model", "x-1"]) == 0
-    assert sem_launch["args"][-2:] == ["--model", "x-1"]
+    # --chrome vem depois dos args do usuário (mesma ordem do paseo-jd-shim:
+    # passthrough primeiro, --chrome por último) — por isso -3:-1, não -2:.
+    assert sem_launch["args"][-3:-1] == ["--model", "x-1"]
+    assert sem_launch["args"][-1] == "--chrome"
     assert sem_launch["cwd"] == str(trab)
 
     # sem o separador: `x-1` vira posicional, é lido como AGENTE
     sem_launch.clear()
     assert cli.main(["claude", "--canal-paseo", "--model", "x-1"]) == 0
-    assert sem_launch["args"][-1] == "--model", "o valor foi arrancado da flag"
+    assert sem_launch["args"][-2] == "--model", "o valor foi arrancado da flag"
 
 
 # --- o agente por variável -------------------------------------------------
@@ -498,3 +501,40 @@ def test_matriz_acha_wrapper_fora_do_path(tmp_path, monkeypatch):
     m = _p.matriz()
     assert m["claude"]["existe"] is True
     assert m["claude"]["caminho"].endswith("kn-claude-paseo.bat")
+
+
+# --- --chrome no canal Paseo, só para claude (jd-task #1004) ---------------
+#
+# Paridade com o paseo-jd-shim do infra-manager: o binário claude já liga
+# --chrome sozinho quando é interativo, e só desliga por default em modo
+# headless — que é como o Paseo o invoca. Sem isso, sessão via Paseo nunca
+# tem Claude-in-Chrome, mesmo em máquina que já tem a extensão pareada.
+
+def test_no_canal_claude_ganha_chrome_por_padrao(sem_launch, tmp_path, monkeypatch):
+    _preparar_pasta_valida(tmp_path, monkeypatch)
+    cli.main(["claude", "--canal-paseo", "--"])
+    assert "--chrome" in sem_launch["args"]
+
+
+def test_no_canal_claude_nao_ganha_chrome_com_variavel_desligada(sem_launch, tmp_path,
+                                                                  monkeypatch):
+    _preparar_pasta_valida(tmp_path, monkeypatch)
+    monkeypatch.setenv("KOINE_PASEO_CHROME", "0")
+    cli.main(["claude", "--canal-paseo", "--"])
+    assert "--chrome" not in sem_launch["args"]
+
+
+def test_fora_do_canal_claude_nao_ganha_chrome(sem_launch, tmp_path, monkeypatch):
+    """No terminal o próprio binário já decide sozinho — o koine não injeta
+    nada ali, só restaura paridade no canal headless do Paseo."""
+    _preparar_pasta_valida(tmp_path, monkeypatch)
+    cli.main(["claude"])
+    assert "--chrome" not in sem_launch["args"]
+
+
+def test_no_canal_opencode_nao_ganha_chrome(sem_launch, tmp_path, monkeypatch):
+    """A paridade é só do claude — outro cliente no mesmo canal não deve
+    ganhar a flag por engano."""
+    _preparar_pasta_valida(tmp_path, monkeypatch)
+    cli.main(["opencode", "--canal-paseo", "--"])
+    assert "--chrome" not in sem_launch["args"]

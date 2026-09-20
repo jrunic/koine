@@ -94,6 +94,21 @@ Os identificadores são **prescritos pelo Koine**, não escolhidos por quem conf
 Nome inventado diverge entre máquinas, e ferramenta que um dia precise ler ou
 consertar essa configuração encontraria dois vocabulários para a mesma coisa.
 
+### `kn-claude`/`kn-claude-hermes` ligam o Claude-in-Chrome por padrão
+
+O binário `claude` já liga `--chrome` sozinho quando é interativo, e só
+desliga por default em modo headless — que é como o Paseo o invoca. Sem essa
+paridade, sessão via Paseo nunca teria Claude-in-Chrome, mesmo em máquina que
+já tem a extensão pareada. Desde a versão com o `KOINE_PASEO_CHROME`, o
+`--chrome` é injetado automaticamente nesse caminho — só para `claude`, nunca
+para outro cliente, e nunca fora do canal Paseo.
+
+Para desligar numa sessão específica: `KOINE_PASEO_CHROME=0` no `env` do
+entry daquele provider, no `config.json` do Paseo. Sobrevive a reruns de
+`koine paseo-provider` — o gerador só reescreve `command`, `label` e a chave
+`KOINE_AGENTE` do `env`; qualquer outra chave que você acrescentar ali
+permanece.
+
 ### O comando vai por caminho absoluto
 
 O serviço do orquestrador roda com ambiente mínimo, e a pasta de programas do seu

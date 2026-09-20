@@ -18,6 +18,13 @@ shell utilizável. O relato é publicado, com segurança, num serviço
 intermediário próprio (`koine-relatos`) — nenhuma credencial de escrita vai
 embutida no pacote distribuído.
 
+### Adicionado — `kn-claude`/`kn-claude-hermes` ligam Claude-in-Chrome por padrão no Paseo
+
+Paridade com o `paseo-jd-shim` do infra-manager: o binário `claude` já liga
+`--chrome` sozinho quando é interativo, e só desliga por default em modo
+headless — que é como o Paseo o invoca. `KOINE_PASEO_CHROME=0` no `env` do
+provider desliga por sessão.
+
 ## [0.16.1] — 2026-09-16
 
 ### Corrigido — OpenCode no Windows usa o shell compatível
