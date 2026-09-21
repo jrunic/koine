@@ -484,3 +484,87 @@ def test_corrigir_nao_escreve_no_glossario(tmp_path):
     assert corrigidos == []
     assert g.read_text(encoding="utf-8") == GLOSSARIO_SEM_FM
     assert not (tmp_path / "GLOSSARIO.md.bak").exists()
+
+
+# --- achado_agente_default (21/09/2026, migração retroativa) ----------------
+
+def _monta_cfg_agentes(tmp_path, agentes=(), usuario_fm=""):
+    cfg = tmp_path / "cfg-agente"
+    (cfg / "agentes").mkdir(parents=True, exist_ok=True)
+    for nome in agentes:
+        (cfg / "agentes" / f"{nome}.md").write_text(
+            f"---\nname: {nome}\n---\n# {nome}\n", encoding="utf-8")
+    if usuario_fm:
+        (cfg / "usuaria.md").write_text(usuario_fm, encoding="utf-8")
+    return str(cfg)
+
+
+def test_sem_agente_nao_gera_achado(tmp_path):
+    cfg = _monta_cfg_agentes(tmp_path, agentes=())
+    assert validar.achado_agente_default(cfg) is None
+
+
+def test_default_resolvido_nao_gera_achado(tmp_path):
+    cfg = _monta_cfg_agentes(
+        tmp_path, agentes=["solis"],
+        usuario_fm="---\nnome: J\nagente-default: solis\n---\n# X\n")
+    assert validar.achado_agente_default(cfg) is None
+
+
+def test_um_agente_sem_default_e_achado_com_o_nome_em_chaves(tmp_path):
+    cfg = _monta_cfg_agentes(tmp_path, agentes=["solis"],
+                             usuario_fm="---\nnome: J\n---\n# X\n")
+    a = validar.achado_agente_default(cfg)
+    assert a is not None
+    assert a.estado == validar.AGENTE_SEM_DEFAULT
+    assert a.chaves == ["solis"]
+    assert a.motivo == ""
+
+
+def test_default_orfao_carrega_o_valor_em_motivo(tmp_path):
+    cfg = _monta_cfg_agentes(
+        tmp_path, agentes=["solis"],
+        usuario_fm="---\nnome: J\nagente-default: fantasma\n---\n# X\n")
+    a = validar.achado_agente_default(cfg)
+    assert a.motivo == "fantasma"
+    assert a.chaves == ["solis"]
+
+
+def test_relatorio_menciona_o_comando_de_correcao(tmp_path):
+    cfg = _monta_cfg_agentes(tmp_path, agentes=["solis"],
+                             usuario_fm="---\nnome: J\n---\n# X\n")
+    a = validar.achado_agente_default(cfg)
+    texto = validar.relatorio([a])
+    assert "koine definir-agente <nome> --default" in texto
+    assert "solis" in texto
+
+
+def test_corrigir_agente_sem_default_grava_quando_inequivoco(tmp_path):
+    cfg = _monta_cfg_agentes(tmp_path, agentes=["solis"],
+                             usuario_fm="---\nnome: J\n---\n# X\n")
+    a = validar.achado_agente_default(cfg)
+    corrigidos, pendentes = validar.corrigir([a])
+    assert corrigidos == [a]
+    assert pendentes == []
+    from koine import frontmatter
+    fm, _ = frontmatter.ler_arquivo(os.path.join(cfg, "usuaria.md"))
+    assert fm["agente-default"] == "solis"
+
+
+def test_corrigir_agente_sem_default_nao_adivinha_com_dois_agentes(tmp_path):
+    cfg = _monta_cfg_agentes(tmp_path, agentes=["solis", "atlas"],
+                             usuario_fm="---\nnome: J\n---\n# X\n")
+    a = validar.achado_agente_default(cfg)
+    corrigidos, pendentes = validar.corrigir([a])
+    assert corrigidos == []
+    assert pendentes == [a]
+
+
+def test_corrigir_agente_sem_default_nao_sobrescreve_default_orfao(tmp_path):
+    cfg = _monta_cfg_agentes(
+        tmp_path, agentes=["solis"],
+        usuario_fm="---\nnome: J\nagente-default: fantasma\n---\n# X\n")
+    a = validar.achado_agente_default(cfg)
+    corrigidos, pendentes = validar.corrigir([a])
+    assert corrigidos == []
+    assert pendentes == [a]

@@ -103,6 +103,13 @@ paseo workspace ls
 Cada pasta aparecendo com o título combinado. Diga ao usuário que elas já estão
 visíveis no celular — não é preciso fazer mais nada no aparelho.
 
+**Rode `koine paseo-doctor` antes de encerrar.** As pastas que você acabou de
+registrar não declaram `agente:` próprio a menos que o usuário peça — elas
+abrem pelo default do usuário, e sem ele caem em Hermes. Isso é fácil de
+passar batido: a sessão abre, responde, só não é o agente esperado, e o
+usuário só percebe ao entrar. Se o doctor apontar `agente.default` em aviso,
+resolva na hora — não deixe para depois.
+
 ## 5. Mudar o título visível
 
 Isso **não** muda o caminho da pasta. O Paseo indexa estado pelo cwd.

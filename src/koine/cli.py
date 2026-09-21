@@ -147,6 +147,9 @@ def _cmd_instalar(args: list[str]) -> int:
     except (OSError, ValueError) as e:
         # degradação graciosa, instalar.go:68-70 — skills falhando não aborta
         print(f"aviso: skills: {e}", file=sys.stderr)
+    nome = _agente.migrar_default_inequivoco(paths.config_dir())
+    if nome:
+        print(f"✓ agente-default: {nome} (o único agente que você tem — gravado automaticamente)")
     print("Instalação concluída.")
     if sys.platform == "win32":
         # Informacional, sempre: o problema aparece na primeira sessão, e a
@@ -428,6 +431,9 @@ def _cmd_validar(args: list[str]) -> int:
     achados += [_validar.Achado(os.path.join(alvo, "CONTEXTO.md"),
                                 _validar.REFS_AUSENTE, motivo=r)
                 for alvo, r, existe in resolvidas if r and not existe]
+    achado_agente = _validar.achado_agente_default(cfg)
+    if achado_agente:
+        achados.append(achado_agente)
     if "--corrigir" not in args:
         print(_validar.relatorio(achados, todas="--todas" in args), end="")
         return 1 if achados else 0

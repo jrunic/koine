@@ -482,6 +482,60 @@ def verificar_providers(cfg: dict) -> Verificacao:
          "indisponiveis": []})
 
 
+def verificar_agente_default(cfg_koine: str) -> Verificacao:
+    """O usuário tem agente(s) operacional(is) e nenhum default gravado?
+
+    Não é verificação do Paseo — é do config do Koine (`~/.config/koine/`).
+    Mora aqui porque é aqui que ela é ouvida: o `paseo-doctor` é o fecho da
+    `/kn-04`, e é exatamente o provider genérico (`kn-<cliente>`) que essa
+    ausência quebra — pasta sem `agente:` próprio cai no default do usuário
+    e, sem ele, em Hermes. Sem esta verificação o defeito é silencioso: a
+    sessão abre, responde, só não é o agente esperado.
+
+    Medido em produção em 21/09/2026: usuária com 1 agente operacional e 30+
+    pastas registradas via `/kn-14` abria todas com Hermes — o default nunca
+    tinha sido gravado, e nada no fluxo de `/kn-04`/`/kn-14` conferia isso.
+    """
+    from koine import agente as _a
+    from koine import frontmatter as _fm
+
+    agentes = _a.agentes_operacionais(cfg_koine)
+    if not agentes:
+        return Verificacao(
+            "agente.default", OK,
+            "você ainda não tem agente operacional — Hermes é o certo até lá.",
+            {"agentes": [], "default": ""})
+
+    default = _a.default_do_usuario(_a.usuario_path(cfg_koine), _fm.ler_arquivo)
+
+    if default and default in agentes:
+        return Verificacao(
+            "agente.default", OK, f"o default do usuário é `{default}`.",
+            {"agentes": agentes, "default": default})
+    if default:
+        return Verificacao(
+            "agente.default", AVISO,
+            f"o default do usuário aponta para `{default}`, que não existe em "
+            f"{os.path.join(cfg_koine, 'agentes')} — pasta sem `agente:` "
+            "próprio abre com Hermes até corrigir. Rode "
+            "`koine definir-agente <nome> --default`.",
+            {"agentes": agentes, "default": default})
+    if len(agentes) == 1:
+        return Verificacao(
+            "agente.default", AVISO,
+            f"você tem 1 agente (`{agentes[0]}`) e nenhum default gravado — "
+            "toda pasta sem `agente:` próprio abre com Hermes, inclusive as "
+            "que a `/kn-14` acabou de registrar. Rode "
+            f"`koine definir-agente {agentes[0]} --default`.",
+            {"agentes": agentes, "default": ""})
+    return Verificacao(
+        "agente.default", AVISO,
+        f"você tem {len(agentes)} agentes ({', '.join(agentes)}) e nenhum "
+        "default gravado — pasta sem `agente:` próprio abre com Hermes. Rode "
+        "`koine definir-agente <nome> --default` com o que você mais usa.",
+        {"agentes": agentes, "default": ""})
+
+
 CHAVES_DO_CANAL = ("daemon.browserTools.enabled", "daemon.mcp.injectIntoAgents")
 
 
@@ -492,6 +546,8 @@ def diagnosticar(home: str | None = None) -> list[Verificacao]:
     if cfg is None:
         return [v_config]
 
+    from koine import paths as _paths
+
     fora = [v_config, verificar_executaveis(), verificar_servico(cfg),
             verificar_versoes()]
     for chave in CHAVES_DO_CANAL:
@@ -501,6 +557,7 @@ def diagnosticar(home: str | None = None) -> list[Verificacao]:
     fora.append(verificar_mcp_nos_agentes(cfg, home))
     fora.append(verificar_navegador(cfg, particoes_do_navegador()))
     fora.append(verificar_providers(cfg))
+    fora.append(verificar_agente_default(_paths.config_dir()))
     return fora
 
 

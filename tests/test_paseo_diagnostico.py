@@ -475,3 +475,63 @@ def test_provider_prescrito_desligado_e_aviso_nunca_erro(monkeypatch):
     v = pd.verificar_providers(cfg)
     assert v.situacao == pd.AVISO
     assert v.dado["desligados"] == ["kn-claude"]
+
+
+# --- verificar_agente_default (achado em produção, 21/09/2026) --------------
+
+def _monta_cfg_koine(tmp_path, agentes=(), usuario_fm=""):
+    """`~/.config/koine` mínimo: N agentes em `agentes/` e, se `usuario_fm`
+    for dado, um único arquivo de usuário na raiz com esse frontmatter."""
+    cfg = tmp_path / "config-koine"
+    (cfg / "agentes").mkdir(parents=True, exist_ok=True)
+    for nome in agentes:
+        (cfg / "agentes" / f"{nome}.md").write_text(
+            f"---\nname: {nome}\n---\n# {nome}\n", encoding="utf-8")
+    if usuario_fm:
+        (cfg / "usuaria.md").write_text(usuario_fm, encoding="utf-8")
+    return str(cfg)
+
+
+def test_sem_agente_operacional_e_ok(tmp_path):
+    cfg = _monta_cfg_koine(tmp_path, agentes=())
+    v = pd.verificar_agente_default(cfg)
+    assert v.situacao == pd.OK
+    assert v.dado["agentes"] == []
+
+
+def test_um_agente_sem_default_e_aviso_com_comando_exato(tmp_path):
+    cfg = _monta_cfg_koine(tmp_path, agentes=["solis"],
+                           usuario_fm="---\nnome: Fulana\n---\n# Fulana\n")
+    v = pd.verificar_agente_default(cfg)
+    assert v.situacao == pd.AVISO
+    assert "koine definir-agente solis --default" in v.mensagem
+    assert v.dado["agentes"] == ["solis"]
+    assert v.dado["default"] == ""
+
+
+def test_default_gravado_e_valido_e_ok(tmp_path):
+    cfg = _monta_cfg_koine(
+        tmp_path, agentes=["solis"],
+        usuario_fm="---\nnome: Fulana\nagente-default: solis\n---\n# Fulana\n")
+    v = pd.verificar_agente_default(cfg)
+    assert v.situacao == pd.OK
+    assert v.dado["default"] == "solis"
+
+
+def test_default_aponta_para_agente_inexistente_e_aviso(tmp_path):
+    cfg = _monta_cfg_koine(
+        tmp_path, agentes=["solis"],
+        usuario_fm="---\nnome: Fulana\nagente-default: fantasma\n---\n# X\n")
+    v = pd.verificar_agente_default(cfg)
+    assert v.situacao == pd.AVISO
+    assert "fantasma" in v.mensagem
+    assert "não existe" in v.mensagem
+
+
+def test_multiplos_agentes_sem_default_lista_todos(tmp_path):
+    cfg = _monta_cfg_koine(tmp_path, agentes=["solis", "atlas"],
+                           usuario_fm="---\nnome: Fulana\n---\n# X\n")
+    v = pd.verificar_agente_default(cfg)
+    assert v.situacao == pd.AVISO
+    assert "solis" in v.mensagem and "atlas" in v.mensagem
+    assert "koine definir-agente <nome> --default" in v.mensagem

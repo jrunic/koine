@@ -21,6 +21,7 @@ SEM_FICHA = "sem-ficha"  # CONTEXTO.md sem `escopo:` — a sessão não abre nes
 REFS_AUSENTE = "refs-ausente"  # o escopo aponta para pasta que não existe no disco
 DESCRICAO_LONGA = "descricao-longa"  # cabe na referência, não cabe no índice
 GLOSSARIO_SOLTO = "glossario-solto"    # na pasta-referências e fora do catálogo
+AGENTE_SEM_DEFAULT = "agente-sem-default"  # tem agente(s), sem default resolvido
 
 # A partir de quantas `description` longas o relatório resume em vez de listar.
 # Medido na instalação de uma usuária em 10/09/2026: 156 das 167 referências
@@ -56,6 +57,30 @@ def varrer(caminhos: list[str], refs_indexadas: tuple = ()) -> list[Achado]:
             if a:
                 achados.append(a)
     return sorted(achados, key=lambda a: a.arquivo)
+
+
+def achado_agente_default(cfg: str) -> Achado | None:
+    """Achado único (não por arquivo): o usuário tem agente(s) operacional(is)
+    e o default não resolve para nenhum deles.
+
+    Cross-file por natureza — compara `config/agentes/` contra o
+    `agente-default` do arquivo do usuário —, por isso não cabe em `_analisar`
+    (que só vê um arquivo por vez). `chaves` carrega os agentes existentes;
+    `motivo` carrega o valor do default quando ele aponta para algo que não
+    existe (vazio quando o default simplesmente não foi gravado).
+
+    Mesmo critério de `agente.unico_sem_default`/`paseo_diagnostico.
+    verificar_agente_default` — as três leem `agente.py`, para não divergir.
+    """
+    from koine import agente as _a
+    agentes = _a.agentes_operacionais(cfg)
+    if not agentes:
+        return None
+    default = _a.default_do_usuario(_a.usuario_path(cfg), frontmatter.ler_arquivo)
+    if default in agentes:
+        return None
+    alvo = _a.usuario_path(cfg) or os.path.join(cfg, "<seu-arquivo-de-usuario>.md")
+    return Achado(alvo, AGENTE_SEM_DEFAULT, chaves=agentes, motivo=default)
 
 
 def refs_do_escopo(pasta: str, cfg: str) -> tuple[str | None, bool]:
@@ -172,6 +197,20 @@ def relatorio(achados: list[Achado], todas: bool = False) -> str:
             linhas.append("      faltando. A sessão não abre nesta pasta enquanto isso.")
             linhas.append("      Abra uma sessão aqui (`kn-<cliente> hermes <pasta>`) que o")
             linhas.append("      Hermes repõe a ficha preservando o que já está escrito.")
+        elif a.estado == AGENTE_SEM_DEFAULT:
+            linhas.append(f"  ⚠ {a.arquivo}")
+            if a.motivo:
+                linhas.append(f"      `agente-default` aponta para `{a.motivo}`, que não")
+                linhas.append(f"      existe em {os.path.dirname(a.arquivo)}/agentes/.")
+            elif len(a.chaves) == 1:
+                linhas.append(f"      você tem 1 agente (`{a.chaves[0]}`) e nenhum")
+                linhas.append("      `agente-default` gravado.")
+            else:
+                agentes = ", ".join(f"`{n}`" for n in a.chaves)
+                linhas.append(f"      você tem {len(a.chaves)} agentes ({agentes}) e")
+                linhas.append("      nenhum `agente-default` gravado.")
+            linhas.append("      Pasta sem `agente:` próprio abre com Hermes até")
+            linhas.append("      corrigir. Rode `koine definir-agente <nome> --default`.")
         elif a.estado == GLOSSARIO_SOLTO:
             linhas.append(f"  ⚠ {a.arquivo}")
             linhas.append("      este glossário está na pasta-referências mas não")
@@ -221,11 +260,19 @@ def _resumo_descricoes(longas: list[Achado]) -> list[str]:
 
 def corrigir(achados: list[Achado]) -> tuple[list[Achado], list[Achado]]:
     """Normaliza os reparáveis. Devolve (corrigidos, pendentes) — pendente é o
-    que o Koine não sabe consertar, e continua sendo decisão do usuário."""
+    que o Koine não sabe consertar, e continua sendo decisão do usuário.
+
+    `AGENTE_SEM_DEFAULT` só corrige no caso INEQUÍVOCO — 1 agente, `motivo`
+    vazio (default nunca gravado, não apontando para algo que sumiu). Default
+    torto ou 2+ agentes ficam pendentes: não há o que adivinhar."""
+    from koine import agente as _a
     from koine import ficha
     corrigidos, pendentes = [], []
     for a in achados:
         if a.estado == REPARAVEL and ficha.normalizar_arquivo(a.arquivo):
+            corrigidos.append(a)
+        elif (a.estado == AGENTE_SEM_DEFAULT and len(a.chaves) == 1 and not a.motivo
+              and ficha.definir_campo_arquivo(a.arquivo, _a.CAMPO_DEFAULT, a.chaves[0])):
             corrigidos.append(a)
         else:
             pendentes.append(a)

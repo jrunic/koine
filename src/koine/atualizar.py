@@ -202,6 +202,10 @@ def aplicar(staging: str, alvo_pyz: str, bindir: str, versao: str, force: bool) 
     _gerar_wrappers_pelo_novo(alvo_pyz, bindir)
     print("Skills:")
     _refresh_skills(versao)
+    from koine import agente as _agente, paths as _paths
+    nome = _agente.migrar_default_inequivoco(_paths.config_dir())
+    if nome:
+        print(f"✓ agente-default: {nome} (o único agente que você tem — gravado automaticamente)")
     print(f"Koine atualizado para {versao}.")
 
 

@@ -1,3 +1,5 @@
+import os
+
 from koine import agente
 
 
@@ -250,3 +252,64 @@ def test_mostrar_e_launch_concordam_no_agente(koine_home, monkeypatch, capsys):
 
     assert anunciado, "o mostrar não informou o agente resolvido"
     assert resolvido in anunciado[0]
+
+
+# --- migração retroativa do default (21/09/2026) ----------------------------
+
+def _monta_cfg(tmp_path, agentes=(), usuario_fm=""):
+    cfg = tmp_path / "config"
+    (cfg / "agentes").mkdir(parents=True, exist_ok=True)
+    for nome in agentes:
+        (cfg / "agentes" / f"{nome}.md").write_text(
+            f"---\nname: {nome}\n---\n# {nome}\n", encoding="utf-8")
+    if usuario_fm:
+        (cfg / "usuaria.md").write_text(usuario_fm, encoding="utf-8")
+    return str(cfg)
+
+
+def test_unico_sem_default_agente_isolado(tmp_path):
+    from koine import frontmatter
+    cfg = _monta_cfg(tmp_path, agentes=["solis"],
+                     usuario_fm="---\nnome: Fulana\n---\n# X\n")
+    assert agente.unico_sem_default(cfg, frontmatter.ler_arquivo) == "solis"
+
+
+def test_unico_sem_default_vazio_quando_ja_resolvido(tmp_path):
+    from koine import frontmatter
+    cfg = _monta_cfg(
+        tmp_path, agentes=["solis"],
+        usuario_fm="---\nnome: Fulana\nagente-default: solis\n---\n# X\n")
+    assert agente.unico_sem_default(cfg, frontmatter.ler_arquivo) == ""
+
+
+def test_unico_sem_default_vazio_quando_ambiguo(tmp_path):
+    from koine import frontmatter
+    cfg = _monta_cfg(tmp_path, agentes=["solis", "atlas"],
+                     usuario_fm="---\nnome: Fulana\n---\n# X\n")
+    assert agente.unico_sem_default(cfg, frontmatter.ler_arquivo) == ""
+
+
+def test_migrar_default_inequivoco_grava_e_faz_bak(tmp_path):
+    cfg = _monta_cfg(tmp_path, agentes=["solis"],
+                     usuario_fm="---\nnome: Fulana\n---\n# Corpo\n")
+    nome = agente.migrar_default_inequivoco(cfg)
+    assert nome == "solis"
+    from koine import frontmatter
+    fm, _ = frontmatter.ler_arquivo(os.path.join(cfg, "usuaria.md"))
+    assert fm["agente-default"] == "solis"
+    assert os.path.exists(os.path.join(cfg, "usuaria.md.bak"))
+
+
+def test_migrar_default_inequivoco_no_op_ambiguo(tmp_path):
+    cfg = _monta_cfg(tmp_path, agentes=["solis", "atlas"],
+                     usuario_fm="---\nnome: Fulana\n---\n# X\n")
+    assert agente.migrar_default_inequivoco(cfg) == ""
+    from koine import frontmatter
+    fm, _ = frontmatter.ler_arquivo(os.path.join(cfg, "usuaria.md"))
+    assert "agente-default" not in fm
+
+
+def test_migrar_default_inequivoco_no_op_sem_agente(tmp_path):
+    cfg = _monta_cfg(tmp_path, agentes=(),
+                     usuario_fm="---\nnome: Fulana\n---\n# X\n")
+    assert agente.migrar_default_inequivoco(cfg) == ""
