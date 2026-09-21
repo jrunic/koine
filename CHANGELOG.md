@@ -24,6 +24,13 @@ exato a rodar.
 
 Guia novo: [`docs/guias/corrigir-agente-errado-no-paseo.md`](docs/guias/corrigir-agente-errado-no-paseo.md).
 
+**Ressalva medida no gate de bancada:** quem chega a esta versão via
+`koine atualizar` **não** recebe o conserto automático nesse mesmo comando —
+mesma causa da #749: o processo que aplica a atualização ainda roda o código
+da versão que está saindo, que não conhece a correção nova. `koine validar` e
+`koine paseo-doctor`, já em 0.18.0 logo depois do `atualizar` terminar,
+apontam certo e dizem o comando manual. `koine instalar` não tem esse atraso.
+
 ## [0.17.0] — 2026-09-20
 
 ### Adicionado — tratamento e relato de erro (`kn-17-trata-erro`)
