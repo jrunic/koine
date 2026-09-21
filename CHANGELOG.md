@@ -4,6 +4,26 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.0] — 2026-09-21
+
+### Corrigido — `agente-default` ausente derrubava sessão pelo Paseo no Hermes
+
+`koine definir-agente --default` e a regra "primeiro agente vira default
+automático" só existem desde a v0.7.0 (28/08/2026). Quem criou o único agente
+antes disso nunca teve o default gravado, e `koine atualizar` nunca tocava na
+configuração do usuário para consertar depois — pasta sem `agente:` próprio
+abria com Hermes, em silêncio, mesmo para quem tem um agente do dia a dia há
+meses. Efeito mais visível pelo Paseo, onde o provider genérico não tem como
+passar o nome do agente na hora.
+
+No caso inequívoco — um único agente, sem default gravado — `koine instalar`
+e `koine atualizar` agora consertam sozinhos. Nos casos ambíguos (2+ agentes
+sem default, ou default apontando para um agente que não existe mais),
+`koine paseo-doctor` e o novo achado do `koine validar` avisam com o comando
+exato a rodar.
+
+Guia novo: [`docs/guias/corrigir-agente-errado-no-paseo.md`](docs/guias/corrigir-agente-errado-no-paseo.md).
+
 ## [0.17.0] — 2026-09-20
 
 ### Adicionado — tratamento e relato de erro (`kn-17-trata-erro`)
