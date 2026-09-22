@@ -59,3 +59,19 @@ def test_abrir_usa_open_dash_a_no_macos(monkeypatch):
 def test_abrir_devolve_false_fora_do_macos(monkeypatch):
     monkeypatch.setattr(pa.sys, "platform", "win32")
     assert pa.abrir() is False
+
+
+def test_aguardar_daemon_devolve_true_quando_servico_ok(monkeypatch):
+    from koine import paseo_diagnostico as pd
+    monkeypatch.setattr(pd, "home_do_paseo", lambda: "/x")
+    monkeypatch.setattr(pd, "ler_config", lambda home: ({"daemon": {}}, None))
+    monkeypatch.setattr(pd, "verificar_servico",
+                        lambda cfg: pd.Verificacao("servico.escutando", pd.OK, "ok", {}))
+    assert pa.aguardar_daemon(timeout=1, intervalo=0.01) is True
+
+
+def test_aguardar_daemon_devolve_false_no_timeout(monkeypatch):
+    from koine import paseo_diagnostico as pd
+    monkeypatch.setattr(pd, "home_do_paseo", lambda: "/x")
+    monkeypatch.setattr(pd, "ler_config", lambda home: (None, object()))
+    assert pa.aguardar_daemon(timeout=0.05, intervalo=0.01) is False
