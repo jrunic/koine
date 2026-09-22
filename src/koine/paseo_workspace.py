@@ -74,3 +74,82 @@ def _rodar(args: list[str], *, timeout: int = 20):
         return json.loads(r.stdout)
     except json.JSONDecodeError:
         return None
+
+
+class PaseoIndisponivel(Exception):
+    """O `paseo` CLI não respondeu (daemon fora do ar, binário ausente,
+    timeout, saída não-JSON) num passo de `garantir()`. Achado da revisão
+    dev-10 do plano, 22/09/2026: sem isto, `garantir()` estourava
+    `TypeError` com traceback cru quando o daemon caía no meio da operação
+    — o consumidor (CLI, `_cmd_instalar`) decide a prosa amigável a partir
+    daqui, nunca a partir de um `None` inesperado."""
+
+
+def garantir(pasta: str, titulo: str = "", projeto_nome: str = "") -> dict:
+    """Garante projeto+workspace para `pasta`. Idempotente nos três estados
+    (nada existe / projeto sem workspace / os dois existem).
+
+    Sem `projeto_nome`: resolve/cria o projeto por PATH desta pasta (uso
+    1:1 — pasta canônica do `koine instalar`, Rodada 3 do `/kn-01`).
+    `titulo`, se dado, vira o nome visível do projeto (renomeia se
+    divergir).
+
+    Com `projeto_nome`: resolve/cria o projeto por NOME em vez de por path
+    — é o caso de várias pastas agrupadas sob o mesmo projeto (`/kn-14`,
+    achado da revisão dev-10: um projeto do Paseo hospeda workspaces de
+    pastas diferentes, medido em `paseo project ls`/`workspace ls` desta
+    máquina). Quando dado, `projeto_nome` prevalece sobre `titulo`.
+
+    Levanta `PaseoIndisponivel` se qualquer chamada ao `paseo` CLI
+    devolver `None` — nunca deixa a ausência de resposta virar
+    `TypeError` mais adiante.
+
+    Devolve {"projectId", "workspaceId", "acao": "criado" | "existente"}.
+    """
+    abspasta = os.path.abspath(pasta)
+    projetos = _rodar(["project", "ls", "--json"])
+    if projetos is None:
+        raise PaseoIndisponivel("paseo project ls falhou")
+
+    if projeto_nome:
+        projeto = achar_projeto_por_nome(projeto_nome, projetos)
+    else:
+        projeto = achar_projeto(pasta, projetos)
+    projeto_e_novo = projeto is None
+
+    if projeto is None:
+        projeto = _rodar(["project", "create", abspasta, "--json"])
+        if projeto is None:
+            raise PaseoIndisponivel("paseo project create falhou")
+        nome_final = projeto_nome or titulo
+        if nome_final:
+            r = _rodar(["project", "rename", projeto["projectId"], nome_final,
+                        "--json"])
+            if r is None:
+                raise PaseoIndisponivel("paseo project rename falhou")
+            projeto["name"] = nome_final
+    elif titulo and not projeto_nome and projeto["name"] != titulo:
+        r = _rodar(["project", "rename", projeto["projectId"], titulo, "--json"])
+        if r is None:
+            raise PaseoIndisponivel("paseo project rename falhou")
+        projeto["name"] = titulo
+
+    workspace = None
+    if not projeto_e_novo:
+        workspaces = _rodar(["workspace", "ls", "--json"])
+        if workspaces is None:
+            raise PaseoIndisponivel("paseo workspace ls falhou")
+        workspace = achar_workspace(projeto["name"], pasta, workspaces)
+
+    if workspace is None:
+        workspace = _rodar(["workspace", "create", "--path", abspasta,
+                            "--project", projeto["projectId"],
+                            "--isolation", "local", "--json"])
+        if workspace is None:
+            raise PaseoIndisponivel("paseo workspace create falhou")
+        acao = "criado"
+    else:
+        acao = "existente"
+
+    return {"projectId": projeto["projectId"], "workspaceId": workspace["workspaceId"],
+            "acao": acao}
