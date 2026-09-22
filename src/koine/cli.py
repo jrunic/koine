@@ -40,7 +40,7 @@ from koine._version import __version__
 SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades", "instalar-wrappers",
                "gerar", "mostrar", "validar", "atualizar", "definir-agente",
                "paseo-info", "paseo-doctor", "paseo-configurar",
-               "paseo-provider"}
+               "paseo-provider", "paseo-workspace"}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -52,7 +52,7 @@ def main(argv: list[str] | None = None) -> int:
         print("uso: koine <cliente|subcomando> ...\n"
               "subcomandos: instalar, instalar-habilidades, gerar, mostrar, "
               "validar, atualizar, paseo-info, paseo-doctor, "
-              "paseo-configurar, paseo-provider, versao",
+              "paseo-configurar, paseo-provider, paseo-workspace, versao",
               file=sys.stderr)
         return 2
 
@@ -85,6 +85,8 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_paseo_configurar(argv[1:])
         if primeiro == "paseo-provider":
             return _cmd_paseo_provider(argv[1:])
+        if primeiro == "paseo-workspace":
+            return _cmd_paseo_workspace(argv[1:])
     if primeiro in adapters.REGISTRY:
         return _rodar_cliente(primeiro, argv[1:])
 
@@ -732,6 +734,25 @@ def _cmd_paseo_provider(args: list[str]) -> int:
         print("(dry-run: nada foi gravado)")
     elif r.gravou:
         print(f"gravado em {r.caminho}")
+    return 0
+
+
+def _cmd_paseo_workspace(args: list[str]) -> int:
+    from koine import paseo_workspace as pw
+    p = argparse.ArgumentParser(prog="koine paseo-workspace")
+    p.add_argument("pasta")
+    p.add_argument("--titulo", default="")
+    p.add_argument("--projeto", default="",
+                    help="nome de um projeto existente (ou a criar) para "
+                        "agrupar esta pasta — sem isso, um projeto por pasta")
+    ns = p.parse_args(args)
+    try:
+        r = pw.garantir(ns.pasta, titulo=ns.titulo, projeto_nome=ns.projeto)
+    except pw.PaseoIndisponivel as e:
+        print(f"erro: {e} — confira `paseo status` e tente de novo.",
+             file=sys.stderr)
+        return 1
+    print(f"projeto={r['projectId']} workspace={r['workspaceId']} ({r['acao']})")
     return 0
 
 
