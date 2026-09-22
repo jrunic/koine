@@ -8,7 +8,9 @@ instrução em prosa na kn-14, interpretada de novo a cada sessão.
 100% sobre `--json` dos subcomandos do `paseo` CLI — nunca parseia texto
 pensado para humano.
 """
+import json
 import os
+import subprocess
 
 
 def achar_projeto(pasta: str, projetos: list[dict]) -> dict | None:
@@ -50,3 +52,25 @@ def achar_projeto_por_nome(nome: str, projetos: list[dict]) -> dict | None:
         if p["name"] == nome:
             return p
     return None
+
+
+def _rodar(args: list[str], *, timeout: int = 20):
+    """Roda `paseo <args>` e devolve o JSON parseado do stdout, ou None.
+
+    Mesma primitiva de resolução de executável que `paseo_diagnostico.
+    _rodar_paseo` — None significa "não deu para fazer", nunca "lista
+    vazia" (que é um resultado válido do CLI)."""
+    from koine import paseo_ambiente
+    exe = paseo_ambiente.resolver_executavel("paseo")
+    if exe is None:
+        return None
+    try:
+        r = paseo_ambiente.executar(exe.caminho, args, timeout=timeout)
+    except (subprocess.TimeoutExpired, OSError):
+        return None
+    if r.returncode != 0:
+        return None
+    try:
+        return json.loads(r.stdout)
+    except json.JSONDecodeError:
+        return None

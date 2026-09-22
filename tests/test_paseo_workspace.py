@@ -50,3 +50,43 @@ def test_achar_projeto_por_nome_casa_por_name():
 
 def test_achar_projeto_por_nome_ausente_devolve_none():
     assert pw.achar_projeto_por_nome("Inexistente", []) is None
+
+
+import json
+
+
+def test_rodar_devolve_json_parseado(monkeypatch):
+    from koine import paseo_ambiente as amb
+    monkeypatch.setattr(amb, "resolver_executavel",
+                        lambda n: amb.Executavel("/usr/local/bin/paseo", "path"))
+    saida = json.dumps([{"projectId": "prj_1"}])
+    monkeypatch.setattr(
+        amb, "executar",
+        lambda *a, **k: type("R", (), {"returncode": 0, "stdout": saida})())
+    assert pw._rodar(["project", "ls", "--json"]) == [{"projectId": "prj_1"}]
+
+
+def test_rodar_devolve_none_sem_executavel(monkeypatch):
+    from koine import paseo_ambiente as amb
+    monkeypatch.setattr(amb, "resolver_executavel", lambda n: None)
+    assert pw._rodar(["project", "ls", "--json"]) is None
+
+
+def test_rodar_devolve_none_em_saida_nao_zero(monkeypatch):
+    from koine import paseo_ambiente as amb
+    monkeypatch.setattr(amb, "resolver_executavel",
+                        lambda n: amb.Executavel("/usr/local/bin/paseo", "path"))
+    monkeypatch.setattr(
+        amb, "executar",
+        lambda *a, **k: type("R", (), {"returncode": 1, "stdout": ""})())
+    assert pw._rodar(["project", "ls", "--json"]) is None
+
+
+def test_rodar_devolve_none_em_json_invalido(monkeypatch):
+    from koine import paseo_ambiente as amb
+    monkeypatch.setattr(amb, "resolver_executavel",
+                        lambda n: amb.Executavel("/usr/local/bin/paseo", "path"))
+    monkeypatch.setattr(
+        amb, "executar",
+        lambda *a, **k: type("R", (), {"returncode": 0, "stdout": "não é json"})())
+    assert pw._rodar(["project", "ls", "--json"]) is None
