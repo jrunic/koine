@@ -119,6 +119,39 @@ def test_rodar_paseo_devolve_none_quando_a_cli_nao_existe(monkeypatch):
     assert pd._rodar_paseo(["status"]) is None
 
 
+# saída REAL medida ao vivo (paseo 0.9.0, macOS, 24/09/2026) — achado da
+# prova viva do onboarding via Paseo: o parser esperava rótulo capitalizado
+# com espaço ("Listen", "Daemon Version"), e a saída real é chave:valor em
+# lowerCamelCase, sem padding. servico.escutando dava ERRO sempre, em
+# qualquer máquina real, mesmo com o daemon de pé e respondendo.
+_STATUS_REAL_090 = (
+    "home: /home/user/.paseo\n"
+    "pid: 96329\n"
+    "startedAt: 2026-09-22T17:58:18.762Z\n"
+    "listen: 127.0.0.1:6767\n"
+    "hostname: macbook\n"
+    "configuredListen: 127.0.0.1:6767\n"
+    "localDaemon: running\n"
+    "desktopManaged: false\n"
+    "logPath: /home/user/.paseo/daemon.log\n"
+    "serverId: srv_XZy7IezCu-QO\n"
+    "daemonVersion: 0.9.0\n"
+    "workerPid: 96330\n"
+)
+
+
+def test_campo_do_status_casa_chave_lowercamelcase_com_dois_pontos():
+    assert pd.campo_do_status(_STATUS_REAL_090, "listen") == "127.0.0.1:6767"
+    assert pd.campo_do_status(_STATUS_REAL_090, "daemonVersion") == "0.9.0"
+
+
+def test_servico_de_pe_formato_real_090_e_ok(monkeypatch):
+    monkeypatch.setattr(pd, "_rodar_paseo", lambda *a, **k: _STATUS_REAL_090)
+    v = pd.verificar_servico({"daemon": {"listen": "127.0.0.1:6767"}})
+    assert v.situacao == pd.OK
+    assert v.dado["listen"] == "127.0.0.1:6767"
+
+
 def test_rodar_paseo_devolve_none_quando_a_cli_falha(monkeypatch):
     """Saída não-zero é "não deu para perguntar", não "a resposta é vazia"."""
     from koine import paseo_ambiente as amb
@@ -131,9 +164,9 @@ def test_rodar_paseo_devolve_none_quando_a_cli_falha(monkeypatch):
 
 
 _STATUS_DE_PE = (
-    "Local Daemon           running\n"
-    "Listen                 127.0.0.1:6767\n"
-    "Daemon Version         0.8.0\n"
+    "localDaemon: running\n"
+    "listen: 127.0.0.1:6767\n"
+    "daemonVersion: 0.8.0\n"
 )
 
 
@@ -164,8 +197,8 @@ def _costura_de_versao(monkeypatch, app: str, daemon: str | None):
         if args[:1] == ["--version"]:
             return f"{app}\n"
         if args[:1] == ["status"]:
-            linha = f"Daemon Version         {daemon}\n" if daemon else ""
-            return "Local Daemon           running\n" + linha
+            linha = f"daemonVersion: {daemon}\n" if daemon else ""
+            return "localDaemon: running\n" + linha
         return ""
     monkeypatch.setattr(pd, "_rodar_paseo", fake)
 
@@ -456,7 +489,7 @@ def test_versao_ignora_log_de_startup(monkeypatch):
     bruto = "Starting daemon...\nlistening on pipe\n0.8.0\n"
     monkeypatch.setattr(pd, "_rodar_paseo",
                         lambda a: bruto if a == ["--version"] else
-                        "Daemon Version: 0.8.0\n")
+                        "daemonVersion: 0.8.0\n")
     v = pd.verificar_versoes()
     assert v.situacao == pd.OK
     assert v.dado["aplicativo"] == "0.8.0"

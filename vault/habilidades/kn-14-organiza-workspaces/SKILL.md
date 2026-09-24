@@ -57,42 +57,31 @@ que é do usuário aqui; o resto é mecânica.
 
 ## 3. Criar
 
-Para cada pasta são **três** comandos, não um:
+Um comando por pasta — ele resolve sozinho os três estados possíveis (nada existe,
+projeto sem workspace, os dois existem já); idempotente, rodar de novo não duplica
+nada.
+
+Para uma pasta em projeto próprio dela:
 
 ```
-paseo project create <caminho da pasta>
-paseo project rename <id do projeto> "<nome humano>"
-paseo workspace create --isolation local --path <caminho> --project <id> --title "<título>"
+koine paseo-workspace <caminho da pasta> --titulo "<nome humano>"
 ```
 
-Por que três:
-
-- **criar projeto não aceita nome.** Ele sai do nome da pasta — um projeto na pasta
-  `instalar-paseo` nasce chamado `instalar-paseo`. O nome humano exige o segundo
-  comando.
-- **criar projeto não cria workspace.** São camadas separadas, e o comando de uma não
-  toca a outra.
-
-`--isolation local` é o que ele quer: o agente trabalha na pasta de verdade. Pasta que
-não é repositório git **só** aceita essa forma.
-
-### Se já existe
-
-Antes de criar, liste:
+Para agrupar a pasta sob um projeto que já existe (o caso comum aqui — é a
+proposta de agrupamento da seção 2) — confira o nome exato do projeto com
+`paseo project ls --json` antes:
 
 ```
-paseo project ls
-paseo workspace ls
+koine paseo-workspace <caminho da pasta> --projeto "<nome exato do projeto>"
 ```
 
-Três estados possíveis, e **o do meio é o que mais acontece** — é a execução anterior
-que parou entre os comandos:
+Sem `--titulo` nem `--projeto`, o nome visível do projeto novo vira o nome da pasta.
+`--projeto` prevalece sobre `--titulo` quando os dois são dados — ele aponta para o
+projeto pelo NOME (não pelo path desta pasta), porque um projeto do Paseo agrupa
+workspaces de pastas diferentes.
 
-| estado | o que fazer |
-|---|---|
-| nada existe | os três comandos |
-| projeto existe, **sem workspace** | **não crie outro projeto** — renomeie se o nome ainda for o da pasta, e crie só o workspace |
-| os dois existem | não faça nada, e diga que já estava certo |
+Se o comando não conseguir falar com o `paseo` (daemon fora do ar), ele erra alto —
+confira `paseo status` e rode de novo.
 
 ## 4. Conferir
 

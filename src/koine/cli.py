@@ -40,7 +40,7 @@ from koine._version import __version__
 SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades", "instalar-wrappers",
                "gerar", "mostrar", "validar", "atualizar", "definir-agente",
                "paseo-info", "paseo-doctor", "paseo-configurar",
-               "paseo-provider"}
+               "paseo-provider", "paseo-workspace"}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -52,7 +52,7 @@ def main(argv: list[str] | None = None) -> int:
         print("uso: koine <cliente|subcomando> ...\n"
               "subcomandos: instalar, instalar-habilidades, gerar, mostrar, "
               "validar, atualizar, paseo-info, paseo-doctor, "
-              "paseo-configurar, paseo-provider, versao",
+              "paseo-configurar, paseo-provider, paseo-workspace, versao",
               file=sys.stderr)
         return 2
 
@@ -85,6 +85,8 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_paseo_configurar(argv[1:])
         if primeiro == "paseo-provider":
             return _cmd_paseo_provider(argv[1:])
+        if primeiro == "paseo-workspace":
+            return _cmd_paseo_workspace(argv[1:])
     if primeiro in adapters.REGISTRY:
         return _rodar_cliente(primeiro, argv[1:])
 
@@ -139,9 +141,9 @@ def _cmd_instalar(args: list[str]) -> int:
               end="")
     # espelha term.IsTerminal(stdin) do Go (instalar.go:61) — e a flag vence
     interativo = sys.stdin.isatty() and not ns.nao_interativo
-    canonica.configurar(vault_src, interativo=interativo,
-                        pasta_escolhida=ns.pasta_canonica or "",
-                        contexto=ns.contexto_canonico or "")
+    pasta_canonica = canonica.configurar(vault_src, interativo=interativo,
+                                         pasta_escolhida=ns.pasta_canonica or "",
+                                         contexto=ns.contexto_canonico or "")
     try:
         _instalar_com_deteccao(ns.para, interativo)
     except (OSError, ValueError) as e:
@@ -151,6 +153,7 @@ def _cmd_instalar(args: list[str]) -> int:
     if nome:
         print(f"✓ agente-default: {nome} (o único agente que você tem — gravado automaticamente)")
     print("Instalação concluída.")
+    _onboarding_paseo_se_aplicavel(pasta_canonica)
     if sys.platform == "win32":
         # Informacional, sempre: o problema aparece na primeira sessão, e a
         # instalação é onde o usuário ainda está prestando atenção. Não bloqueia
@@ -162,6 +165,82 @@ def _cmd_instalar(args: list[str]) -> int:
     # mensagem final SEMPRE imprime, mesmo com skills falhando (instalar.go:72-83)
     print(mensagens.final_instalar(), end="")
     return 0
+
+
+def _onboarding_paseo_se_aplicavel(pasta_canonica: str) -> None:
+    """Conduz a sequência de onboarding via Paseo quando a máquina tem
+    harness Paseo-compatível e o binário do Paseo presente. Silenciosa e
+    sem efeito quando não se aplica — koine instalar continua idêntico ao
+    de hoje para quem não usa Paseo.
+
+    Ordem fixada pela revisão dev-10 da spec (22/09/2026): escrever config
+    (arquivo, sem exigir o daemon) → checagem ISOLADA de PATH (não o doctor
+    completo, que reprova por depender do daemon antes de ele subir) →
+    encerrar/reabrir só se a config mudou de fato → abrir → esperar o
+    daemon → criar projeto/workspace canônico (só agora, com o daemon de
+    pé) → doctor completo, informacional.
+
+    Gate de plataforma (achado bloqueia da revisão dev-10 do PLANO,
+    22/09/2026): `paseo_app.abrir()`/`esta_rodando()` são stub False fora
+    do macOS — sem sair cedo aqui, o Windows escreveria a config e giraria
+    60s em `aguardar_daemon()` até avisar "não respondeu", escondendo a
+    causa real (mecanismo de abrir o app ainda não medido nesta
+    plataforma). `koine instalar` continua funcional no Windows sem esta
+    etapa — o usuário segue a `/kn-04` manual.
+    """
+    if sys.platform != "darwin":
+        return
+
+    from koine import paseo, paseo_app, paseo_configurar, paseo_diagnostico as pd
+    from koine import paseo_provider, paseo_workspace, skills as _skills
+
+    harness_paseo = set(_skills.detectar_harnesses()) & set(paseo.com_rota())
+    if not harness_paseo:
+        return
+    v_path = pd.verificar_executaveis()
+    if v_path.situacao == pd.ERRO:
+        return  # Paseo não instalado nesta máquina — nada a fazer
+
+    print("\nPaseo detectado — configurando acesso remoto:")
+    r_config = paseo_configurar.aplicar()
+    r_provider = paseo_provider.aplicar()
+    config_mudou = bool(r_config.alteracoes) or any(
+        e.acao != "inalterado" for e in r_provider.entries)
+
+    if v_path.situacao == pd.AVISO:
+        print(f"aviso: {v_path.mensagem}", file=sys.stderr)
+
+    if config_mudou and paseo_app.esta_rodando():
+        print("  Reiniciando o Paseo para aplicar a configuração nova...")
+        if not paseo_app.encerrar():
+            print("  aviso: não consegui confirmar o encerramento do Paseo — "
+                 "feche manualmente e abra de novo.", file=sys.stderr)
+            return
+
+    if not paseo_app.esta_rodando():
+        if not paseo_app.abrir():
+            print("  aviso: não consegui abrir o Paseo — abra manualmente.",
+                 file=sys.stderr)
+            return
+    if not paseo_app.aguardar_daemon():
+        print("  aviso: o Paseo não respondeu a tempo — abra manualmente e "
+             "rode `koine paseo-doctor`.", file=sys.stderr)
+        return
+
+    try:
+        resultado = paseo_workspace.garantir(pasta_canonica, titulo="Koine")
+    except paseo_workspace.PaseoIndisponivel as e:
+        print(f"  aviso: {e} — rode `koine paseo-workspace {pasta_canonica} "
+             f"--titulo Koine` manualmente depois.", file=sys.stderr)
+        return
+    print(f"  ✓ workspace do Paseo pronto ({resultado['acao']}) — "
+         f"abra o app e continue por lá com /kn-01.")
+
+    verificacoes = pd.diagnosticar()
+    erros = [v for v in verificacoes if v.situacao == pd.ERRO]
+    if erros:
+        print(f"  aviso: `koine paseo-doctor` achou {len(erros)} problema(s) — "
+             "rode `koine paseo-doctor` para o detalhe.", file=sys.stderr)
 
 
 def _instalar_com_deteccao(para: str | None, interativo: bool) -> None:
@@ -732,6 +811,25 @@ def _cmd_paseo_provider(args: list[str]) -> int:
         print("(dry-run: nada foi gravado)")
     elif r.gravou:
         print(f"gravado em {r.caminho}")
+    return 0
+
+
+def _cmd_paseo_workspace(args: list[str]) -> int:
+    from koine import paseo_workspace as pw
+    p = argparse.ArgumentParser(prog="koine paseo-workspace")
+    p.add_argument("pasta")
+    p.add_argument("--titulo", default="")
+    p.add_argument("--projeto", default="",
+                    help="nome de um projeto existente (ou a criar) para "
+                        "agrupar esta pasta — sem isso, um projeto por pasta")
+    ns = p.parse_args(args)
+    try:
+        r = pw.garantir(ns.pasta, titulo=ns.titulo, projeto_nome=ns.projeto)
+    except pw.PaseoIndisponivel as e:
+        print(f"erro: {e} — confira `paseo status` e tente de novo.",
+             file=sys.stderr)
+        return 1
+    print(f"projeto={r['projectId']} workspace={r['workspaceId']} ({r['acao']})")
     return 0
 
 
