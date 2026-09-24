@@ -183,6 +183,31 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
   `20260620-okf-conformance-e-frontmatter`: OKF v0.1 em inglês para campos da
   spec, PT-BR para extensões). O validador o acusa como campo legado; é falso
   positivo aqui, e renomear contraria a decisão do repo.
+- **`paseo_ambiente.resolver_executavel` acha o `paseo` real mesmo com PATH
+  isolado — o fallback macOS é caminho fixo em disco
+  (`/Applications/Paseo.app/Contents/Resources/bin/paseo`), não passa por
+  variável nenhuma.** Incidente de 22-24/09/2026: testes e2e que sobem o
+  `koine.pyz` como **processo filho real** (subprocess do interpretador,
+  não `cli.main()` in-process) isolavam o `PATH` do filho com cuidado —
+  irrelevante, porque o fallback acha o Paseo de qualquer jeito, e
+  `paseo_app.py` mandava `osascript`/`open` **reais** contra o app em uso,
+  sem guarda nenhuma. Duas tentativas de correção por variável de ambiente
+  falharam pelo mesmo motivo: vários desses testes constroem `env={}` do
+  zero para o filho, sem herdar nada do processo pai — nada que se
+  `monkeypatch.setenv` no pytest chega lá. **A correção que funciona é
+  arquivo em disco** — `paseo_app.MARCADOR_BLOQUEIO`
+  (`/tmp/.koine-testes-bloqueiam-paseo`), único sinal que qualquer processo
+  filho, em qualquer máquina, enxerga igual; `tests/conftest.py` cria para
+  a sessão de testes inteira (fixture de escopo `session`) e remove no
+  fim. Regra para quem tocar `paseo_app.py`, `paseo_ambiente.py` ou
+  escrever teste e2e novo que suba o pyz real: **todo caminho que chama
+  `osascript`/`open`/o `paseo` CLI de verdade checa o marcador primeiro**
+  — e checar só `PATH` no ambiente do subprocesso não é suficiente. Também
+  aprendido: patchear `subprocess.run` no módulo errado (`paseo_ambiente.
+  subprocess`, que é o MESMO objeto que `subprocess` em qualquer arquivo
+  do processo) quebra testes sem nenhuma relação — o filtro certo é por
+  **comando** (`_alvo_paseo_real` em `tests/conftest.py`), nunca um
+  bloqueio incondicional do módulo.
 - **Publicado na v0.13.0 (#874/#887):** o glossário virou conceito
   (`vault/conceitos/glossario.md`), nasceu a `/kn-15-mantem-glossario`, a `kn-99`
   passou a perguntar pelo vocabulário, e **cada adapter passou a liberar as
