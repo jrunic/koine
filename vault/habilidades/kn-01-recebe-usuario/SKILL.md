@@ -564,6 +564,32 @@ Atualize conforme o trabalho avançar.
 
 **Cite `title`, `description` e `descricao` com aspas duplas.** O frontmatter é YAML: valor não-citado com dois-pontos-espaço no meio (ex.: `Vendas B2B: metas`) é inválido. O Koine repara na leitura e avisa, mas o arquivo segue torto para qualquer outra ferramenta e o `koine validar` vai apontá-lo. Se o texto tiver aspas duplas, escape com `\"`.
 
+#### Registrar no Paseo (condicional)
+
+**Se o Paseo estiver configurado nesta máquina** (confira com `koine
+paseo-doctor --json`, ache na lista o item com `"id": "providers.do_koine"`
+e leia `dado.estado` — considere configurado quando o estado é diferente de
+`nao-adotado` — ou seja: `completo`, `parcial`, `desligado` ou
+`indisponivel` também contam, porque todos significam que alguém já rodou
+`/kn-04-conecta-o-paseo` nesta máquina; ausência do item na lista, ou o
+comando falhando (Paseo não instalado), significa que a máquina não usa
+Paseo, e você segue sem perguntar nada disso; **nunca** decida pelo código
+de saída do comando — ele reprova com qualquer ERRO da lista, mesmo sem
+relação com o Paseo), ofereça:
+
+> "Você também pode abrir sessões desta pasta pelo Paseo (celular ou o
+> próprio app) — quer que eu registre?"
+
+Se sim, rode:
+
+```
+koine paseo-workspace <pasta> --titulo "<nome que o usuário deu à pasta>"
+```
+
+Não pergunte isso se o Paseo não estiver configurado — nada acontece
+silenciosamente, mas também não force o usuário a decidir sobre algo que
+não existe na máquina dele.
+
 #### Confirmação
 
 > "Pronto. Seu primeiro `CONTEXTO.md` foi criado em:
