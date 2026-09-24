@@ -120,6 +120,26 @@ Com `--corrigir`, os arquivos **reparáveis** são normalizados no disco: o valo
 
 Os arquivos de configuração que o launch carrega (`CONTEXTO.md` da pasta, escopo, domínio) já são normalizados sozinhos ao abrir a sessão. A pasta-referências fica de fora do automático de propósito: reescrever a sua base de conhecimento é coisa que o Koine só faz quando você pede.
 
+### `koine paseo-workspace <pasta> [--titulo <nome>] [--projeto <nome>]`
+
+Garante que existe projeto e workspace do Paseo apontando para `pasta` —
+idempotente: rodar de novo não duplica nada, cobre os três estados (nada
+existe, projeto sem workspace, os dois existem).
+
+- `--titulo` vira o nome visível de um projeto **novo, próprio desta
+  pasta**; sem ele, usa o nome da pasta.
+- `--projeto <nome>` agrupa esta pasta sob um projeto **existente** (ou cria
+  um novo com esse nome) — casado por nome, não por path. Use quando várias
+  pastas devem compartilhar o mesmo projeto no Paseo. `--projeto`
+  prevalece sobre `--titulo` quando os dois são dados.
+- Levanta erro (saída 1, sem traceback) se o `paseo` CLI não responder —
+  confira `paseo status` e tente de novo.
+
+Usado por `koine instalar` (pasta canônica, sem `--projeto`), pela
+`/kn-01-recebe-usuario` (pasta de trabalho real, sem `--projeto`) e pela
+`/kn-14-organiza-workspaces` (demais pastas, com `--projeto` quando o
+usuário está agrupando).
+
 ### `koine versao`
 
 Imprime versão e sai.
