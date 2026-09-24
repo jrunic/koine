@@ -208,6 +208,18 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
   do processo) quebra testes sem nenhuma relação — o filtro certo é por
   **comando** (`_alvo_paseo_real` em `tests/conftest.py`), nunca um
   bloqueio incondicional do módulo.
+- **`campo_do_status` (`paseo_diagnostico.py`) parseia `chave: valor`
+  lowerCamelCase — `listen:`, `daemonVersion:` — não o formato antigo
+  capitalizado com espaço (`"Listen"`, `"Daemon Version"`).** Achado da
+  prova viva do onboarding via Paseo, 24/09/2026 (commit `f15c08c`): as
+  fixtures de teste fabricavam um formato que **nunca bateu com nenhuma
+  saída real medida** — `servico.escutando` dava `erro` sempre, em
+  qualquer instalação real do Paseo (não só a máquina de teste), e
+  `versao.aplicativo_e_daemon` sempre avisava "não publica versão". Quem
+  mexer em `campo_do_status` ou em qualquer parser de saída de CLI de
+  terceiro: medir a saída real antes de escrever a fixture — o formato já
+  mudou pelo menos uma vez entre versões do Paseo (0.8.0 tabular →
+  0.9.0 `chave: valor`) e pode mudar de novo.
 - **Publicado na v0.13.0 (#874/#887):** o glossário virou conceito
   (`vault/conceitos/glossario.md`), nasceu a `/kn-15-mantem-glossario`, a `kn-99`
   passou a perguntar pelo vocabulário, e **cada adapter passou a liberar as

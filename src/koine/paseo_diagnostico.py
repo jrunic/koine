@@ -210,10 +210,17 @@ def verificar_executaveis() -> Verificacao:
 
 
 def campo_do_status(saida: str, rotulo: str) -> str | None:
-    """Valor de um campo da tabela do `paseo status`."""
+    """Valor de um campo de `paseo status` — uma linha `chave: valor` por
+    campo, chave em lowerCamelCase (medido contra o Paseo 0.9.0 real,
+    24/09/2026 — achado da prova viva do onboarding via Paseo). Formato
+    anterior (rótulo capitalizado com espaço, padding fixo, sem `:`) nunca
+    bateu com uma saída real; casamento por chave exata antes do primeiro
+    `:` — `partition` não se confunde com o `:` dentro do valor de `listen`
+    (`127.0.0.1:6767`) nem de timestamps ISO."""
     for linha in saida.splitlines():
-        if linha.startswith(rotulo):
-            valor = linha[len(rotulo):].strip()
+        chave, sep, valor = linha.partition(":")
+        if sep and chave.strip() == rotulo:
+            valor = valor.strip()
             return valor or None
     return None
 
@@ -230,7 +237,7 @@ def verificar_servico(cfg: dict) -> Verificacao:
             "do ar, ou o comando `paseo` não está no seu PATH. Abra o "
             "aplicativo Paseo e tente de novo.",
             {"motivo": "cli-ausente", "listen_declarado": declarado})
-    ouvindo = campo_do_status(saida, "Listen")
+    ouvindo = campo_do_status(saida, "listen")
     if ouvindo is None:
         return Verificacao(
             "servico.escutando", ERRO,
@@ -254,7 +261,7 @@ def verificar_versoes() -> Verificacao:
     bruto = _rodar_paseo(["--version"])
     app = _versao_de(bruto) if bruto else None
     status = _rodar_paseo(["status"])
-    daemon = campo_do_status(status, "Daemon Version") if status else None
+    daemon = campo_do_status(status, "daemonVersion") if status else None
     daemon = _versao_de(daemon) if daemon else None
 
     if app is None:
