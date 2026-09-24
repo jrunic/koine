@@ -20,6 +20,12 @@ def _instalar(koine_home, *args):
 
 def _costura_feliz(monkeypatch, tmp_path, *, config_mudou=True,
                    ja_rodando=False):
+    # Achado do CI (ubuntu-latest, 24/09/2026): _onboarding_paseo_se_aplicavel
+    # sai cedo em `sys.platform != "darwin"` — sem forçar aqui, os testes só
+    # exercitam o caminho real numa máquina macOS de verdade, e passam por
+    # engano em qualquer outra plataforma (retorno antecipado = chamadas
+    # nunca disparam, e os asserts de "não chamou" passam por motivo errado).
+    monkeypatch.setattr(cli.sys, "platform", "darwin")
     monkeypatch.setattr(skills, "detectar_harnesses", lambda: ["claude"])
     monkeypatch.setattr(
         pd, "verificar_executaveis",
