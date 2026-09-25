@@ -225,6 +225,25 @@ def campo_do_status(saida: str, rotulo: str) -> str | None:
     return None
 
 
+def desktop_managed() -> bool | None:
+    """`desktopManaged` de `paseo status`, lido AO VIVO a cada chamada —
+    nunca cache, nunca herdado de uma leitura anterior. Achado da medição
+    de desempate (25/09/2026, ata 01-discussoes/20260925-desktopmanaged-e-
+    dinamico-nao-estatico.md): o campo reflete o estado ATUAL de gestão do
+    daemon pelo app, não uma propriedade fixa da instalação — com app e
+    daemon parados ele lê `false` (legível, não `None`), e com o app
+    gerenciando o daemon lê `true`. `None` = `paseo status` indisponível
+    (CLI ausente, timeout) ou campo ausente (versão antiga do Paseo, sem
+    essa chave no formato tabular)."""
+    saida = _rodar_paseo(["status"])
+    if saida is None:
+        return None
+    valor = campo_do_status(saida, "desktopManaged")
+    if valor is None:
+        return None
+    return valor.strip().lower() == "true"
+
+
 def verificar_servico(cfg: dict) -> Verificacao:
     """O serviço está de pé e escutando onde o config manda?"""
     declarado = busca(cfg, "daemon.listen")
