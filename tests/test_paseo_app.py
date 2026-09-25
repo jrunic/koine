@@ -127,3 +127,39 @@ def test_marcador_bloqueio_e_um_caminho_fixo_em_disco():
     """Fixo e absoluto — nunca derivado de TMPDIR/HOME, que podem faltar no
     env{} custom que muitos testes e2e constroem do zero para o filho."""
     assert pa.MARCADOR_BLOQUEIO == "/tmp/.koine-testes-bloqueiam-paseo"
+
+
+def test_encerrar_avisa_quando_desktop_managed_diverge_do_esperado(
+        monkeypatch, capsys):
+    """Checkpoint de observação (spec 20260925, achado 4 da revisão
+    dev-10): quit app/open -a operam sobre o processo nomeado via System
+    Events, nunca por correspondência de PID com o daemon — são seguros
+    independente do valor do campo, então a leitura não muda o fluxo. Mas
+    precisa de consequência OBSERVÁVEL (não só "a função foi chamada") —
+    um aviso quando o valor diverge do historicamente observado (False)."""
+    from koine import paseo_diagnostico as pd
+    estados = iter([True, True, False])
+    monkeypatch.setattr(pa, "esta_rodando", lambda: next(estados))
+    monkeypatch.setattr(pd, "desktop_managed", lambda: True)
+    monkeypatch.setattr(pa.time, "sleep", lambda s: None)
+    monkeypatch.setattr(
+        pa.subprocess, "run",
+        lambda args, **k: subprocess.CompletedProcess(args, 0))
+    pa.encerrar()
+    saida = capsys.readouterr()
+    assert "desktopManaged" in saida.err
+    assert "true" in saida.err.lower()
+
+
+def test_encerrar_nao_avisa_quando_desktop_managed_e_false(monkeypatch, capsys):
+    from koine import paseo_diagnostico as pd
+    estados = iter([True, True, False])
+    monkeypatch.setattr(pa, "esta_rodando", lambda: next(estados))
+    monkeypatch.setattr(pd, "desktop_managed", lambda: False)
+    monkeypatch.setattr(pa.time, "sleep", lambda s: None)
+    monkeypatch.setattr(
+        pa.subprocess, "run",
+        lambda args, **k: subprocess.CompletedProcess(args, 0))
+    pa.encerrar()
+    saida = capsys.readouterr()
+    assert "desktopManaged" not in saida.err

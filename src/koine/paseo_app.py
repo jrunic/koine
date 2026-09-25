@@ -51,9 +51,19 @@ def esta_rodando() -> bool:
 
 def encerrar(*, tentativas: int = 20, intervalo: float = 0.5) -> bool:
     """Encerra de forma limpa (quit, não kill). True se encerrou ou já não
-    estava rodando; False se não confirmou o encerramento a tempo."""
+    estava rodando; False se não confirmou o encerramento a tempo.
+
+    Checkpoint de observação de `desktopManaged` (spec 20260925): `quit
+    app`/`open -a` operam sobre o processo nomeado do app via System
+    Events, nunca por correspondência de PID com o daemon — são seguros
+    independente do valor do campo, e por isso NÃO muda o fluxo aqui (ao
+    contrário do módulo Windows, onde o campo decide se `taskkill` roda).
+    Só avisa quando o valor diverge do historicamente observado (False),
+    para que uma mudança futura apareça como sinal, não como suposição
+    silenciosa."""
     if not esta_rodando():
         return True
+    _avisar_se_desktop_managed_inesperado()
     try:
         subprocess.run(["osascript", "-e", f'quit app "{APP_MACOS}"'],
                        capture_output=True, timeout=10)
@@ -64,6 +74,14 @@ def encerrar(*, tentativas: int = 20, intervalo: float = 0.5) -> bool:
             return True
         time.sleep(intervalo)
     return False
+
+
+def _avisar_se_desktop_managed_inesperado() -> None:
+    from koine import paseo_diagnostico as pd
+    if pd.desktop_managed() is True:
+        print("aviso: Paseo reporta desktopManaged=true no macOS — "
+             "comportamento não observado antes desta versão; o "
+             "fechamento segue via quit app normalmente.", file=sys.stderr)
 
 
 def abrir() -> bool:
