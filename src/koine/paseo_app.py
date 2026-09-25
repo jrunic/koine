@@ -1,8 +1,8 @@
-"""Detectar, encerrar e abrir o app desktop do Paseo.
+"""Detectar, encerrar e abrir o app desktop do Paseo no macOS.
 
-Medido só para macOS nesta rodada (assumption nomeada na spec) — Windows
-fica com `esta_rodando`/`abrir` devolvendo False/False, nunca lançando, até
-alguém medir o mecanismo equivalente lá.
+Companheiro de `paseo_app_windows.py` — mesma interface pública
+(esta_rodando/encerrar/abrir), mecanismo próprio por plataforma. `cli.
+_modulo_app_desktop()` escolhe qual dos dois usar.
 
 Encerrar é sempre "quit" (AppleScript, evento de encerramento normal do
 app), nunca kill de processo — o app tem estado próprio (sessões, cache) e
