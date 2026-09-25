@@ -88,3 +88,45 @@ def test_encerrar_recusa_quando_desktop_managed_ilegivel(monkeypatch):
     monkeypatch.setattr(paw.subprocess, "run", lambda *a, **k: chamou.append(a))
     assert paw.encerrar() is False
     assert chamou == []
+
+
+def test_abrir_usa_start_b_no_windows(monkeypatch):
+    monkeypatch.setattr(paw.sys, "platform", "win32")
+    monkeypatch.setattr(paw, "_resolver_app",
+                        lambda: r"C:\Users\x\AppData\Local\Programs\Paseo\Paseo.exe")
+    chamadas = []
+    monkeypatch.setattr(
+        paw.subprocess, "run",
+        lambda args, **k: chamadas.append(args) or
+        subprocess.CompletedProcess(args, 0))
+    assert paw.abrir() is True
+    assert chamadas[-1] == [
+        "cmd", "/c", "start", "/B", "",
+        r"C:\Users\x\AppData\Local\Programs\Paseo\Paseo.exe"]
+
+
+def test_abrir_ignora_desktop_managed_e_sempre_roda(monkeypatch):
+    """abrir() é incondicional nas duas plataformas (spec, achado 1 da
+    revisão dev-10): antes da primeira abertura o campo sempre lê False —
+    gatear aqui bloquearia toda instalação, sempre."""
+    from koine import paseo_diagnostico as pd
+    monkeypatch.setattr(paw.sys, "platform", "win32")
+    monkeypatch.setattr(paw, "_resolver_app", lambda: "Paseo.exe")
+    monkeypatch.setattr(pd, "desktop_managed",
+                        lambda: (_ for _ in ()).throw(
+                            AssertionError("abrir() não deveria consultar")))
+    monkeypatch.setattr(
+        paw.subprocess, "run",
+        lambda args, **k: subprocess.CompletedProcess(args, 0))
+    assert paw.abrir() is True
+
+
+def test_abrir_false_quando_app_nao_encontrado(monkeypatch):
+    monkeypatch.setattr(paw.sys, "platform", "win32")
+    monkeypatch.setattr(paw, "_resolver_app", lambda: None)
+    assert paw.abrir() is False
+
+
+def test_abrir_false_fora_do_windows(monkeypatch):
+    monkeypatch.setattr(paw.sys, "platform", "darwin")
+    assert paw.abrir() is False

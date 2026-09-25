@@ -68,3 +68,45 @@ def encerrar(*, tentativas: int = 20, intervalo: float = 0.5) -> bool:
             return True
         time.sleep(intervalo)
     return False
+
+
+FALLBACKS_DO_APP = {
+    "win32": lambda: [os.path.join(
+        os.environ.get("LOCALAPPDATA") or "", "Programs", "Paseo", APP_EXE)],
+}
+
+
+def _resolver_app() -> str | None:
+    """PATH primeiro (raro — o app não costuma estar lá), depois o local
+    de instalação padrão medido nesta VM. Tabela própria — separada da
+    que `paseo_ambiente` usa para o CLI `paseo.cmd`, que é um binário
+    diferente (spec, Decisões de Implementação)."""
+    import shutil
+    achado = shutil.which(APP_EXE)
+    if achado:
+        return achado
+    for candidato in FALLBACKS_DO_APP.get(sys.platform, lambda: [])():
+        if candidato and os.path.isfile(candidato):
+            return candidato
+    return None
+
+
+def abrir() -> bool:
+    """Abre o app desktop. INCONDICIONAL — não lê `desktopManaged` (o
+    campo sempre lê False antes de qualquer abertura; gatear aqui
+    bloquearia toda primeira instalação, sempre — spec 20260925). Usa
+    `start /B` para não travar o processo chamador: `start` puro, com a
+    própria linha de saída redirecionada, mediu travar o `.bat` chamador
+    por mais de 10 minutos esperando o app fechar (ata de mecânica,
+    24/09/2026), mesmo o app tendo aberto de verdade."""
+    if sys.platform != "win32" or _bloqueado_por_teste():
+        return False
+    exe = _resolver_app()
+    if exe is None:
+        return False
+    try:
+        r = subprocess.run(["cmd", "/c", "start", "/B", "", exe],
+                           capture_output=True, timeout=10)
+    except (subprocess.TimeoutExpired, OSError):
+        return False
+    return r.returncode == 0
