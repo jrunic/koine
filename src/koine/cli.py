@@ -167,11 +167,28 @@ def _cmd_instalar(args: list[str]) -> int:
     return 0
 
 
+def _modulo_app_desktop():
+    """Módulo de controle do app desktop do Paseo, escolhido pela
+    plataforma — None em qualquer SO sem mecanismo medido (ex.: Linux), e
+    o chamador decide não seguir com a etapa. Os dois módulos expõem a
+    MESMA interface pública (esta_rodando/encerrar/abrir); só `paseo_app.
+    aguardar_daemon` é compartilhado direto, por já ser agnóstico de
+    plataforma (spec 20260925-spec-koine-onboarding-paseo-windows.md)."""
+    if sys.platform == "darwin":
+        from koine import paseo_app
+        return paseo_app
+    if sys.platform == "win32":
+        from koine import paseo_app_windows
+        return paseo_app_windows
+    return None
+
+
 def _onboarding_paseo_se_aplicavel(pasta_canonica: str) -> None:
     """Conduz a sequência de onboarding via Paseo quando a máquina tem
-    harness Paseo-compatível e o binário do Paseo presente. Silenciosa e
-    sem efeito quando não se aplica — koine instalar continua idêntico ao
-    de hoje para quem não usa Paseo.
+    harness Paseo-compatível, o binário do Paseo presente, e a plataforma
+    tem mecanismo medido de controle do app desktop. Silenciosa e sem
+    efeito quando não se aplica — koine instalar continua idêntico ao de
+    hoje para quem não usa Paseo.
 
     Ordem fixada pela revisão dev-10 da spec (22/09/2026): escrever config
     (arquivo, sem exigir o daemon) → checagem ISOLADA de PATH (não o doctor
@@ -180,15 +197,23 @@ def _onboarding_paseo_se_aplicavel(pasta_canonica: str) -> None:
     daemon → criar projeto/workspace canônico (só agora, com o daemon de
     pé) → doctor completo, informacional.
 
-    Gate de plataforma (achado bloqueia da revisão dev-10 do PLANO,
-    22/09/2026): `paseo_app.abrir()`/`esta_rodando()` são stub False fora
-    do macOS — sem sair cedo aqui, o Windows escreveria a config e giraria
-    60s em `aguardar_daemon()` até avisar "não respondeu", escondendo a
-    causa real (mecanismo de abrir o app ainda não medido nesta
-    plataforma). `koine instalar` continua funcional no Windows sem esta
-    etapa — o usuário segue a `/kn-04` manual.
+    Despacho por plataforma (spec 20260925-spec-koine-onboarding-paseo-
+    windows.md, superando o gate `darwin`-only original): `_modulo_app_
+    desktop()` escolhe o módulo certo (macOS ou Windows) por `sys.
+    platform`; qualquer outro SO (ex.: Linux) sai sem efeito, como sempre.
+
+    Desfecho da recusa Windows (spec, corrigido pela revisão dev-10 do
+    PLANO, achado 1, 25/09/2026): no ramo Windows, o campo `desktopManaged`
+    é lido AQUI, antes de sequer chamar `encerrar()` — se não vier `True`,
+    a sequência AVISA E SEGUE (não aborta): o app permanece rodando
+    intocado, `esta_rodando()` já é True logo adiante (pula `abrir()`), e o
+    resto da sequência (aguardar daemon, criar workspace, doctor) continua
+    normalmente. Só um `encerrar()` chamado de fato e que falha em
+    CONFIRMAR o fechamento (estado ambíguo) aborta — esse caso já era
+    tratado assim para o macOS e continua sendo.
     """
-    if sys.platform != "darwin":
+    app_mod = _modulo_app_desktop()
+    if app_mod is None:
         return
 
     from koine import paseo, paseo_app, paseo_configurar, paseo_diagnostico as pd
@@ -210,15 +235,22 @@ def _onboarding_paseo_se_aplicavel(pasta_canonica: str) -> None:
     if v_path.situacao == pd.AVISO:
         print(f"aviso: {v_path.mensagem}", file=sys.stderr)
 
-    if config_mudou and paseo_app.esta_rodando():
-        print("  Reiniciando o Paseo para aplicar a configuração nova...")
-        if not paseo_app.encerrar():
-            print("  aviso: não consegui confirmar o encerramento do Paseo — "
-                 "feche manualmente e abra de novo.", file=sys.stderr)
-            return
+    if config_mudou and app_mod.esta_rodando():
+        if sys.platform == "win32" and pd.desktop_managed() is not True:
+            print("  aviso: o Paseo está aberto e não afirma gerenciar o "
+                 "daemon sozinho (desktopManaged=false) — não vou fechá-lo "
+                 "automaticamente. A configuração nova só entra em vigor "
+                 "no próximo fechamento manual do Paseo.", file=sys.stderr)
+        else:
+            print("  Reiniciando o Paseo para aplicar a configuração nova...")
+            if not app_mod.encerrar():
+                print("  aviso: não consegui confirmar o encerramento do "
+                     "Paseo — feche manualmente e abra de novo.",
+                     file=sys.stderr)
+                return
 
-    if not paseo_app.esta_rodando():
-        if not paseo_app.abrir():
+    if not app_mod.esta_rodando():
+        if not app_mod.abrir():
             print("  aviso: não consegui abrir o Paseo — abra manualmente.",
                  file=sys.stderr)
             return
