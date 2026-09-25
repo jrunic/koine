@@ -44,3 +44,27 @@ def esta_rodando() -> bool:
     except (subprocess.TimeoutExpired, OSError):
         return False
     return r.returncode == 0 and APP_EXE in r.stdout
+
+
+def encerrar(*, tentativas: int = 20, intervalo: float = 0.5) -> bool:
+    """Encerra sem forçar (`taskkill` sem `/F`) — SÓ quando
+    `paseo_diagnostico.desktop_managed()` lê True NA HORA desta chamada
+    (nunca herdado). True se encerrou ou já não estava rodando; False se
+    recusou por desktopManaged não-True, ou se não confirmou o
+    encerramento a tempo. Quando devolve False por recusa, não chamou
+    `taskkill` nenhum — o app segue rodando intocado."""
+    if not esta_rodando():
+        return True
+    from koine import paseo_diagnostico as pd
+    if pd.desktop_managed() is not True:
+        return False
+    try:
+        subprocess.run(["taskkill", "/IM", APP_EXE],
+                       capture_output=True, timeout=10)
+    except (subprocess.TimeoutExpired, OSError):
+        return False
+    for _ in range(tentativas):
+        if not esta_rodando():
+            return True
+        time.sleep(intervalo)
+    return False
