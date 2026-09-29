@@ -4,6 +4,22 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.1] — 2026-09-29
+
+### Corrigido — `install.bat` podia travar sob tarefa agendada (execution alias do WindowsApps)
+
+`py`/`python`/`python3` resolvidos por PATH puro podiam cair no execution alias
+do WindowsApps (PyManager registra os três assim). Sob terminal interativo o
+alias encaminha normalmente, mas sob I/O redirecionado — tarefa agendada,
+automação, o caminho que `KOINE_INSTALAR_ARGS=--nao-interativo` existe para
+cobrir — ele travava indefinidamente, mesmo com o Python real instalado ao
+lado.
+
+A detecção de interpretador passa a filtrar qualquer candidato resolvido
+para `WindowsApps` antes de invocar, testando só pelo caminho completo do
+que sobrar. A mensagem de erro quando nenhum Python é achado também ganhou
+um aviso dedicado para quem só tem o alias da Store instalado.
+
 ## [0.19.0] — 2026-09-28
 
 ### Adicionado — onboarding via Paseo no Windows (paridade com o macOS)
