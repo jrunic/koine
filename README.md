@@ -113,10 +113,14 @@ Distribuídas no vault e disponíveis após `koine instalar`:
 | `/kn-02-mantem-catalogo` | Criar/ajustar arquivo do usuário, escopo, contexto de pasta, ou domínio |
 | `/kn-03-cria-agente` | Criar novo agente operacional especializado em um tipo de trabalho |
 | `/kn-04-conecta-o-paseo` | Preparar o acesso de fora do computador — opcional, só para quem vai operar do celular |
+| `/kn-05-cria-skill` | Criar skill própria para um fluxo de trabalho recorrente que nenhuma skill shipped cobre |
 | `/kn-11-mantem-referencia` | Catalogar conhecimento (pessoa, decisão, aprendizado) durante o trabalho |
 | `/kn-12-prepara-contexto` | Materializar o contexto na pasta e regenerar os índices de domínio sem o binário (modo skills) |
 | `/kn-13-sabatina-plano` | Sabatinar um plano ou processo — entrevista que confere o que você afirma contra a evidência real |
 | `/kn-14-organiza-workspaces` | Registrar pastas de trabalho no orquestrador, para abri-las do celular |
+| `/kn-15-mantem-glossario` | Criar ou atualizar o glossário do trabalho — cada termo com um sentido só |
+| `/kn-16-agenda-trabalho` | Agendar um trabalho para rodar sozinho, no orquestrador |
+| `/kn-17-trata-erro` | Consultar o catálogo de erros conhecidos e, se não resolver, enviar um relato |
 | `/kn-21-escreve-design` | Escrever o `DESIGN.md` de uma marca do escopo — cores, tipografia, tom visual |
 | `/kn-22-gera-imagem` | Gerar imagem na identidade da marca via [`imagio`](https://github.com/jrunic/imagio) |
 | `/kn-23-gera-marca-prelo` | Derivar o payload de marca do [`prelo`](https://github.com/jrunic/prelo) para PDF na identidade |
