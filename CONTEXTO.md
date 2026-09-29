@@ -247,15 +247,18 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
   ali travaria toda instalação). O checkpoint no macOS (`paseo_app.py`) é
   só observacional — `quit app` nunca corre esse risco, porque opera pelo
   nome do processo via System Events, não por correspondência de PID.
-- **`install.bat` pode travar sob tarefa agendada/I-O redirecionado quando
-  `python` resolve para o execution alias do WindowsApps** em vez do
+- **`install.bat` podia travar sob tarefa agendada/I-O redirecionado quando
+  `python` resolvia para o execution alias do WindowsApps** em vez do
   interpretador real — medido em 28/09/2026, gate de bancada da v0.19.0:
-  processo vivo, ocioso, sem retorno por 20+ minutos; funciona normalmente
-  em terminal interativo. Não reproduz com o caminho explícito do Python
-  real. Quem for rodar o gate de bancada numa conta nova: conferir `where
-  python` antes de rodar `install.bat` via `schtasks` — se o alias do Store
-  vier primeiro, é isso, não o código novo. Correção do `install.bat` em
-  aberto, jd-task **#1073**.
+  processo vivo, ocioso, sem retorno por 20+ minutos; funcionava normalmente
+  em terminal interativo. Não reproduzia com o caminho explícito do Python
+  real. **Corrigido em `main` (`9a41793`), jd-task #1073:** `:testa_python`
+  enumera todas as ocorrências de `where <nome>`, filtra qualquer caminho
+  com `WindowsApps` e só invoca pelo caminho completo do que sobrar — nunca
+  mais pelo nome cru. Revalidado na VM `koine-restrito`, mesma conta e
+  mesmo PATH que travava: `install.bat` completo sob `schtasks` em ~21s.
+  Chega a quem instala só na **próxima tag** — `install.bat` é asset de
+  release, merge em `main` sozinho não propaga.
 
 ## Família `kn-2N` espelha o `jd-cria-design` do brain
 

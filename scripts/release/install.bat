@@ -142,6 +142,11 @@ exit /b 1
 :sem_python
 echo Erro: nenhum Python ^>= 3.12 encontrado no PATH.
 echo.
+echo Se "python --version" funciona no seu terminal mas o erro apareceu
+echo mesmo assim: o unico Python achado e o atalho da Microsoft Store
+echo (WindowsApps), que este instalador pula de proposito - ele trava
+echo sob automacao.
+echo.
 echo O Koine e uma aplicacao Python. Como instalar:
 echo   - baixe de https://www.python.org/downloads/ e marque
 echo     "Add python.exe to PATH" durante a instalacao
