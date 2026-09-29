@@ -237,6 +237,25 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
 - **Publicado na v0.13.0 (#863/#871):** o teto de 200 caracteres na `description`
   do índice, a dedup de entrada entre domínios, o aviso de carga dupla no launch
   e o achado `DESCRICAO_LONGA` do `validar`.
+- **`desktop_managed()` (`paseo_diagnostico.py`) decide se é seguro fechar o
+  app do Paseo automaticamente — nunca a plataforma.** Medido em 25/09/2026:
+  o app e o daemon podem ser indistinguíveis por nome no Windows (ambos
+  `Paseo.exe`), então fechar por nome sem checar o campo arriscaria matar os
+  dois quando o app não gerencia o daemon. `paseo_app_windows.encerrar()` lê
+  o campo AO VIVO antes de cada `taskkill`; `abrir()` é sempre incondicional
+  (o campo lê `false` antes de qualquer primeira abertura, sempre — gatear
+  ali travaria toda instalação). O checkpoint no macOS (`paseo_app.py`) é
+  só observacional — `quit app` nunca corre esse risco, porque opera pelo
+  nome do processo via System Events, não por correspondência de PID.
+- **`install.bat` pode travar sob tarefa agendada/I-O redirecionado quando
+  `python` resolve para o execution alias do WindowsApps** em vez do
+  interpretador real — medido em 28/09/2026, gate de bancada da v0.19.0:
+  processo vivo, ocioso, sem retorno por 20+ minutos; funciona normalmente
+  em terminal interativo. Não reproduz com o caminho explícito do Python
+  real. Quem for rodar o gate de bancada numa conta nova: conferir `where
+  python` antes de rodar `install.bat` via `schtasks` — se o alias do Store
+  vier primeiro, é isso, não o código novo. Correção do `install.bat` em
+  aberto, jd-task **#1073**.
 
 ## Família `kn-2N` espelha o `jd-cria-design` do brain
 
