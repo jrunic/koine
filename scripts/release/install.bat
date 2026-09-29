@@ -98,12 +98,32 @@ REM ====================================================== rotinas e mensagens
 
 :testa_python
 REM Marca em PY/PYARG o primeiro interpretador >= 3.12 achado. Nao sobrescreve.
+REM
+REM Pula todo candidato que resolva para o execution alias do WindowsApps
+REM (%%LOCALAPPDATA%%\Microsoft\WindowsApps\<nome>.exe) - PyManager registra
+REM py/python/python3 assim, e esse alias trava sob I/O redirecionado (tarefa
+REM agendada, automacao) mesmo quando o Python de verdade esta instalado ao
+REM lado. Medido no gate de bancada da v0.19.0 - jd-task #1073.
 if defined PY goto :eof
-where %1 >nul 2>nul
+for /f "usebackq delims=" %%p in (`where %1 2^>nul`) do (
+  if not defined PY (
+    echo %%p| findstr /i "WindowsApps" >nul
+    if errorlevel 1 call :testa_candidato "%%p" %2
+  )
+)
+goto :eof
+
+:testa_candidato
+REM %1 = caminho completo entre aspas do candidato (ja filtrado, sem alias).
+"%~1" %2 -c "import sys; raise SystemExit(0 if sys.version_info >= (3, 12) else 1)" >nul 2>nul
 if errorlevel 1 goto :eof
-%1 %2 -c "import sys; raise SystemExit(0 if sys.version_info >= (3, 12) else 1)" >nul 2>nul
-if errorlevel 1 goto :eof
-for /f "usebackq delims=" %%p in (`%1 %2 -c "import sys; print(sys.executable)"`) do set "PY=%%p"
+REM sys.executable via arquivo, nao via FOR/F com crase: caminho entre aspas
+REM logo apos a crase quebra o parser do cmd (medido na bancada, 29/09/2026).
+set "TMPOUT=%TEMP%\koine_py_%RANDOM%.txt"
+"%~1" %2 -c "import sys; print(sys.executable)" >"%TMPOUT%" 2>nul
+if not exist "%TMPOUT%" goto :eof
+set /p PY=<"%TMPOUT%"
+del /q "%TMPOUT%" 2>nul
 set "PYARG="
 goto :eof
 

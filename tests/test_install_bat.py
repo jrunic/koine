@@ -110,3 +110,24 @@ def test_install_bat_conserta_a_sessao_corrente():
     # altera o ambiente do pai.
     texto = _bytes().decode("ascii", errors="replace")
     assert 'set "PATH=%BINDIR%;%PATH%"' in texto
+
+
+def test_install_bat_pula_execution_alias_do_windowsapps():
+    """py/python/python3 resolvidos por PATH puro podem cair no execution alias
+    do WindowsApps, que trava sob I/O redirecionado (tarefa agendada,
+    automação) mesmo com o Python de verdade instalado ao lado — medido no
+    gate de bancada da v0.19.0, jd-task #1073. A guarda: todo candidato
+    encontrado por `where` é filtrado por "WindowsApps" ANTES de ser invocado,
+    nunca invocado pelo nome cru sem esse filtro passar primeiro."""
+    texto = _bytes().decode("ascii", errors="replace")
+    assert "findstr /i \"WindowsApps\"" in texto, (
+        "sem o filtro, o alias pode ser invocado direto e travar sob "
+        "I/O redirecionado")
+    # a invocação real do candidato (versão + sys.executable) tem que vir
+    # DEPOIS do filtro no fluxo de :testa_python, não antes — a ordem prende
+    # que o filtro não é decorativo.
+    bloco = texto.split(":testa_python", 1)[1].split(":sem_curl", 1)[0]
+    pos_filtro = bloco.index("findstr /i \"WindowsApps\"")
+    pos_invocacao = bloco.index("sys.version_info >= (3, 12)")
+    assert pos_filtro < pos_invocacao, (
+        "o filtro do alias precisa vir antes da invocação do candidato")
