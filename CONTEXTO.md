@@ -259,6 +259,18 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
   mesmo PATH que travava: `install.bat` completo sob `schtasks` em ~21s.
   Chega a quem instala só na **próxima tag** — `install.bat` é asset de
   release, merge em `main` sozinho não propaga.
+- **Skill de usuário mora fora do vault, nunca em `vault/habilidades/`** —
+  `koine criar-habilidade` (chamado pela skill shipped `kn-05-cria-skill`)
+  grava em `~/.config/koine/habilidades/<nome>/SKILL.md`, território do
+  usuário, nunca tocado por `instalar`/`atualizar`. A distribuição para os
+  harnesses tem rotina própria (`habilidade_usuario.distribuir`, não o
+  `instalar_habilidades_detalhado` do vault, que filtra por `kn-` e
+  excluiria a skill de usuário por construção) e recusa sobrescrever
+  diretório que não carrega a marca `origem: usuario` no frontmatter —
+  nunca pisa em skill de terceiro instalada por fora do Koine. Nome de
+  skill de usuário não pode usar o padrão `kn-<dois dígitos>-`, reservado
+  ao catálogo do produto. Detalhe: ADR
+  `20260929-habilidade-de-usuario-fora-do-vault.md`.
 
 ## Família `kn-2N` espelha o `jd-cria-design` do brain
 
