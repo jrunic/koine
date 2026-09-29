@@ -14,7 +14,7 @@ tags: [referencia, habilidades, skills, kn]
 
 ## Visão geral
 
-Koine distribui **16 skills** no vault (`vault/habilidades/kn-NN-*/SKILL.md`), instaladas em `~/.local/share/koine/habilidades/` pelo `koine instalar` e **copiadas** dali para a pasta de skills de cada harness detectado (ex: `~/.claude/skills/`, `~/.config/opencode/skills/`).
+Koine distribui **17 skills** no vault (`vault/habilidades/kn-NN-*/SKILL.md`), instaladas em `~/.local/share/koine/habilidades/` pelo `koine instalar` e **copiadas** dali para a pasta de skills de cada harness detectado (ex: `~/.claude/skills/`, `~/.config/opencode/skills/`).
 
 **Todo agente Koine pode e deve usar as skills `kn-*`.** Elas são do método, não de um agente — ficam instaladas no harness e disponíveis em qualquer sessão, com Hermes ou com um agente operacional derivado.
 
@@ -48,6 +48,7 @@ Espaço entre blocos permite adicionar skills futuras sem renumeração cascata.
 | **kn-02-mantem-catalogo** | `/kn-02-mantem-catalogo` | Quando precisa criar/ajustar | Manutenção pontual da estrutura — 4 fluxos individuais (arquivo do usuário, escopo, contexto de pasta, domínio) |
 | **kn-03-cria-agente** | `/kn-03-cria-agente` | Quando emerge tipo de sessão recorrente com voz distinta | Criar agente operacional derivado especializado em um tipo de trabalho |
 | **kn-04-conecta-o-paseo** | `/kn-04-conecta-o-paseo` | 1× por máquina — opcional | Preparar o acesso de fora do computador: detecta quais clientes têm caminho, escreve os providers, deixa o ditado em português e conduz o pareamento do celular |
+| **kn-05-cria-skill** | `/kn-05-cria-skill` | Quando um fluxo se repete e nenhuma kn-NN cobre | Criar skill própria do usuário — entrevista o procedimento e materializa um SKILL.md fora do vault, distribuído a cada cliente IA |
 | **kn-11-mantem-referencia** | `/kn-11-mantem-referencia` | Frequente — durante o trabalho real | Catalogar conhecimento (pessoa, decisão, aprendizado, evento) na pasta-referências do escopo atual |
 | **kn-12-prepara-contexto** | `/kn-12-prepara-contexto` | Quando o binário não está disponível | Gerar `CLAUDE.md` e índices de domínio no modo skills |
 | **kn-13-sabatina-plano** | `/kn-13-sabatina-plano` | Quando é preciso entender antes de decidir | Entrevista socrática que confere o que o usuário afirma contra a evidência real, afia o vocabulário no `GLOSSARIO.md` e registra a decisão que passa nos três critérios |
@@ -151,6 +152,34 @@ Cria um agente operacional derivado especializado em um tipo de trabalho (códig
 - `/kn-02-mantem-catalogo` (Onda 2+ pode trazer fluxo de edição)
 
 **SKILL.md:** `~/.local/share/koine/habilidades/kn-03-cria-agente/SKILL.md`
+
+---
+
+## `kn-05-cria-skill`
+
+**Roda quando um fluxo de trabalho se repete** e nenhuma skill shipped
+(`kn-NN`) cobre o caso.
+
+Cria uma skill própria do usuário — procedimento reutilizável, invocável
+como `/<nome>`, materializado fora do vault e distribuído a cada cliente IA
+detectado na máquina.
+
+**Quando invocar:**
+- O mesmo procedimento foi repetido pela segunda vez
+- Nenhuma skill existente (shipped ou de usuário) cobre o fluxo
+
+**Inputs:**
+- Descrição do fluxo de trabalho a virar skill
+
+**Outputs:**
+- `~/.config/koine/habilidades/<nome>/SKILL.md` (arquivo canônico)
+- Cópia em cada cliente IA detectado (`~/.claude/skills/<nome>/`, etc.)
+
+**Skills relacionadas:**
+- `/kn-03-cria-agente` — mesmo padrão de entrevista, para agente em vez de
+  skill
+
+**SKILL.md:** `~/.local/share/koine/habilidades/kn-05-cria-skill/SKILL.md`
 
 ---
 
@@ -438,13 +467,15 @@ Após `koine instalar`:
 ├── kn-01-recebe-usuario/SKILL.md
 ├── kn-02-mantem-catalogo/SKILL.md
 ├── kn-03-cria-agente/SKILL.md
+├── kn-04-conecta-o-paseo/SKILL.md
+├── kn-05-cria-skill/SKILL.md
 ├── kn-11-mantem-referencia/SKILL.md
 ├── kn-12-prepara-contexto/SKILL.md
-├── kn-04-conecta-o-paseo/SKILL.md
 ├── kn-13-sabatina-plano/SKILL.md
 ├── kn-14-organiza-workspaces/SKILL.md
 ├── kn-15-mantem-glossario/SKILL.md
 ├── kn-16-agenda-trabalho/SKILL.md
+├── kn-17-trata-erro/SKILL.md
 ├── kn-21-escreve-design/SKILL.md
 ├── kn-22-gera-imagem/SKILL.md
 ├── kn-23-gera-marca-prelo/SKILL.md
