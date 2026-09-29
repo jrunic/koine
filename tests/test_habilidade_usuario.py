@@ -109,3 +109,92 @@ def test_criar_recusa_colisao_com_skill_de_usuario_existente(tmp_path, monkeypat
 
     with pytest.raises(ValueError, match="já existe"):
         hu.criar("organiza-inbox", "segunda tentativa", "corpo 2")
+
+
+from koine import skills
+
+
+def test_distribuir_copia_para_harness_detectado(tmp_path, monkeypatch):
+    home = _home_isolada(tmp_path, monkeypatch)
+    monkeypatch.setattr(skills.Path, "home", staticmethod(lambda: home))
+    hu.criar("organiza-inbox", "descrição", "corpo")
+
+    criadas, atualizadas, ignoradas = hu.distribuir("organiza-inbox", ["claude"])
+
+    assert criadas == ["claude"]
+    assert atualizadas == []
+    assert ignoradas == []
+    destino = home / ".claude" / "skills" / "organiza-inbox" / "SKILL.md"
+    assert destino.exists()
+
+
+def test_distribuir_e_idempotente_na_segunda_chamada(tmp_path, monkeypatch):
+    home = _home_isolada(tmp_path, monkeypatch)
+    monkeypatch.setattr(skills.Path, "home", staticmethod(lambda: home))
+    hu.criar("organiza-inbox", "descrição", "corpo")
+    hu.distribuir("organiza-inbox", ["claude"])
+
+    criadas, atualizadas, ignoradas = hu.distribuir("organiza-inbox", ["claude"])
+
+    assert criadas == atualizadas == ignoradas == []
+
+
+def test_distribuir_atualiza_quando_conteudo_diverge(tmp_path, monkeypatch):
+    home = _home_isolada(tmp_path, monkeypatch)
+    monkeypatch.setattr(skills.Path, "home", staticmethod(lambda: home))
+    hu.criar("organiza-inbox", "descrição v1", "corpo v1")
+    hu.distribuir("organiza-inbox", ["claude"])
+    # usuário roda de novo e muda a descrição/corpo — precisa recriar o
+    # arquivo canônico antes (mesma pasta, mesmo nome, conteúdo novo)
+    caminho = os.path.join(hu.pasta_usuario(), "organiza-inbox", "SKILL.md")
+    fm = {"name": "organiza-inbox", "description": "descrição v2", "origem": "usuario"}
+    with open(caminho, "w", encoding="utf-8") as f:
+        f.write(frontmatter.compor(fm) + "\n\ncorpo v2\n")
+
+    criadas, atualizadas, ignoradas = hu.distribuir("organiza-inbox", ["claude"])
+
+    assert atualizadas == ["claude"]
+    destino = home / ".claude" / "skills" / "organiza-inbox" / "SKILL.md"
+    assert "descrição v2" in destino.read_text()
+
+
+def test_distribuir_ignora_harness_com_skill_de_terceiro(tmp_path, monkeypatch):
+    home = _home_isolada(tmp_path, monkeypatch)
+    monkeypatch.setattr(skills.Path, "home", staticmethod(lambda: home))
+    hu.criar("organiza-inbox", "descrição", "corpo")
+    alheio = home / ".claude" / "skills" / "organiza-inbox"
+    alheio.mkdir(parents=True)
+    (alheio / "SKILL.md").write_text(
+        "---\nname: organiza-inbox\ndescription: skill de terceiro\n---\n\ncorpo alheio\n")
+
+    criadas, atualizadas, ignoradas = hu.distribuir("organiza-inbox", ["claude"])
+
+    assert ignoradas == ["claude"]
+    assert criadas == atualizadas == []
+    assert "corpo alheio" in alheio.joinpath("SKILL.md").read_text()
+
+
+def test_koine_instalar_nao_toca_a_copia_de_skill_de_usuario_no_harness(
+        tmp_path, monkeypatch):
+    """Guarda de regressão: `instalar_habilidades_detalhado` só itera o que
+    EXISTE no vault (`os.listdir(vault_dir()/habilidades)`) — skill de
+    usuário nunca mora lá, então nunca entra no laço, e o filtro
+    `startswith('kn-')` nem chega a ser consultado para ela. A proteção
+    quebraria se o mecanismo ganhasse semântica de "poda" (remover do
+    harness o que não existe mais no vault) — este teste avisa se isso
+    acontecer sem essa distinção ser revisitada."""
+    home = _home_isolada(tmp_path, monkeypatch)
+    monkeypatch.setattr(skills.Path, "home", staticmethod(lambda: home))
+    hu.criar("organiza-inbox", "descrição", "corpo do usuário")
+    hu.distribuir("organiza-inbox", ["claude"])
+    destino = home / ".claude" / "skills" / "organiza-inbox" / "SKILL.md"
+    conteudo_antes = destino.read_text()
+
+    vault_falso = tmp_path / "vault-falso"
+    (vault_falso / "habilidades" / "kn-99-encerra-sessao").mkdir(parents=True)
+    (vault_falso / "habilidades" / "kn-99-encerra-sessao" / "SKILL.md").write_text("x")
+    monkeypatch.setattr(paths, "vault_dir", lambda: str(vault_falso))
+
+    skills.instalar_habilidades_detalhado("claude", "0.0.1")
+
+    assert destino.read_text() == conteudo_antes

@@ -9,8 +9,11 @@ dois divergirem.
 """
 import os
 import re
+import shutil
+from pathlib import Path
 
-from koine import frontmatter, paths
+from koine import backup, dircopy, frontmatter, paths, skills
+from koine._version import __version__
 
 NOME_VALIDO = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 NOME_RESERVADO = re.compile(r"^kn-\d{2}-")
@@ -85,3 +88,57 @@ def criar(nome: str, descricao: str, corpo: str) -> str:
     with open(dest, "w", encoding="utf-8") as f:
         f.write(conteudo)
     return dest
+
+
+def _e_do_usuario(caminho_skill_md: str) -> bool:
+    """O `SKILL.md` em `caminho_skill_md` foi criado por `criar()` (nosso ou
+    de uma distribuição anterior)? Erro de leitura ou frontmatter sem a marca
+    → False, tratado como skill de terceiro — nunca sobrescrever em silêncio
+    o que o usuário instalou por fora do Koine ali."""
+    try:
+        fm, _ = frontmatter.ler_arquivo(caminho_skill_md)
+    except Exception:
+        return False
+    return fm.get("origem") == MARCADOR_ORIGEM
+
+
+def distribuir(nome: str, harnesses: list[str]) -> tuple[list[str], list[str], list[str]]:
+    """Copia a skill de usuário `nome` para a pasta de skills de cada
+    harness em `harnesses`. Devolve (criadas, atualizadas, ignoradas), cada
+    uma lista de nomes de harness.
+
+    Idêntico é pulado sem entrar em nenhuma das três listas — mesma
+    convenção de `skills.instalar_habilidades_detalhado` para o vault.
+    `ignoradas` é o harness cujo destino já tem algo que não é nosso (skill
+    de terceiro, ou skill de usuário com conteúdo que não passa pela marca):
+    a distribuição não sobrescreve, e quem chama decide como avisar.
+
+    Sem guarda própria contra `dst` ser symlink (ex.: `~/.claude/skills/*`
+    apontando para outra árvore) — mesma omissão que já existe no mecanismo
+    do vault (`skills.py`). Herdada de propósito, não é regressão: proteção
+    hoje vem de `_e_do_usuario` não achar a marca no alvo do link.
+    """
+    origem = os.path.join(pasta_usuario(), nome)
+    if not os.path.isdir(origem):
+        raise FileNotFoundError(origem)
+    criadas, atualizadas, ignoradas = [], [], []
+    for h in harnesses:
+        rel = skills.HARNESS_SKILLS.get(h)
+        if rel is None:
+            continue
+        dest_dir = os.path.join(str(Path.home()), *rel.split("/"))
+        os.makedirs(dest_dir, exist_ok=True)
+        dst = os.path.join(dest_dir, nome)
+        if os.path.isdir(dst):
+            if not _e_do_usuario(os.path.join(dst, "SKILL.md")):
+                ignoradas.append(h)
+                continue
+            if dircopy.arvore(origem) == dircopy.arvore(dst):
+                continue
+            backup.guardar(dst, __version__, f"harness-usuario/{h}", nome)
+            dircopy.trocar_dir(origem, dst)
+            atualizadas.append(h)
+            continue
+        shutil.copytree(origem, dst)
+        criadas.append(h)
+    return criadas, atualizadas, ignoradas
