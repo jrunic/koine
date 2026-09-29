@@ -18,6 +18,7 @@ from koine import (
     estoque,
     ficha,
     frontmatter,
+    habilidade_usuario as _habilidade_usuario,
     indice,
     instantaneo as _instantaneo,
     instalar as _instalar,
@@ -39,6 +40,7 @@ from koine._version import __version__
 
 SUBCOMANDOS = {"versao", "instalar", "instalar-habilidades", "instalar-wrappers",
                "gerar", "mostrar", "validar", "atualizar", "definir-agente",
+               "criar-habilidade",
                "paseo-info", "paseo-doctor", "paseo-configurar",
                "paseo-provider", "paseo-workspace"}
 
@@ -77,6 +79,8 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_atualizar(argv[1:])
         if primeiro == "definir-agente":
             return _cmd_definir_agente(argv[1:])
+        if primeiro == "criar-habilidade":
+            return _cmd_criar_habilidade(argv[1:])
         if primeiro == "paseo-info":
             return _cmd_paseo_info(argv[1:])
         if primeiro == "paseo-doctor":
@@ -364,6 +368,44 @@ def _cmd_definir_agente(args: list[str]) -> int:
           "tem ficha (o bloco `---` no topo), ou está somente-leitura.",
           file=sys.stderr)
     return 1
+
+
+def _cmd_criar_habilidade(args: list[str]) -> int:
+    p = argparse.ArgumentParser(prog="koine criar-habilidade")
+    p.add_argument("nome")
+    p.add_argument("--descricao", required=True)
+    p.add_argument("--corpo", required=True,
+                   help="caminho de um arquivo com o corpo (sem frontmatter) da skill")
+    ns = p.parse_args(args)
+
+    try:
+        with open(ns.corpo, encoding="utf-8") as f:
+            corpo = f.read()
+    except OSError as e:
+        print(f"Erro: não consegui ler {ns.corpo!r}: {e}", file=sys.stderr)
+        return 1
+
+    try:
+        caminho = _habilidade_usuario.criar(ns.nome, ns.descricao, corpo)
+    except ValueError as e:
+        print(f"Erro: {e}", file=sys.stderr)
+        return 1
+
+    print(f"Skill criada em {caminho}")
+    harnesses = skills.detectar_harnesses()
+    if not harnesses:
+        print("  (nenhum harness detectado nesta máquina — a skill fica "
+              "disponível quando um cliente IA compatível for instalado)")
+        return 0
+    criadas, atualizadas, ignoradas = _habilidade_usuario.distribuir(ns.nome, harnesses)
+    for h in criadas:
+        print(f"  + {h}")
+    for h in atualizadas:
+        print(f"  ~ {h} (versão anterior guardada em cache)")
+    for h in ignoradas:
+        print(f"  aviso: {h} já tem uma skill '{ns.nome}' que não é do Koine "
+              "— não sobrescrita", file=sys.stderr)
+    return 0
 
 
 def _cmd_instalar_wrappers(args: list[str]) -> int:
