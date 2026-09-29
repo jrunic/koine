@@ -2,7 +2,7 @@ import os
 import shutil
 from pathlib import Path
 
-from koine import backup, paths
+from koine import backup, dircopy, paths
 
 HARNESS_SKILLS = {
     "claude": ".claude/skills",
@@ -21,16 +21,6 @@ def detectar_harnesses() -> list[str]:
     """Porta de detectarHarnesses: harnesses cujo binário está no PATH,
     em ordem alfabética."""
     return sorted(h for h, b in BINARIO_HARNESS.items() if shutil.which(b))
-
-
-def _arvore(base: str) -> dict:
-    out = {}
-    for raiz, _, arqs in os.walk(base):
-        for a in arqs:
-            p = os.path.join(raiz, a)
-            with open(p, "rb") as f:
-                out[os.path.relpath(p, base)] = f.read()
-    return out
 
 
 def instalar_habilidades_detalhado(
@@ -61,31 +51,16 @@ def instalar_habilidades_detalhado(
             continue
         dst = os.path.join(dest_dir, nome)
         if os.path.isdir(dst):
-            if _arvore(src) == _arvore(dst):
+            if dircopy.arvore(src) == dircopy.arvore(dst):
                 existentes.append(nome)        # idêntico → pula
                 continue
             bak = backup.guardar(dst, versao, f"harness/{harness}", nome)
-            _trocar_dir(src, dst)
+            dircopy.trocar_dir(src, dst)
             atualizadas.append((nome, bak))
             continue
         shutil.copytree(src, dst)
         criadas.append(nome)
     return criadas, existentes, atualizadas
-
-
-def _trocar_dir(src: str, dst: str) -> None:
-    """Monta a árvore nova ao lado e troca no fim.
-
-    O nome temporário começa com ponto de propósito: não casa o filtro `kn-*`,
-    então nem o instalador nem o cliente o enxergam como skill enquanto existe.
-    """
-    pai = os.path.dirname(dst)
-    tmp = os.path.join(pai, "." + os.path.basename(dst) + ".koine-novo")
-    if os.path.lexists(tmp):
-        shutil.rmtree(tmp)
-    shutil.copytree(src, tmp)
-    shutil.rmtree(dst)
-    os.replace(tmp, dst)
 
 
 def instalar_habilidades(harness: str, versao: str) -> list[tuple[str, str]]:
