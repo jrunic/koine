@@ -208,6 +208,18 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
   do processo) quebra testes sem nenhuma relação — o filtro certo é por
   **comando** (`_alvo_paseo_real` em `tests/conftest.py`), nunca um
   bloqueio incondicional do módulo.
+- **`MARCADOR_BLOQUEIO` só guarda `osascript`/`open`/`paseo` CLI — não o
+  caminho de onboarding (`paseo_workspace.py`) que fala com o daemon
+  direto.** Medido em 29/09/2026, fora da suíte: rodar `koine instalar` de
+  verdade (não `pytest`) contra `HOME` isolada em `/tmp`, numa máquina com
+  Paseo instalado, criou um projeto e um workspace **reais** no Paseo de
+  produção — porque o daemon é serviço único da máquina, não por-`HOME`, e
+  o marcador só existe como fixture do `conftest.py` (não protege execução
+  manual fora do pytest). Quem for rodar prova viva manual de `koine
+  instalar`/`atualizar` numa máquina com Paseo instalado precisa saber
+  disso antes: ou evita o passo de onboarding (chamando comando que não o
+  aciona, como `koine criar-habilidade`), ou limpa o projeto/workspace
+  criado depois (`paseo workspace archive`/`paseo project delete`).
 - **`campo_do_status` (`paseo_diagnostico.py`) parseia `chave: valor`
   lowerCamelCase — `listen:`, `daemonVersion:` — não o formato antigo
   capitalizado com espaço (`"Listen"`, `"Daemon Version"`).** Achado da
