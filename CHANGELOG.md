@@ -4,6 +4,21 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0] — 2026-09-29
+
+### Adicionado — usuário cria skill própria (`kn-05-cria-skill`)
+
+Novo comando `koine criar-habilidade` cria, valida e distribui uma skill
+própria do usuário — procedimento reutilizável para um fluxo de trabalho
+recorrente que nenhuma skill shipped cobre. O arquivo canônico mora em
+`~/.config/koine/habilidades/<nome>/SKILL.md`, fora do vault, e sobrevive a
+`koine atualizar`/`instalar --force` do mesmo jeito que já vale para agente
+operacional derivado (`~/.config/koine/agentes/`). A distribuição para cada
+cliente IA detectado recusa sobrescrever skill de terceiro instalada por
+fora do Koine. A skill nova `kn-05-cria-skill` conduz a entrevista e delega
+ao comando; no modo skills (sem o binário `koine`), grava o arquivo direto e
+orienta cópia manual.
+
 ## [0.19.1] — 2026-09-29
 
 ### Corrigido — `install.bat` podia travar sob tarefa agendada (execution alias do WindowsApps)
