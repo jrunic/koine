@@ -18,10 +18,9 @@ from koine import frontmatter
 HABILIDADES = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "vault", "habilidades")
 
-# regex de nome do opencode: ^[a-z0-9]+(-[a-z0-9]+)*$
-import re
-
-NOME_VALIDO = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+# regex de nome do opencode: ^[a-z0-9]+(-[a-z0-9]+)*$ — mesmo contrato que
+# habilidade_usuario aplica à skill de usuário; centralizado lá.
+from koine.habilidade_usuario import NOME_VALIDO
 
 
 def _skills():
