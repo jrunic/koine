@@ -4,6 +4,28 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0] — 2026-09-28
+
+### Adicionado — onboarding via Paseo no Windows (paridade com o macOS)
+
+O onboarding automático via Paseo, entregue só para macOS na v0.18.0, passa a
+funcionar também no Windows. `koine instalar`, com harness compatível e o
+Paseo instalado, configura, abre o app e cria o workspace sozinho — sem
+nenhuma etapa manual do usuário.
+
+Módulo novo espelha o controle do app desktop já existente no macOS, mas com
+mecânica Windows-nativa: `tasklist` para detectar, `taskkill` sem `/F` para
+encerrar, `start /B` para reabrir — tudo via `cmd`, nunca PowerShell (a
+política de estações corporativas que motivou este incremento nega
+PowerShell por padrão).
+
+**Decisão central:** o campo `desktopManaged` do `paseo status`, lido ao
+vivo a cada chamada, decide se é seguro fechar o app automaticamente — não a
+plataforma. No Windows, o processo do app e o do daemon podem ser
+indistinguíveis por nome; fechar por nome sem essa checagem arriscaria matar
+os dois quando o app não gerencia o daemon. O macOS ganhou o mesmo
+checkpoint de leitura, defensivamente, mesmo sem mudar de comportamento.
+
 ## [0.18.0] — 2026-09-21
 
 ### Corrigido — `agente-default` ausente derrubava sessão pelo Paseo no Hermes

@@ -568,3 +568,71 @@ def test_multiplos_agentes_sem_default_lista_todos(tmp_path):
     assert v.situacao == pd.AVISO
     assert "solis" in v.mensagem and "atlas" in v.mensagem
     assert "koine definir-agente <nome> --default" in v.mensagem
+
+
+def test_desktop_managed_true_quando_campo_diz_true(monkeypatch):
+    saida = (
+        "home: C:\\Users\\user\\.paseo\n"
+        "pid: 11632\n"
+        "listen: 127.0.0.1:6767\n"
+        "desktopManaged: true\n"
+        "daemonVersion: 0.9.2\n"
+    )
+    monkeypatch.setattr(pd, "_rodar_paseo", lambda *a, **k: saida)
+    assert pd.desktop_managed() is True
+
+
+def test_desktop_managed_false_quando_campo_diz_false(monkeypatch):
+    monkeypatch.setattr(pd, "_rodar_paseo", lambda *a, **k: _STATUS_REAL_090)
+    assert pd.desktop_managed() is False
+
+
+def test_desktop_managed_false_com_app_e_daemon_parados(monkeypatch):
+    """Medido em VM Windows com AppLocker, 25/09/2026 (ata
+    01-discussoes/20260925-desktopmanaged-e-dinamico-nao-estatico.md): com
+    o processo do app fechado, `paseo status` continua respondendo — não
+    é `None`, não é timeout — e o campo lê `false`. É o estado universal
+    antes de qualquer primeira abertura, por isso `abrir()` não pode
+    gatear por este campo (spec 20260925)."""
+    saida = (
+        "home: C:\\Users\\user\\.paseo\n"
+        "pid: null\n"
+        "startedAt: null\n"
+        "listen: null\n"
+        "hostname: null\n"
+        "configuredListen: 127.0.0.1:6767\n"
+        "localDaemon: stopped\n"
+        "desktopManaged: false\n"
+        "logPath: C:\\Users\\user\\.paseo\\daemon.log\n"
+        "connectedDaemon: not_probed\n"
+    )
+    monkeypatch.setattr(pd, "_rodar_paseo", lambda *a, **k: saida)
+    assert pd.desktop_managed() is False
+
+
+def test_desktop_managed_none_quando_status_indisponivel(monkeypatch):
+    monkeypatch.setattr(pd, "_rodar_paseo", lambda *a, **k: None)
+    assert pd.desktop_managed() is None
+
+
+def test_desktop_managed_none_quando_campo_ausente_formato_antigo(monkeypatch):
+    """Paseo 0.6.1 (medido na mesma VM antes da atualização) usa formato
+    tabular sem a chave `desktopManaged` — `campo_do_status` já devolve
+    `None` para chave ausente; `desktop_managed()` propaga esse `None`,
+    nunca inventa um booleano."""
+    monkeypatch.setattr(
+        pd, "_rodar_paseo",
+        lambda *a, **k: "KEY          VALUE\nlisten       127.0.0.1:6767\n")
+    assert pd.desktop_managed() is None
+
+
+def test_desktop_managed_le_ao_vivo_a_cada_chamada(monkeypatch):
+    """Nunca cache — achado central da medição de desempate: o campo é
+    dinâmico, não uma propriedade fixa da instalação."""
+    respostas = iter([
+        "desktopManaged: false\n",
+        "desktopManaged: true\n",
+    ])
+    monkeypatch.setattr(pd, "_rodar_paseo", lambda *a, **k: next(respostas))
+    assert pd.desktop_managed() is False
+    assert pd.desktop_managed() is True
