@@ -124,6 +124,44 @@ funcionar mas uma tentativa manual de rodar `paseo` direto no terminal
 confundir os dois, é esperado — usar sempre os comandos `koine paseo-*`, não
 `paseo` direto.
 
+## OpenCode falha com `EUNKNOWN: unknown error, uv_spawn` ao carregar uma skill
+
+**Sintoma:** a sessão do OpenCode responde normalmente e executa comandos de
+terminal (`cmd.exe` funciona), mas carregar qualquer skill — inclusive com a
+flag `--pure` — falha com um erro citando `uv_spawn` (às vezes
+`EUNKNOWN: unknown error, uv_spawn`). Listar as skills disponíveis e ler um
+arquivo direto continuam funcionando; só o carregamento de uma skill falha.
+
+**Causa:** bug do próprio OpenCode, não do Koine. A ferramenta nativa `skill`
+do OpenCode lista os arquivos da skill usando o binário `rg` (ripgrep) por
+baixo. Na primeira vez que precisa dele, o OpenCode baixa o arquivo `.zip` do
+ripgrep e extrai usando **exclusivamente PowerShell**
+(`powershell.exe`/`pwsh.exe -Command Expand-Archive`), sem nenhum caminho
+alternativo. Numa máquina Windows onde a execução de PowerShell é negada por
+política (GPO/AppLocker — o mesmo perfil corporativo que o Koine já trata em
+outros pontos desta referência), essa chamada é recusada pelo Windows na
+criação do processo, com um código de erro que a camada de execução do
+OpenCode não sabe nomear — e é isso que aparece como `uv_spawn`. O campo
+`"shell"` que o adapter do OpenCode do Koine grava não tem efeito aqui: o
+download e a extração do ripgrep não leem essa configuração.
+
+**Remédio:** instalar o `rg.exe` manualmente numa pasta que já esteja no
+`PATH` — o OpenCode usa um `rg` já disponível no `PATH` antes de tentar
+baixar e extrair o dele. Com `cmd.exe` (sem PowerShell):
+
+```
+curl -sSL -o %TEMP%\rg.zip https://github.com/BurntSushi/ripgrep/releases/download/15.1.0/ripgrep-15.1.0-x86_64-pc-windows-msvc.zip
+tar -xf %TEMP%\rg.zip -C %TEMP%\rg-extraido
+copy %TEMP%\rg-extraido\ripgrep-15.1.0-x86_64-pc-windows-msvc\rg.exe %USERPROFILE%\.local\bin\rg.exe
+```
+
+(`tar` já vem no Windows 10/11 e não depende de PowerShell — troque
+`x86_64` por `aarch64` numa máquina ARM64.) A pasta `%USERPROFILE%\.local\bin`
+já é onde o `instalar` do Koine coloca os próprios wrappers e já está no
+`PATH` do usuário; se o Koine ainda não tiver sido instalado nesta máquina,
+qualquer pasta já presente no `PATH` serve. Depois de copiar o `rg.exe`,
+tentar carregar a skill de novo.
+
 ## Koine (ou Paseo) instalado, mas o comando não é reconhecido na sessão atual
 
 **Sintoma:** logo depois de `koine instalar` (ou de instalar o Paseo), um
