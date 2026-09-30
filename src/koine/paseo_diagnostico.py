@@ -146,12 +146,17 @@ def verificar_relay(cfg: dict) -> Verificacao:
 def verificar_voz(cfg: dict) -> Verificacao:
     """Ditado e fala configurados?
 
-    Aviso e nunca erro: a máquina funciona sem voz. O caminho da chave é o
-    medido em 13/09/2026 contra o Paseo 0.8.0 — se uma versão futura mudá-lo, o
-    desfecho é um aviso a mais, nunca uma reprovação indevida, que é a
-    assimetria certa para um sinal opcional.
+    Aviso e nunca erro: a máquina funciona sem voz. O caminho da chave é
+    `features.dictation.stt.provider` — o mesmo que `paseo_configurar._preencher`
+    grava, confirmado contra o Paseo 0.9.2 real (jd-task #1096,
+    koine-relatos#6). A versão anterior lia `daemon.voice.sttProvider`, um
+    caminho que `paseo_configurar` nunca escreveu e que nenhuma medição
+    encontrou de verdade — sempre AUSENTE, sempre "ditado não configurado",
+    mesmo com o ditado configurado. Se uma versão futura do Paseo mudar o
+    caminho de novo, o desfecho é um aviso a mais, nunca uma reprovação
+    indevida, que é a assimetria certa para um sinal opcional.
     """
-    provedor = busca(cfg, "daemon.voice.sttProvider")
+    provedor = busca(cfg, "features.dictation.stt.provider")
     if provedor is AUSENTE:
         return Verificacao(
             "config.voz", AVISO,

@@ -232,6 +232,21 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
   terceiro: medir a saída real antes de escrever a fixture — o formato já
   mudou pelo menos uma vez entre versões do Paseo (0.8.0 tabular →
   0.9.0 `chave: valor`) e pode mudar de novo.
+- **`verificar_voz` (`paseo_diagnostico.py`) lê `features.dictation.stt.provider`,
+  o mesmo caminho que `paseo_configurar._preencher` escreve — não
+  `daemon.voice.sttProvider`.** Achado do koine-relatos#6, jd-task #1096: o
+  caminho antigo nunca bateu com o que o próprio `paseo_configurar` grava nem
+  com o Paseo 0.9.2 real (medido pela "Configuração gerada" do relato) —
+  `koine paseo-doctor` reportava "ditado não configurado" **sempre**, mesmo
+  com o ditado ligado. Mesma família do achado do `campo_do_status` acima:
+  fixture de teste nunca verificada contra escrita/saída real. Teste de
+  regressão constrói o config via `paseo_configurar.mesclar({})` para os dois
+  nunca mais divergirem sem que a suíte acuse. **Não investigado:** o mesmo
+  relato também citava `paseo status` respondendo `DAEMON_REQUEST_TIMEOUT` e
+  `paseo restart` travando 120s sem concluir — não reproduzido, não atribuído
+  a código do Koine; pode ter sido o próprio relator explorando manualmente
+  depois de já confuso pelo falso-negativo do ditado. Sem tarefa aberta; se
+  reaparecer isolado (sem o sintoma do ditado junto), vale nova investigação.
 - **Publicado na v0.13.0 (#874/#887):** o glossário virou conceito
   (`vault/conceitos/glossario.md`), nasceu a `/kn-15-mantem-glossario`, a `kn-99`
   passou a perguntar pelo vocabulário, e **cada adapter passou a liberar as

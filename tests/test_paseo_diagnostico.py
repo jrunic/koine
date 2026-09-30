@@ -98,10 +98,22 @@ def test_relay_presente_nunca_reprova(ligado):
 
 
 def test_voz_configurada_e_ok():
-    cfg = {"daemon": {"voice": {"sttProvider": "parakeet"}}}
+    cfg = {"features": {"dictation": {"stt": {"provider": "parakeet"}}}}
     v = pd.verificar_voz(cfg)
     assert v.situacao == pd.OK
     assert v.dado["provedor"] == "parakeet"
+
+
+def test_voz_configurada_bate_com_o_que_o_paseo_configurar_escreve():
+    """jd-task #1096 — `verificar_voz` lia `daemon.voice.sttProvider`, um
+    caminho que `paseo_configurar` nunca escreve e que o Paseo 0.9.2 real
+    (koine-relatos#6) também não usa. O config real do relato:
+    `features.dictation.stt.provider` — o mesmo que `_preencher` grava."""
+    from koine import paseo_configurar as pc
+    cfg, _ = pc.mesclar({})
+    v = pd.verificar_voz(cfg)
+    assert v.situacao == pd.OK
+    assert v.dado["provedor"] == "local"
 
 
 def test_voz_ausente_e_aviso_nunca_erro():
