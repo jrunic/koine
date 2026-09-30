@@ -4,6 +4,27 @@ All notable changes to Koine are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.1] — 2026-09-30
+
+### Corrigido — `koine paseo-doctor` errava o diagnóstico de ditado configurado
+
+`verificar_voz` lia `daemon.voice.sttProvider`, um caminho que
+`paseo_configurar` nunca escreve — o writer sempre gravou em
+`features.dictation.stt.provider`/`features.voiceMode.enabled`, o schema
+real do Paseo. `koine paseo-doctor` reportava "ditado não configurado"
+sempre, mesmo com o ditado ligado. Corrigido para ler o caminho real; teste
+de regressão constrói o config pela própria escrita do `paseo_configurar`,
+para os dois nunca mais divergirem em silêncio.
+
+### Corrigido — leitura da saída do Paseo podia falhar por decodificação errada no Windows
+
+`paseo_ambiente.executar` decodificava a saída de comandos do Paseo pelo
+locale preferido do sistema operacional, que no Windows raramente é UTF-8 —
+mesmo a saída do Paseo sendo sempre JSON (UTF-8 por definição). Path ou
+label acentuado podia derrubar `koine paseo-doctor` com um erro de
+decodificação não tratado. Agora a leitura força `encoding="utf-8"` com
+`errors="replace"`, nunca dependendo do locale da máquina.
+
 ## [0.20.0] — 2026-09-29
 
 ### Adicionado — usuário cria skill própria (`kn-05-cria-skill`)
