@@ -96,10 +96,19 @@ def resolver_executavel(nome: str) -> Executavel | None:
 def executar(executavel: str, args: list[str], *, timeout: int = 15):
     """Primitiva única. No Windows, .cmd/.bat só executa por cmd.exe /c —
     caminho absoluto de batch não é chamada direta (launch desde a v0.4.2).
-    Args em lista: o subprocess cuida do quoting de espaço no caminho."""
+    Args em lista: o subprocess cuida do quoting de espaço no caminho.
+
+    `encoding="utf-8"` explícito: a saída do Paseo é sempre JSON (UTF-8 por
+    RFC 8259), mas `text=True` sem encoding decodifica pelo locale preferido
+    — no Windows raramente UTF-8, mesmo com path/label acentuado na saída
+    (jd-task #1097, koine-relatos#8). `errors="replace"` garante que a
+    primitiva nunca lança por byte inesperado; quem chama decide o que fazer
+    com o texto, não é surpreendido por `UnicodeDecodeError`.
+    """
     if (sys.platform == "win32"
             and executavel.lower().endswith((".cmd", ".bat"))):
         cmd = ["cmd", "/c", executavel, *args]
     else:
         cmd = [executavel, *args]
-    return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    return subprocess.run(cmd, capture_output=True, text=True,
+                          encoding="utf-8", errors="replace", timeout=timeout)

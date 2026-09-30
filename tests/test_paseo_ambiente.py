@@ -91,13 +91,32 @@ def test_executavel_ausente_devolve_none(monkeypatch, tmp_path):
     assert amb.resolver_executavel("paseo") is None
 
 
-def _grava_chamada(destino):
+def _grava_chamada(destino, kwargs_destino=None):
     def fake_run(cmd, **kw):
         destino.append(cmd)
+        if kwargs_destino is not None:
+            kwargs_destino.append(kw)
         class R:
             returncode, stdout, stderr = 0, "", ""
         return R()
     return fake_run
+
+
+def test_executar_decodifica_utf8_explicito_com_fallback_seguro(monkeypatch):
+    """jd-task #1097 — sem `encoding` explícito, `text=True` decodifica pelo
+    encoding preferido do locale, que no Windows raramente é UTF-8 mesmo a
+    saída do Paseo sendo JSON (sempre UTF-8, RFC 8259). Path/label acentuado
+    na saída do Paseo pode virar mojibake ou `UnicodeDecodeError` não
+    capturado por `_rodar_paseo` (só pega `TimeoutExpired`/`OSError`).
+    `errors="replace"` garante que a primitiva nunca lança por byte
+    inesperado — mesma disciplina do `koine.saida.preparar` (v0.6.3), só que
+    para leitura, não escrita."""
+    chamadas, kwargs = [], []
+    monkeypatch.setattr(amb.sys, "platform", "win32")
+    monkeypatch.setattr(amb.subprocess, "run", _grava_chamada(chamadas, kwargs))
+    amb.executar(r"C:\um dir\Paseo\paseo.cmd", ["status"])
+    assert kwargs[0]["encoding"] == "utf-8"
+    assert kwargs[0]["errors"] == "replace"
 
 
 def test_windows_executa_cmd_bat_por_cmd_exe(monkeypatch):

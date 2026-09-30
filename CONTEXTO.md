@@ -247,6 +247,24 @@ Push de tag `v*` dispara `.github/workflows/release.yml`: pytest → build do `k
   a código do Koine; pode ter sido o próprio relator explorando manualmente
   depois de já confuso pelo falso-negativo do ditado. Sem tarefa aberta; se
   reaparecer isolado (sem o sintoma do ditado junto), vale nova investigação.
+- **`paseo_ambiente.executar` decodifica a saída do Paseo com `encoding="utf-8",
+  errors="replace"` explícitos — nunca depende do locale preferido do SO.**
+  Achado do koine-relatos#8, jd-task #1097: `subprocess.run(..., text=True)`
+  sem `encoding` decodifica pelo locale do Windows (raramente UTF-8, mesmo com
+  a saída do Paseo sendo sempre JSON/UTF-8 por RFC 8259), e um byte fora do
+  locale vira `UnicodeDecodeError` **não capturado** por `_rodar_paseo` (que só
+  pega `TimeoutExpired`/`OSError`) — path ou label acentuado na saída do Paseo
+  podia derrubar `koine paseo-doctor` inteiro. Mesma disciplina do
+  `koine.saida.preparar` (v0.6.3), só que para leitura em vez de escrita.
+  **Não investigado, do mesmo relato:** o `[ERRO] N sessão(ões)... não a
+  receberam` de `verificar_mcp_nos_agentes` e o `Cannot connect to daemon`
+  pós-reinício do Paseo. Medido localmente (macOS, Paseo 0.9.x): sessões
+  OpenCode/ACP recebem o MCP normalmente aqui, e a doc oficial do Paseo diz
+  que a injeção é na criação da sessão, não assíncrona — o que enfraquece
+  tanto "ACP não recebe injeção" quanto "corrida de tempo" como causa, sem
+  confirmar nenhuma das duas. Pode ser defeito real do Paseo naquela máquina
+  específica (upstream: `getpaseo/paseo#4851`/`#5018` documentam ACP perdendo
+  MCP injetado, para outro provider). Sem tarefa aberta.
 - **Publicado na v0.13.0 (#874/#887):** o glossário virou conceito
   (`vault/conceitos/glossario.md`), nasceu a `/kn-15-mantem-glossario`, a `kn-99`
   passou a perguntar pelo vocabulário, e **cada adapter passou a liberar as
